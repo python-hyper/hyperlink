@@ -1,4 +1,4 @@
-# -*- test-case-name: twisted.python.test.test_url -*-
+
 # Copyright (c) Twisted Matrix Laboratories.
 # See LICENSE for details.
 
@@ -793,6 +793,24 @@ class TestURL(TestCase):
             URL(path=u'foo')
         self.assertEqual(
             str(raised.exception),
-            "expected iterable of text for path, got text itself: {}"
+            "expected iterable of text for path, not: {}"
             .format(repr(u'foo'))
         )
+
+
+    def test_netloc(self):
+        url = URL(scheme='https')
+        self.assertEqual(url.uses_netloc, True)
+
+        url = URL(scheme='git+https')
+        self.assertEqual(url.uses_netloc, True)
+
+        url = URL(scheme='mailto')
+        self.assertEqual(url.uses_netloc, False)
+
+        url = URL(scheme='ztp')
+        self.assertEqual(url.uses_netloc, None)
+
+        # TODO
+        # url = URL.fromText('ztp://test.com')
+        # self.assertEqual(url.uses_netloc, True)  # etc.

@@ -7,6 +7,9 @@
 URL parsing, construction and rendering.
 """
 
+import re
+import string
+
 try:
     from urlparse import urlsplit, urlunsplit
     from urllib import quote as urlquote, unquote as urlunquote
@@ -17,10 +20,13 @@ except ImportError:
 
 from unicodedata import normalize
 
-# Zero dependencies within Twisted: this module should probably be spun out
-# into its own library fairly soon.
-
 unicode = type(u'')
+try:
+    unichr
+except NameError:
+    unichr = chr
+NoneType = type(None)
+
 
 # RFC 3986 section 2.2, Reserved Characters
 _genDelims = u':/?#[]@'
@@ -31,6 +37,110 @@ _validInFragment = _validInPath + u'/?'
 _validInQuery = (_validInFragment
                  .replace(u'&', u'').replace(u'=', u'').replace(u'+', u''))
 
+_unspecified = object()
+
+
+# URL parsing regex (per RFC 3986)
+_URL_RE = re.compile(r'^((?P<scheme>[^:/?#]+):)?'
+                     r'((?P<_uses_netloc>//)(?P<authority>[^/?#]*))?'
+                     r'(?P<path_parts>[^?#]*)'
+                     r'(\?(?P<_query>[^#]*))?'
+                     r'(#(?P<fragment>.*))?')
+
+
+_HEX_CHAR_MAP = dict([((a + b).encode('ascii'),
+                       unichr(int(a + b, 16)).encode('charmap'))
+                      for a in string.hexdigits for b in string.hexdigits])
+_ASCII_RE = re.compile('([\x00-\x7f]+)')
+
+
+# The unreserved URI characters (per RFC 3986)
+_UNRESERVED_CHARS = frozenset('~-._0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ'
+                              'abcdefghijklmnopqrstuvwxyz')
+
+# RFC 3986 section 2.2, Reserved Characters
+_GEN_DELIMS = frozenset(u':/?#[]@')
+_SUB_DELIMS = frozenset(u"!$&'()*+,;=")
+_ALL_DELIMS = _GEN_DELIMS | _SUB_DELIMS
+
+_USERINFO_SAFE = _UNRESERVED_CHARS | _SUB_DELIMS
+_PATH_SAFE = _UNRESERVED_CHARS | _SUB_DELIMS | set(u':@')
+_FRAGMENT_SAFE = _UNRESERVED_CHARS | _PATH_SAFE | set(u'/?')
+_QUERY_SAFE = _UNRESERVED_CHARS | _FRAGMENT_SAFE - set(u'&=+')
+
+
+def _make_quote_map(safe_chars):
+    ret = {}
+    # v is included in the dict for py3 mostly, because bytestrings
+    # are iterables of ints, of course!
+    for i, v in zip(range(256), range(256)):
+        c = chr(v)
+        if c in safe_chars:
+            ret[c] = ret[v] = c
+        else:
+            ret[c] = ret[v] = '%{0:02X}'.format(i)
+    return ret
+
+
+_USERINFO_PART_QUOTE_MAP = _make_quote_map(_USERINFO_SAFE)
+_PATH_PART_QUOTE_MAP = _make_quote_map(_PATH_SAFE)
+_QUERY_PART_QUOTE_MAP = _make_quote_map(_QUERY_SAFE)
+_FRAGMENT_QUOTE_MAP = _make_quote_map(_FRAGMENT_SAFE)
+
+
+NETLOC_SCHEMES = ['ftp', 'http', 'gopher', 'nntp', 'telnet',
+                  'imap', 'wais', 'file', 'mms', 'https', 'shttp',
+                  'snews', 'prospero', 'rtsp', 'rtspu', 'rsync', '',
+                  'svn', 'svn+ssh', 'sftp', 'nfs', 'git', 'git+ssh']
+NO_NETLOC_SCHEMES = ['urn', 'tel', 'news', 'mailto']  # TODO: others?
+
+DEFAULT_PORT_MAP = {u'http': 80,
+                    u'https': 443}
+
+
+def _optional(argument, default):
+    """
+    If the given value is C{_unspecified}, return C{default}; otherwise return
+    C{argument}.
+
+    @param argument: The argument passed.
+
+    @param default: The default to use if C{argument} is C{_unspecified}.
+
+    @return: C{argument} or C{default}
+    """
+    if argument is _unspecified:
+        return default
+    else:
+        return argument
+
+
+def _typecheck(name, value, *types):
+    """
+    Check that the given C{value} is of the given C{type}, or raise an
+    exception describing the problem using C{name}.
+
+    @param name: a name to use to describe the type mismatch in the error if
+        one occurs
+    @type name: native L{str}
+
+    @param value: the value to check
+    @type value: L{object}
+
+    @param types: the expected types of C{value}
+    @type types: L{tuple} of L{type}
+
+    @raise TypeError: if there is a type mismatch between C{value} and C{type}
+
+    @return: C{value} if the type check succeeds
+    """
+    if not types:
+        types = (unicode,)
+    if not isinstance(value, types):
+        raise TypeError("expected {} for {}, got {}".format(
+            " or ".join([t.__name__ for t in types]), name, repr(value),
+        ))
+    return value
 
 
 def _minimalPercentEncode(text, safe):
@@ -50,7 +160,6 @@ def _minimalPercentEncode(text, safe):
     unsafe = set(_genDelims + _subDelims) - set(safe)
     return u''.join((c if c not in unsafe else "%{:02X}".format(ord(c)))
                     for c in text)
-
 
 
 def _maximalPercentEncode(text, safe):
@@ -127,60 +236,6 @@ def _resolveDotSegments(path):
 
 
 
-_unspecified = object()
-
-def _optional(argument, default):
-    """
-    If the given value is C{_unspecified}, return C{default}; otherwise return
-    C{argument}.
-
-    @param argument: The argument passed.
-
-    @param default: The default to use if C{argument} is C{_unspecified}.
-
-    @return: C{argument} or C{default}
-    """
-    if argument is _unspecified:
-        return default
-    else:
-        return argument
-
-_schemeDefaultPorts = {
-    u'http': 80,
-    u'https': 443,
-}
-
-
-
-def _typecheck(name, value, *types):
-    """
-    Check that the given C{value} is of the given C{type}, or raise an
-    exception describing the problem using C{name}.
-
-    @param name: a name to use to describe the type mismatch in the error if
-        one occurs
-    @type name: native L{str}
-
-    @param value: the value to check
-    @type value: L{object}
-
-    @param types: the expected types of C{value}
-    @type types: L{tuple} of L{type}
-
-    @raise TypeError: if there is a type mismatch between C{value} and C{type}
-
-    @return: C{value} if the type check succeeds
-    """
-    if not types:
-        types = (unicode,)
-    if not isinstance(value, types):
-        raise TypeError("expected {} for {}, got {}".format(
-            " or ".join([t.__name__ for t in types]), name, repr(value),
-        ))
-    return value
-
-
-
 class URL(object):
     """
     A L{URL} represents a URL and provides a convenient API for modifying its
@@ -223,7 +278,8 @@ class URL(object):
     character sets - this is the Internationalized, or IRI, normalization.  The
     other is the older, US-ASCII-only representation, which is necessary for
     most contexts where you would need to put a URI.  You can convert *between*
-    these representations according to certain rules.  L{URL} exposes these
+    thes
+    e representations according to certain rules.  L{URL} exposes these
     conversions as methods::
 
         >>> URL.fromText(u"https://→example.com/foo⇧bar/").asURI()
@@ -274,7 +330,7 @@ class URL(object):
     """
 
     def __init__(self, scheme=None, host=None, path=(), query=(), fragment=u'',
-                 port=None, rooted=None, userinfo=u''):
+                 port=None, rooted=None, userinfo=u'', use_netloc=None):
         """
         Create a new L{URL} from structured information about itself.
 
@@ -313,7 +369,7 @@ class URL(object):
         if host is not None and scheme is None:
             scheme = u'http'
         if port is None:
-            port = _schemeDefaultPorts.get(scheme)
+            port = DEFAULT_PORT_MAP.get(scheme)
         if host and query and not path:
             path = (u'',)
 
@@ -330,21 +386,23 @@ class URL(object):
         self._scheme = _typecheck("scheme", scheme)
         self._host = _typecheck("host", host)
         if isinstance(path, unicode):
-            raise TypeError(
-                "expected iterable of text for path, got text itself: "
-                + repr(path)
-            )
+            raise TypeError("expected iterable of text for path, not: %r"
+                            % (path,))
         self._path = tuple((_typecheck("path segment", segment)
                             for segment in path))
         self._query = tuple(
             (_typecheck("query parameter name", k),
-             _typecheck("query parameter value", v, unicode, type(None)))
+             _typecheck("query parameter value", v, unicode, NoneType))
             for (k, v) in query
         )
         self._fragment = _typecheck("fragment", fragment)
-        self._port = _typecheck("port", port, int, type(None))
+        self._port = _typecheck("port", port, int, NoneType)
         self._rooted = _typecheck("rooted", rooted, bool)
         self._userinfo = _typecheck("userinfo", userinfo)
+        self._use_netloc = _typecheck("use_netloc", use_netloc, bool, NoneType)
+
+        return
+
 
     scheme = property(lambda self: self._scheme)
     host = property(lambda self: self._host)
@@ -364,6 +422,19 @@ class URL(object):
         return self.userinfo.split(u':')[0]
 
 
+    @property
+    def uses_netloc(self):
+        # TODO: should self._uses_netloc override or be overridden?
+        default = self._use_netloc
+        if self._scheme in NETLOC_SCHEMES:
+            return True
+        if self._scheme.split('+')[-1] in NETLOC_SCHEMES:
+            return True
+        if self._scheme in NO_NETLOC_SCHEMES:
+            return False
+        return default
+
+
     def authority(self, includeSecrets=False):
         """
         Compute and return the appropriate host/port/userinfo combination.
@@ -377,13 +448,13 @@ class URL(object):
         @rtype: L{unicode}
         """
         hostport = [self.host]
-        if self.port != _schemeDefaultPorts.get(self.scheme):
+        if self.port != DEFAULT_PORT_MAP.get(self.scheme):
             hostport.append(unicode(self.port))
         authority = []
         if self.userinfo:
             userinfo = self.userinfo
             if not includeSecrets and u":" in userinfo:
-                userinfo = userinfo[:userinfo.index(u":")+1]
+                userinfo = userinfo[:userinfo.index(u":") + 1]
             authority.append(userinfo)
         authority.append(u":".join(hostport))
         return u"@".join(authority)
@@ -491,6 +562,7 @@ class URL(object):
         (scheme, authority, path, query, fragment) = (
             (u'' if x == b'' else x) for x in urlsplit(s)
         )
+        uses_netloc = None
         authority = authority.split("@", 1)
         if len(authority) == 1:
             [netloc] = authority
@@ -518,7 +590,7 @@ class URL(object):
                      for qe in query.split(u"&"))
         else:
             query = ()
-        return cls(scheme, host, path, query, fragment, port, rooted, userinfo)
+        return cls(scheme, host, path, query, fragment, port, rooted, userinfo, uses_netloc)
 
 
     def child(self, *segments):
