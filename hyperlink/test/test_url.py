@@ -814,6 +814,8 @@ class TestURL(TestCase):
         url = URL(scheme='ztp')
         self.assertEqual(url.uses_netloc, None)
 
-        # TODO
-        # url = URL.fromText('ztp://test.com')
-        # self.assertEqual(url.uses_netloc, True)  # etc.
+        url = URL.fromText('ztp://test.com')
+        self.assertEqual(url.uses_netloc, True)  # etc.
+
+        url = URL.fromText('ztp:test:com')
+        self.assertEqual(url.uses_netloc, False)  # etc.
