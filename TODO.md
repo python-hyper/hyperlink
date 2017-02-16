@@ -6,6 +6,7 @@
 * Optimize percent decoding
 * Add netloc logic
 * More default ports
+* README
 
 ## Questions
 
