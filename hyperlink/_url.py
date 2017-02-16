@@ -9,6 +9,39 @@ URL parsing, construction and rendering.
 
 import re
 import string
+import socket
+
+try:
+    from socket import inet_pton
+except ImportError:
+    # from https://gist.github.com/nnemkin/4966028
+    import ctypes
+
+    class _sockaddr(ctypes.Structure):
+        _fields_ = [("sa_family", ctypes.c_short),
+                    ("__pad1", ctypes.c_ushort),
+                    ("ipv4_addr", ctypes.c_byte * 4),
+                    ("ipv6_addr", ctypes.c_byte * 16),
+                    ("__pad2", ctypes.c_ulong)]
+
+    WSAStringToAddressA = ctypes.windll.ws2_32.WSAStringToAddressA
+    WSAAddressToStringA = ctypes.windll.ws2_32.WSAAddressToStringA
+
+    def inet_pton(address_family, ip_string):
+        addr = _sockaddr()
+        ip_string = ip_string.encode('ascii')  # TODO
+        addr.sa_family = address_family
+        addr_size = ctypes.c_int(ctypes.sizeof(addr))
+
+        if WSAStringToAddressA(ip_string, address_family, None, ctypes.byref(addr), ctypes.byref(addr_size)) != 0:
+            raise socket.error(ctypes.FormatError())
+
+        if address_family == socket.AF_INET:
+            return ctypes.string_at(addr.ipv4_addr, 4)
+        if address_family == socket.AF_INET6:
+            return ctypes.string_at(addr.ipv6_addr, 16)
+        raise socket.error('unknown address family')
+
 
 try:
     from urlparse import urlsplit, urlunsplit
@@ -96,6 +129,10 @@ NO_NETLOC_SCHEMES = ['urn', 'tel', 'news', 'mailto']  # TODO: others?
 
 DEFAULT_PORT_MAP = {u'http': 80,
                     u'https': 443}
+
+
+class URLParseError(ValueError):
+    pass
 
 
 def _optional(argument, default):
@@ -233,6 +270,50 @@ def _resolveDotSegments(path):
         segs.append(u'')
 
     return segs
+
+
+def to_unicode(obj):
+    try:
+        return unicode(obj)
+    except UnicodeDecodeError:
+        return unicode(obj, encoding=DEFAULT_ENCODING)
+
+
+def parse_host(host):
+    """\
+    returns:
+      family (socket constant or None), host (string)
+
+    >>> parse_host('googlewebsite.com') == (None, 'googlewebsite.com')
+    True
+    >>> parse_host('[::1]') == (socket.AF_INET6, '::1')
+    True
+    >>> parse_host('192.168.1.1') == (socket.AF_INET, '192.168.1.1')
+    True
+
+    (odd doctest formatting above due to py3's switch from int to enums
+    for socket constants)
+    """
+    if not host:
+        return None, u''
+    if u':' in host and u'[' == host[0] and u']' == host[-1]:
+        host = host[1:-1]
+        try:
+            inet_pton(socket.AF_INET6, host)
+        except socket.error as se:
+            raise URLParseError('invalid IPv6 host: %r (%r)' % (host, se))
+        except UnicodeEncodeError:
+            pass  # TODO: this can't be a real host right?
+        else:
+            family = socket.AF_INET6
+            return family, host
+    try:
+        inet_pton(socket.AF_INET, host)
+    except (socket.error, UnicodeEncodeError):
+        family = None  # not an IP
+    else:
+        family = socket.AF_INET
+    return family, host
 
 
 
@@ -559,24 +640,41 @@ class URL(object):
         @return: the parsed representation of C{s}
         @rtype: L{URL}
         """
-        (scheme, authority, path, query, fragment) = (
-            (u'' if x == b'' else x) for x in urlsplit(s)
-        )
-        uses_netloc = None
-        authority = authority.split("@", 1)
-        if len(authority) == 1:
-            [netloc] = authority
-            userinfo = u''
-        else:
-            [userinfo, netloc] = authority
-        split = netloc.split(u":")
-        if len(split) == 2:
-            host, port = split
-            port = int(port)
-        else:
-            host, port = split[0], None
-        if path:
-            path = path.split(u"/")
+        s = to_unicode(s)
+        um = _URL_RE.match(s)
+        try:
+            gs = um.groupdict()
+        except AttributeError:
+            raise URLParseError('could not parse url: %r' % s)
+
+        au_text = gs['authority']
+        userinfo, hostinfo = u'', au_text
+
+        if au_text:
+            userinfo, sep, hostinfo = au_text.rpartition('@')
+
+        host, port = None, None
+        if hostinfo:
+            host, sep, port_str = hostinfo.partition(u':')
+            if sep:
+                if u']' in port_str:
+                    host = hostinfo  # wrong split, was an ipv6
+                else:
+                    try:
+                        port = int(port_str)
+                    except ValueError:
+                        if not port_str:  # TODO: excessive?
+                            raise URLParseError('port must not be empty')
+                        raise URLParseError('expected integer for port, not %r'
+                                            % port_str)
+        family, host = parse_host(host)
+
+        scheme = gs['scheme'] or u''
+        fragment = gs['fragment'] or u''
+        uses_netloc = gs['_uses_netloc'] and True
+
+        if gs['path_parts']:
+            path = gs['path_parts'].split(u"/")
             if not path[0]:
                 path.pop(0)
                 rooted = True
@@ -584,13 +682,14 @@ class URL(object):
                 rooted = False
         else:
             path = ()
-            rooted = bool(netloc)
-        if query:
+            rooted = bool(hostinfo)
+        if gs['_query']:
             query = ((qe.split(u"=", 1) if u'=' in qe else (qe, None))
-                     for qe in query.split(u"&"))
+                     for qe in gs['_query'].split(u"&"))
         else:
             query = ()
-        return cls(scheme, host, path, query, fragment, port, rooted, userinfo, uses_netloc)
+        return cls(scheme, host, path, query, fragment, port,
+                   rooted, userinfo, uses_netloc)
 
 
     def child(self, *segments):
