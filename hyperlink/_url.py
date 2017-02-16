@@ -9,8 +9,8 @@ URL parsing, construction and rendering.
 
 import re
 import string
-import socket
 
+import socket
 try:
     from socket import inet_pton
 except ImportError:
@@ -411,7 +411,7 @@ class URL(object):
     """
 
     def __init__(self, scheme=None, host=None, path=(), query=(), fragment=u'',
-                 port=None, rooted=None, userinfo=u'', use_netloc=None):
+                 port=None, rooted=None, userinfo=u'', family=None, use_netloc=None):
         """
         Create a new L{URL} from structured information about itself.
 
@@ -480,10 +480,11 @@ class URL(object):
         self._port = _typecheck("port", port, int, NoneType)
         self._rooted = _typecheck("rooted", rooted, bool)
         self._userinfo = _typecheck("userinfo", userinfo)
+        self._family = _typecheck("family", family,
+                                  type(socket.AF_INET), NoneType)
         self._use_netloc = _typecheck("use_netloc", use_netloc, bool, NoneType)
 
         return
-
 
     scheme = property(lambda self: self._scheme)
     host = property(lambda self: self._host)
@@ -493,7 +494,7 @@ class URL(object):
     fragment = property(lambda self: self._fragment)
     rooted = property(lambda self: self._rooted)
     userinfo = property(lambda self: self._userinfo)
-
+    family = property(lambda self: self._family)
 
     @property
     def user(self):
@@ -528,7 +529,10 @@ class URL(object):
             of the URL.
         @rtype: L{unicode}
         """
-        hostport = [self.host]
+        if self.family == socket.AF_INET6:
+            hostport = ['[' + self.host + ']']
+        else:
+            hostport = [self.host]
         if self.port != DEFAULT_PORT_MAP.get(self.scheme):
             hostport.append(unicode(self.port))
         authority = []
@@ -689,7 +693,7 @@ class URL(object):
         else:
             query = ()
         return cls(scheme, host, path, query, fragment, port,
-                   rooted, userinfo, uses_netloc)
+                   rooted, userinfo, family, uses_netloc)
 
 
     def child(self, *segments):
