@@ -198,6 +198,9 @@ class TestURL(TestCase):
         tests = (
             "http://localhost",
             "http://localhost/",
+            "http://127.0.0.1/",
+            "http://[::127.0.0.1]/",
+            "http://[::1]/",
             "http://localhost/foo",
             "http://localhost/foo/",
             "http://localhost/foo!!bar/",
