@@ -8,9 +8,11 @@ Tests for L{twisted.python.url}.
 
 from __future__ import unicode_literals
 
-from ..url import URL
+from .. import URL, URLParseError
 unicode = type(u'')
 from unittest import TestCase
+
+import socket
 
 theurl = "http://www.foo.com/a/nice/path/?zot=23&zut"
 
@@ -815,7 +817,20 @@ class TestURL(TestCase):
         self.assertEqual(url.uses_netloc, None)
 
         url = URL.fromText('ztp://test.com')
-        self.assertEqual(url.uses_netloc, True)  # etc.
+        self.assertEqual(url.uses_netloc, True)
 
         url = URL.fromText('ztp:test:com')
-        self.assertEqual(url.uses_netloc, False)  # etc.
+        self.assertEqual(url.uses_netloc, None)
+
+
+    def test_invalid_ipv6(self):
+        invalid_ipv6_ips = ['2001::0234:C1ab::A0:aabc:003F',
+                            '2001::1::3F',
+                            ':',
+                            '::::',
+                            '::256.0.0.1']
+        for ip in invalid_ipv6_ips:
+            url_text = 'http://[' + ip + ']'
+            if hasattr(socket, 'inet_pton'):
+                self.assertRaises(socket.error, socket.inet_pton, socket.AF_INET6, ip)
+            self.assertRaises(URLParseError, URL.fromText, url_text)
