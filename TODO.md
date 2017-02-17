@@ -5,6 +5,7 @@
 * More default ports
 * README
 * pct encode userinfo
+* better error on URL constructor (single string argument leads to succesful instantiation with invalid scheme)
 
 ## Complete
 

@@ -834,3 +834,17 @@ class TestURL(TestCase):
             if hasattr(socket, 'inet_pton'):
                 self.assertRaises(socket.error, socket.inet_pton, socket.AF_INET6, ip)
             self.assertRaises(URLParseError, URL.fromText, url_text)
+
+
+    def test_ip_family_detection(self):
+        u = URL.fromText('http://giggle.com')
+        self.assertEqual(u.family, None)
+
+        u = URL.fromText('http://127.0.0.1/a/b/?c=d')
+        self.assertEqual(u.family, socket.AF_INET)
+
+        u = URL.fromText('http://[::1]/a/b/?c=d')
+        self.assertEqual(u.family, socket.AF_INET6)
+
+    def test_invalid_port(self):
+        self.assertRaises(URLParseError, URL.fromText, 'http://portsmouth:smash')
