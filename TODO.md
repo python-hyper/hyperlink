@@ -1,12 +1,16 @@
 # hyperlink TODO
 
 * Speed up percent encoding with urlutils approach
-* Parse with regular expression
-* parse ipv6
 * Optimize percent decoding
-* Add netloc logic
 * More default ports
 * README
+* pct encode userinfo
+
+## Complete
+
+* Parse with regular expression
+* Parse/emit IPv6
+* Add netloc detection logic
 
 ## Questions
 
