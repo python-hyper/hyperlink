@@ -331,14 +331,15 @@ class URL(object):
     like so::
 
         >>> from hyperlink import URL
-        >>> URL(scheme=u'https', host=u'example.com',
-        ...     path=[u'hello', u'world'])
-        URL.fromText(u'https://example.com/hello/world')
+        >>> url = URL(scheme=u'https', host=u'example.com', path=[u'hello', u'world'])
+        >>> print(url.asText())
+        https://example.com/hello/world
 
     Or you can use the L{fromText} method you can see in the output there::
 
-        >>> URL.fromText(u'https://example.com/hello/world')
-        URL.fromText(u'https://example.com/hello/world')
+        >>> url = URL.fromText(u'https://example.com/hello/world')
+        >>> print(url.asText())
+        https://example.com/hello/world
 
     There are two major advantages of using L{URL} over representing URLs as
     strings.  The first is that it's really easy to evaluate a relative
