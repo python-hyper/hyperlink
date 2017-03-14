@@ -1,8 +1,4 @@
-# -*- test-case-name: twisted.python.test.test_url -*-
 # -*- coding: utf-8 -*-
-# Copyright (c) Twisted Matrix Laboratories.
-# See LICENSE for details.
-
 """
 URL parsing, construction and rendering.
 """
@@ -15,6 +11,7 @@ try:
     from socket import inet_pton
 except ImportError:
     # from https://gist.github.com/nnemkin/4966028
+    # this code only applies on Windows Python 2.7
     import ctypes
 
     class _sockaddr(ctypes.Structure):
@@ -318,7 +315,7 @@ def parse_host(host):
 
 
 class URL(object):
-    """
+    u"""
     A L{URL} represents a URL and provides a convenient API for modifying its
     parts.
 
@@ -333,7 +330,7 @@ class URL(object):
     You can construct L{URL} objects by passing in these components directly,
     like so::
 
-        >>> from twisted.python.url import URL
+        >>> from hyperlink import URL
         >>> URL(scheme=u'https', host=u'example.com',
         ...     path=[u'hello', u'world'])
         URL.fromText(u'https://example.com/hello/world')
@@ -350,9 +347,8 @@ class URL(object):
 
         >>> URL.fromText(u'https://example.com/base/uri/').click(u"/absolute")
         URL.fromText(u'https://example.com/absolute')
-        >>> (URL.fromText(u'https://example.com/base/uri/')
-        ...  .click(u"relative/path"))
-        URL.fromText(u'https://example.com/base/uri/relative/path')
+        >>> URL.fromText(u'https://example.com/base/uri/').click(u"rel/path")
+        URL.fromText(u'https://example.com/base/uri/rel/path')
 
     The other is that URLs have two normalizations.  One representation is
     suitable for humans to read, because it can represent data from many
@@ -365,9 +361,8 @@ class URL(object):
 
         >>> URL.fromText(u"https://→example.com/foo⇧bar/").asURI()
         URL.fromText(u'https://xn--example-dk9c.com/foo%E2%87%A7bar/')
-        >>> (URL.fromText(u'https://xn--example-dk9c.com/foo%E2%87%A7bar/')
-             .asIRI())
-        URL.fromText(u'https://\u2192example.com/foo\u21e7bar/')
+        >>> URL.fromText(u'https://xn--example-dk9c.com/foo%E2%87%A7bar/').asIRI()
+        URL.fromText(u'https://\\u2192example.com/foo\\u21e7bar/')
 
     @see: U{RFC 3986, Uniform Resource Identifier (URI): Generic Syntax
         <https://tools.ietf.org/html/rfc3986>}
@@ -703,9 +698,8 @@ class URL(object):
 
         For example::
 
-            >>> (URL.fromText(u"http://localhost/a/b?x=y")
-                 .child(u"c", u"d").asText())
-            u'http://localhost/a/b/c?x=y'
+            >>> URL.fromText(u"http://localhost/a/b?x=y").child(u"c", u"d").asText()
+            u'http://localhost/a/b/c/d?x=y'
 
         @param segments: A path segment.
         @type segments: L{tuple} of L{unicode}
@@ -783,7 +777,7 @@ class URL(object):
 
 
     def asURI(self):
-        """
+        u"""
         Convert a L{URL} object that potentially contains non-ASCII characters
         into a L{URL} object where all non-ASCII text has been encoded
         appropriately.  This is useful to do in preparation for sending a
@@ -819,8 +813,7 @@ class URL(object):
 
         For example::
 
-            >>> (URL.fromText(u'https://xn--example-dk9c.com/foo%E2%87%A7bar/')
-                 .asIRI())
+            >>> URL.fromText(u'https://xn--example-dk9c.com/foo%E2%87%A7bar/').asIRI()
             URL.fromText(u'https://\u2192example.com/foo\u21e7bar/')
 
         @return: a new L{URL} with its path-segments, query-parameters, and
@@ -882,7 +875,7 @@ class URL(object):
         Convert this URL to an C{eval}-able representation that shows all of
         its constituent parts.
         """
-        return ('URL.fromText({})').format(repr(self.asText()))
+        return 'URL.fromText(%r)' % self.asText()
 
 
     def add(self, name, value=None):
