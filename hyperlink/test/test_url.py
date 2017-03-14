@@ -2,9 +2,6 @@
 # Copyright (c) Twisted Matrix Laboratories.
 # See LICENSE for details.
 
-"""
-Tests for L{twisted.python.url}.
-"""
 
 from __future__ import unicode_literals
 
@@ -215,6 +212,7 @@ class TestURL(TestCase):
             "http://localhost/asd?a=asd%20sdf/345",
             "http://(%2525)/(%2525)?(%2525)&(%2525)=(%2525)#(%2525)",
             "http://(%C3%A9)/(%C3%A9)?(%C3%A9)&(%C3%A9)=(%C3%A9)#(%C3%A9)",
+            "?sslrootcert=/Users/glyph/Downloads/rds-ca-2015-root.pem&sslmode=verify-full",
             )
         for test in tests:
             result = URL.fromText(test).asText()
