@@ -171,7 +171,7 @@ def _typecheck(name, value, *types):
     if not types:
         types = (unicode,)
     if not isinstance(value, types):
-        raise TypeError("expected {} for {}, got {}".format(
+        raise TypeError("expected {0} for {1}, got {2}".format(
             " or ".join([t.__name__ for t in types]), name, repr(value),
         ))
     return value
@@ -192,7 +192,7 @@ def _minimalPercentEncode(text, safe):
     @rtype: L{unicode}
     """
     unsafe = set(_genDelims + _subDelims) - set(safe)
-    return u''.join((c if c not in unsafe else "%{:02X}".format(ord(c)))
+    return u''.join((c if c not in unsafe else "%{0:02X}".format(ord(c)))
                     for c in text)
 
 
