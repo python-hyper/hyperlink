@@ -70,11 +70,11 @@ _validInQuery = (_validInFragment
 _unspecified = object()
 
 
-# URL parsing regex (per RFC 3986)
+# URL parsing regex (based on RFC 3986 Appendix B, with modifications)
 _URL_RE = re.compile(r'^((?P<scheme>[^:/?#]+):)?'
-                     r'((?P<_uses_netloc>//)(?P<authority>[^/?#]*))?'
-                     r'(?P<path_parts>[^?#]*)'
-                     r'(\?(?P<_query>[^#]*))?'
+                     r'((?P<_netloc_sep>//)(?P<authority>[^/?#]*))?'
+                     r'(?P<path>[^?#]*)'
+                     r'(\?(?P<query>[^#]*))?'
                      r'(#(?P<fragment>.*))?')
 
 
@@ -118,17 +118,73 @@ _QUERY_PART_QUOTE_MAP = _make_quote_map(_QUERY_SAFE)
 _FRAGMENT_QUOTE_MAP = _make_quote_map(_FRAGMENT_SAFE)
 
 
-NETLOC_SCHEMES = ['ftp', 'http', 'gopher', 'nntp', 'telnet',
-                  'imap', 'wais', 'file', 'mms', 'https', 'shttp',
-                  'snews', 'prospero', 'rtsp', 'rtspu', 'rsync', '',
-                  'svn', 'svn+ssh', 'sftp', 'nfs', 'git', 'git+ssh']
-NO_NETLOC_SCHEMES = ['urn', 'tel', 'news', 'mailto']  # TODO: others?
+# This port list painstakingly curated by hand searching through
+# https://www.iana.org/assignments/uri-schemes/uri-schemes.xhtml
+# and
+# https://www.iana.org/assignments/service-names-port-numbers/service-names-port-numbers.xhtml
+SCHEME_PORT_MAP = {'acap': 674, 'afp': 548, 'dict': 2628, 'dns': 53,
+                   'file': None, 'ftp': 21, 'git': 9418, 'gopher': 70,
+                   'http': 80, 'https': 443, 'imap': 143, 'ipp': 631,
+                   'ipps': 631, 'irc': 194, 'ircs': 6697, 'ldap': 389,
+                   'ldaps': 636, 'mms': 1755, 'msrp': 2855, 'msrps': None,
+                   'mtqp': 1038, 'nfs': 111, 'nntp': 119, 'nntps': 563,
+                   'pop': 110, 'prospero': 1525, 'redis': 6379, 'rsync': 873,
+                   'rtsp': 554, 'rtsps': 322, 'rtspu': 5005, 'sftp': 22,
+                   'smb': 445, 'snmp': 161, 'ssh': 22, 'steam': None,
+                   'svn': 3690, 'telnet': 23, 'ventrilo': 3784, 'vnc': 5900,
+                   'wais': 210, 'ws': 80, 'wss': 443, 'xmpp': None}
 
-DEFAULT_PORT_MAP = {u'http': 80,
-                    u'https': 443}
+# This list of schemes that don't use authorities is also from the link above.
+NO_NETLOC_SCHEMES = set(['urn', 'about', 'bitcoin', 'blob', 'data', 'geo',
+                         'magnet', 'mailto', 'news', 'pkcs11',
+                         'sip', 'sips', 'tel'])
+# As of Mar 11, 2017, there were 44 netloc schemes, and 13 non-netloc
+
+
+def register_scheme(text, uses_netloc=None, default_port=None):
+    """Registers new scheme information, resulting in correct port and
+    slash behavior from the URL object. There are dozens of standard
+    schemes preregistered, so this function is mostly meant for
+    proprietary internal customizations or stopgaps on missing
+    standards information. If a scheme seems to be missing, please
+    `file an issue`_!
+
+    Args:
+        text (str): Text representing the scheme.
+           (the 'http' in 'http://hatnote.com')
+        uses_netloc (bool): Does the scheme support specifying a
+           network host? For instance, "http" does, "mailto" does not.
+        default_port (int): The default port, if any, for netloc-using
+           schemes.
+
+    .. _file an issue: https://github.com/mahmoud/boltons/issues
+    """
+    text = text.lower()
+    if default_port is not None:
+        try:
+            default_port = int(default_port)
+        except ValueError:
+            raise ValueError('default_port expected integer or None, not %r'
+                             % (default_port,))
+
+    if uses_netloc is True:
+        SCHEME_PORT_MAP[text] = default_port
+    elif uses_netloc is False:
+        if default_port is not None:
+            raise ValueError('unexpected default port while specifying'
+                             ' non-netloc scheme: %r' % default_port)
+        NO_NETLOC_SCHEMES.add(text)
+    elif uses_netloc is not None:
+        raise ValueError('uses_netloc expected True, False, or None')
+
+    return
+
 
 
 class URLParseError(ValueError):
+    """Exception inheriting from :exc:`ValueError`, raised when failing to
+    parse a URL. Mostly raised on invalid ports and IPv6 addresses.
+    """
     pass
 
 
@@ -446,7 +502,7 @@ class URL(object):
         if host is not None and scheme is None:
             scheme = u'http'
         if port is None:
-            port = DEFAULT_PORT_MAP.get(scheme)
+            port = SCHEME_PORT_MAP.get(scheme)
         if host and query and not path:
             path = (u'',)
 
@@ -502,14 +558,31 @@ class URL(object):
 
     @property
     def uses_netloc(self):
-        # TODO: should self._uses_netloc override or be overridden?
+        """Whether or not a URL uses :code:`:` or :code:`://` to separate the
+        scheme from the rest of the URL depends on the scheme's own
+        standard definition. There is no way to infer this behavior
+        from other parts of the URL. A scheme either supports network
+        locations or it does not.
+
+        The URL type's approach to this is to check for explicitly
+        registered schemes, with common schemes like HTTP
+        preregistered. This is the same approach taken by
+        :mod:`urlparse`.
+
+        URL adds two additional heuristics if the scheme as a whole is
+        not registered. First, it attempts to check the subpart of the
+        scheme after the last ``+`` character. This adds intuitive
+        behavior for schemes like ``git+ssh``. Second, if a URL with
+        an unrecognized scheme is loaded, it will maintain the
+        separator it sees.
+        """
         default = self._use_netloc
-        if self._scheme in NETLOC_SCHEMES:
+        if self.scheme in SCHEME_PORT_MAP:
             return True
-        if self._scheme.split('+')[-1] in NETLOC_SCHEMES:
-            return True
-        if self._scheme in NO_NETLOC_SCHEMES:
+        if self.scheme in NO_NETLOC_SCHEMES:
             return False
+        if self.scheme.split('+')[-1] in SCHEME_PORT_MAP:
+            return True
         return default
 
 
@@ -529,7 +602,7 @@ class URL(object):
             hostport = ['[' + self.host + ']']
         else:
             hostport = [self.host]
-        if self.port != DEFAULT_PORT_MAP.get(self.scheme):
+        if self.port != SCHEME_PORT_MAP.get(self.scheme):
             hostport.append(unicode(self.port))
         authority = []
         if self.userinfo:
@@ -671,10 +744,10 @@ class URL(object):
 
         scheme = gs['scheme'] or u''
         fragment = gs['fragment'] or u''
-        uses_netloc = gs['_uses_netloc'] and True
+        uses_netloc = bool(gs['_netloc_sep'])
 
-        if gs['path_parts']:
-            path = gs['path_parts'].split(u"/")
+        if gs['path']:
+            path = gs['path'].split(u"/")
             if not path[0]:
                 path.pop(0)
                 rooted = True
@@ -683,9 +756,9 @@ class URL(object):
         else:
             path = ()
             rooted = bool(hostinfo)
-        if gs['_query']:
+        if gs['query']:
             query = ((qe.split(u"=", 1) if u'=' in qe else (qe, None))
-                     for qe in gs['_query'].split(u"&"))
+                     for qe in gs['query'].split(u"&"))
         else:
             query = ()
         return cls(scheme, host, path, query, fragment, port,

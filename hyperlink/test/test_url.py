@@ -818,7 +818,7 @@ class TestURL(TestCase):
         self.assertEqual(url.uses_netloc, True)
 
         url = URL.fromText('ztp:test:com')
-        self.assertEqual(url.uses_netloc, None)
+        self.assertEqual(url.uses_netloc, False)
 
 
     def test_invalid_ipv6(self):
