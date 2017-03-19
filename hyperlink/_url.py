@@ -503,7 +503,7 @@ class URL(object):
         if port is None:
             port = SCHEME_PORT_MAP.get(scheme)
         if host and query and not path:
-            path = (u'',)
+            path = ()  # (u'',)
 
         # Now that we're done detecting whether they were passed, we can set
         # them to their defaults:
@@ -931,7 +931,7 @@ class URL(object):
             C{u"http://example.com/some/path?some=query"}.
         @rtype: L{unicode}
         """
-        path = u'/'.join(([u''] if self.rooted else [])
+        path = u'/'.join(([u''] if (self.rooted and self.path) else [])
                          + [_minimalPercentEncode(segment, _validInPath)
                             for segment in self.path])
         query = u'&'.join(
