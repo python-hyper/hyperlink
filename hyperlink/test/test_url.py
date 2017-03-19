@@ -874,10 +874,10 @@ class TestURL(TestCase):
         self.assertEquals(url.to_text(), 'ztp:/x/y/z')
 
         # also works when the input doesn't include '//'
-        # url = URL(scheme='git+ftp', path=('x', 'y', 'z' ,''),
-        #           rooted=True, use_netloc=True)
+        url = URL(scheme='git+ftp', path=('x', 'y', 'z' ,''),
+                  rooted=True, use_netloc=True)
         # broken bc urlunsplit
-        # self.assertEquals(url.to_text(), 'git+ftp:///x/y/z/')
+        self.assertEquals(url.to_text(), 'git+ftp:///x/y/z/')
 
         # really why would this ever come up but ok
         url = URL.from_text('file:///path/to/heck')
