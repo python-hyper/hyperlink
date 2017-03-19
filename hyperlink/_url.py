@@ -41,11 +41,9 @@ except ImportError:
 
 
 try:
-    from urlparse import urlunsplit
     from urllib import quote as urlquote, unquote as urlunquote
 except ImportError:
-    from urllib.parse import (urlunsplit,
-                              quote as urlquote,
+    from urllib.parse import (quote as urlquote,
                               unquote_to_bytes as urlunquote)
 
 from unicodedata import normalize
@@ -930,16 +928,39 @@ class URL(object):
             C{u"http://example.com/some/path?some=query"}.
         @rtype: L{unicode}
         """
+        scheme = self.scheme
+        authority = self.authority(includeSecrets)
         path = u'/'.join(([u''] if (self.rooted and self.path) else [])
                          + [_minimalPercentEncode(segment, _validInPath)
                             for segment in self.path])
-        query = u'&'.join(
+        query_string = u'&'.join(
             u'='.join((_minimalPercentEncode(x, _validInQuery)
                        for x in ([k] if v is None else [k, v])))
             for (k, v) in self.query
         )
-        return urlunsplit((self.scheme, self.authority(includeSecrets), path,
-                           query, self.fragment))
+        fragment = self.fragment  # TODO: quote?
+
+        parts = []
+        _add = parts.append
+        if scheme:
+            _add(scheme)
+            _add(':')
+        if authority:
+            _add('//')
+            _add(authority)
+        elif (scheme and path[:2] != '//' and self.uses_netloc):
+            _add('//')
+        if path:
+            if scheme and authority and path[:1] != '/':
+                _add('/')  # relpaths with abs authorities auto get '/'
+            _add(path)
+        if query_string:
+            _add('?')
+            _add(query_string)
+        if fragment:
+            _add('#')
+            _add(fragment)
+        return u''.join(parts)
 
     to_uri = asURI
     to_iri = asIRI
@@ -952,7 +973,6 @@ class URL(object):
         its constituent parts.
         """
         return 'URL.fromText(%r)' % self.asText()
-
 
     def add(self, name, value=None):
         """
