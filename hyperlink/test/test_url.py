@@ -88,6 +88,29 @@ ROUNDTRIP_TESTS = (
     "http://(%2525)/(%2525)?(%2525)&(%2525)=(%2525)#(%2525)",
     "http://(%C3%A9)/(%C3%A9)?(%C3%A9)&(%C3%A9)=(%C3%A9)#(%C3%A9)",
     "?sslrootcert=/Users/glyph/Downloads/rds-ca-2015-root.pem&sslmode=verify",
+
+    # from boltons.urlutils' tests
+
+    'http://googlewebsite.com/e-shops.aspx',
+    'http://example.com:8080/search?q=123&business=Nothing%20Special',
+    'http://hatnote.com:9000?arg=1&arg=2&arg=3',
+    'https://xn--bcher-kva.ch',
+    'http://xn--ggbla1c4e.xn--ngbc5azd/',
+    'http://tools.ietf.org/html/rfc3986#section-3.4',
+    # 'http://wiki:pedia@hatnote.com',
+    'ftp://ftp.rfc-editor.org/in-notes/tar/RFCs0001-0500.tar.gz',
+    'http://[1080:0:0:0:8:800:200C:417A]/index.html',
+    'ssh://192.0.2.16:2222/',
+    'https://[::101.45.75.219]:80/?hi=bye',
+    'ldap://[::192.9.5.5]/dc=example,dc=com??sub?(sn=Jensen)',
+    'mailto:me@example.com?to=me@example.com&body=hi%20http://wikipedia.org',
+    'news:alt.rec.motorcycle',
+    'tel:+1-800-867-5309',
+    'urn:oasis:member:A00024:x',
+    ('magnet:?xt=urn:btih:1a42b9e04e122b97a5254e3df77ab3c4b7da725f&dn=Puppy%'
+     '20Linux%20precise-5.7.1.iso&tr=udp://tracker.openbittorrent.com:80&'
+     'tr=udp://tracker.publicbt.com:80&tr=udp://tracker.istole.it:6969&'
+     'tr=udp://tracker.ccc.de:80&tr=udp://open.demonii.com:1337'),
 )
 
 
@@ -395,7 +418,7 @@ class TestURL(TestCase):
             URL.fromText("http://www.foo.com/a/nice/path/")
             .add(u"foo", u"bar").asText())
         self.assertEqual(
-            "http://www.foo.com/?foo=bar",
+            "http://www.foo.com?foo=bar",
             URL(host=u"www.foo.com").add(u"foo", u"bar")
             .asText())
         urlpath = URL.fromText(BASIC_URL)
