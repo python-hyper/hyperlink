@@ -41,10 +41,10 @@ except ImportError:
 
 
 try:
-    from urlparse import urlsplit, urlunsplit
+    from urlparse import urlunsplit
     from urllib import quote as urlquote, unquote as urlunquote
 except ImportError:
-    from urllib.parse import (urlsplit, urlunsplit,
+    from urllib.parse import (urlunsplit,
                               quote as urlquote,
                               unquote_to_bytes as urlunquote)
 
@@ -178,7 +178,6 @@ def register_scheme(text, uses_netloc=None, default_port=None):
         raise ValueError('uses_netloc expected True, False, or None')
 
     return
-
 
 
 class URLParseError(ValueError):
