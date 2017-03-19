@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 
 # Copyright (c) Twisted Matrix Laboratories.
 # See LICENSE for details.
@@ -827,3 +828,60 @@ class TestURL(TestCase):
 
     def test_invalid_port(self):
         self.assertRaises(URLParseError, URL.fromText, 'ftp://portmouth:smash')
+
+    def test_idna(self):
+        u1 = URL.fromText('http://bücher.ch')
+        self.assertEquals(u1.host, 'bücher.ch')
+        self.assertEquals(u1.to_text(), 'http://bücher.ch')
+        self.assertEquals(u1.to_uri().to_text(), 'http://xn--bcher-kva.ch')
+
+        u2 = URL.fromText('https://xn--bcher-kva.ch')
+        self.assertEquals(u2.host, 'xn--bcher-kva.ch')
+        self.assertEquals(u2.to_text(), 'https://xn--bcher-kva.ch')
+        self.assertEquals(u2.to_iri().to_text(), u'https://bücher.ch')
+
+    def test_netloc_slashes(self):
+        # basic sanity checks
+        url = URL.from_text('mailto:mahmoud@hatnote.com')
+        self.assertEquals(url.scheme, 'mailto')
+        self.assertEquals(url.to_text(), 'mailto:mahmoud@hatnote.com')
+
+        url = URL.from_text('http://hatnote.com')
+        self.assertEquals(url.scheme, 'http')
+        self.assertEquals(url.to_text(), 'http://hatnote.com')
+
+        # test that unrecognized schemes stay consistent with '//'
+        url = URL.from_text('newscheme:a:b:c')
+        self.assertEquals(url.scheme, 'newscheme')
+        self.assertEquals(url.to_text(), 'newscheme:a:b:c')
+
+        url = URL.from_text('newerscheme://a/b/c')
+        self.assertEquals(url.scheme, 'newerscheme')
+        self.assertEquals(url.to_text(), 'newerscheme://a/b/c')
+
+        # test that reasonable guesses are made
+        url = URL.from_text('git+ftp://gitstub.biz/glyph/lefkowitz')
+        self.assertEquals(url.scheme, 'git+ftp')
+        self.assertEquals(url.to_text(),
+                          'git+ftp://gitstub.biz/glyph/lefkowitz')
+
+        url = URL.from_text('what+mailto:freerealestate@enotuniq.org')
+        self.assertEquals(url.scheme, 'what+mailto')
+        self.assertEquals(url.to_text(),
+                          'what+mailto:freerealestate@enotuniq.org')
+
+        url = URL(scheme='ztp', path=('x', 'y', 'z'), rooted=True)
+        self.assertEquals(url.to_text(), 'ztp:/x/y/z')
+
+        # also works when the input doesn't include '//'
+        # url = URL(scheme='git+ftp', path=('x', 'y', 'z' ,''),
+        #           rooted=True, use_netloc=True)
+        # broken bc urlunsplit
+        # self.assertEquals(url.to_text(), 'git+ftp:///x/y/z/')
+
+        # really why would this ever come up but ok
+        url = URL.from_text('file:///path/to/heck')
+        url2 = url.replace(scheme='mailto')
+        self.assertEquals(url2.to_text(), 'mailto:/path/to/heck')
+
+        return
