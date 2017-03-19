@@ -911,7 +911,6 @@ class URL(object):
             fragment=_percentDecode(self.fragment)
         )
 
-
     def asText(self, includeSecrets=False):
         """
         Convert this URL to its canonical textual representation.
@@ -942,6 +941,10 @@ class URL(object):
         return urlunsplit((self.scheme, self.authority(includeSecrets), path,
                            query, self.fragment))
 
+    to_uri = asURI
+    to_iri = asIRI
+    to_text = asText
+    from_text = fromText
 
     def __repr__(self):
         """
