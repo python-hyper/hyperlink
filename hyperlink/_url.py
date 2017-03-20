@@ -26,7 +26,7 @@ except ImportError:
 
     def inet_pton(address_family, ip_string):
         addr = _sockaddr()
-        ip_string = ip_string.encode('ascii')  # TODO
+        ip_string = ip_string.encode('ascii')
         addr.sa_family = address_family
         addr_size = ctypes.c_int(ctypes.sizeof(addr))
 
@@ -41,10 +41,9 @@ except ImportError:
 
 
 try:
-    from urllib import quote as urlquote, unquote as urlunquote
+    from urllib import unquote as urlunquote
 except ImportError:
-    from urllib.parse import (quote as urlquote,
-                              unquote_to_bytes as urlunquote)
+    from urllib.parse import unquote_to_bytes as urlunquote
 
 from unicodedata import normalize
 
@@ -68,6 +67,10 @@ _validInQuery = (_validInFragment
 _unspecified = object()
 
 
+# The unreserved URI characters (per RFC 3986 Section 2.3)
+_UNRESERVED_CHARS = frozenset('~-._0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ'
+                              'abcdefghijklmnopqrstuvwxyz')
+
 # URL parsing regex (based on RFC 3986 Appendix B, with modifications)
 _URL_RE = re.compile(r'^((?P<scheme>[^:/?#]+):)?'
                      r'((?P<_netloc_sep>//)(?P<authority>[^/?#]*))?'
@@ -82,31 +85,32 @@ _HEX_CHAR_MAP = dict([((a + b).encode('ascii'),
 _ASCII_RE = re.compile('([\x00-\x7f]+)')
 
 
-# The unreserved URI characters (per RFC 3986)
-_UNRESERVED_CHARS = frozenset('~-._0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ'
-                              'abcdefghijklmnopqrstuvwxyz')
-
 # RFC 3986 section 2.2, Reserved Characters
 _GEN_DELIMS = frozenset(u':/?#[]@')
 _SUB_DELIMS = frozenset(u"!$&'()*+,;=")
 _ALL_DELIMS = _GEN_DELIMS | _SUB_DELIMS
 
 _USERINFO_SAFE = _UNRESERVED_CHARS | _SUB_DELIMS
-_PATH_SAFE = _UNRESERVED_CHARS | _SUB_DELIMS | set(u':@')
+_USERINFO_DELIMS = _ALL_DELIMS - _USERINFO_SAFE
+_PATH_SAFE = _UNRESERVED_CHARS | _SUB_DELIMS | set(u':@%')
+_PATH_DELIMS = _ALL_DELIMS - _PATH_SAFE
 _FRAGMENT_SAFE = _UNRESERVED_CHARS | _PATH_SAFE | set(u'/?')
+_FRAGMENT_DELIMS = _ALL_DELIMS - _FRAGMENT_SAFE
 _QUERY_SAFE = _UNRESERVED_CHARS | _FRAGMENT_SAFE - set(u'&=+')
+_QUERY_DELIMS = _ALL_DELIMS - _QUERY_SAFE
 
 
+# TODO: port to unsafe approach
 def _make_quote_map(safe_chars):
     ret = {}
     # v is included in the dict for py3 mostly, because bytestrings
     # are iterables of ints, of course!
     for i, v in zip(range(256), range(256)):
-        c = chr(v)
+        c = unichr(v)
         if c in safe_chars:
             ret[c] = ret[v] = c
         else:
-            ret[c] = ret[v] = '%{0:02X}'.format(i)
+            ret[c] = ret[v] = ret[chr(v)] = '%{0:02X}'.format(i)
     return ret
 
 
@@ -114,6 +118,57 @@ _USERINFO_PART_QUOTE_MAP = _make_quote_map(_USERINFO_SAFE)
 _PATH_PART_QUOTE_MAP = _make_quote_map(_PATH_SAFE)
 _QUERY_PART_QUOTE_MAP = _make_quote_map(_QUERY_SAFE)
 _FRAGMENT_QUOTE_MAP = _make_quote_map(_FRAGMENT_SAFE)
+
+
+def _encode_path_part(text, maximal=True):
+    """Percent-encode a single segment of a URL path.
+
+    Setting *maximal* to False percent-encodes only the reserved
+    characters that are syntactically necessary for serialization,
+    preserving any IRI-style textual data.
+
+    Leaving *maximal* set to its default True percent-encodes
+    everything required to convert a portion of an IRI to a portion of
+    a URI.
+    """
+    if maximal:
+        bytestr = normalize('NFC', to_unicode(text)).encode('utf8')
+        return u''.join([_PATH_PART_QUOTE_MAP[b] for b in bytestr])
+    return u''.join([_PATH_PART_QUOTE_MAP[t] if t in _PATH_DELIMS else t
+                     for t in text])
+
+
+def _encode_query_part(text, maximal=True):
+    """
+    Percent-encode a single query string key or value.
+    """
+    if maximal:
+        bytestr = normalize('NFC', to_unicode(text)).encode('utf8')
+        return u''.join([_QUERY_PART_QUOTE_MAP[b] for b in bytestr])
+    return u''.join([_QUERY_PART_QUOTE_MAP[t] if t in _QUERY_DELIMS else t
+                     for t in text])
+
+
+def _encode_fragment_part(text, maximal=True):
+    """Quote the fragment part of the URL. Fragments don't have
+    subdelimiters, so the whole URL fragment can be passed.
+    """
+    if maximal:
+        bytestr = normalize('NFC', to_unicode(text)).encode('utf8')
+        return u''.join([_FRAGMENT_QUOTE_MAP[b] for b in bytestr])
+    return u''.join([_FRAGMENT_QUOTE_MAP[t] if t in _FRAGMENT_DELIMS else t
+                     for t in text])
+
+
+def _encode_userinfo_part(text, maximal=True):
+    """Quote special characters in either the username or password
+    section of the URL.
+    """
+    if maximal:
+        bytestr = normalize('NFC', to_unicode(text)).encode('utf8')
+        return u''.join([_USERINFO_PART_QUOTE_MAP[b] for b in bytestr])
+    return u''.join([_USERINFO_PART_QUOTE_MAP[t] if t in _USERINFO_DELIMS
+                     else t for t in text])
 
 
 # This port list painstakingly curated by hand searching through
@@ -230,48 +285,6 @@ def _typecheck(name, value, *types):
     return value
 
 
-def _minimalPercentEncode(text, safe):
-    """
-    Percent-encode only the characters that are syntactically necessary for
-    serialization, preserving any IRI-style textual data.
-
-    @param text: the text to escaped
-    @type text: L{unicode}
-
-    @param safe: characters safe to include in the return value
-    @type safe: L{unicode}
-
-    @return: the encoded version of C{text}
-    @rtype: L{unicode}
-    """
-    unsafe = set(_genDelims + _subDelims) - set(safe)
-    return u''.join((c if c not in unsafe else "%{0:02X}".format(ord(c)))
-                    for c in text)
-
-
-def _maximalPercentEncode(text, safe):
-    """
-    Percent-encode everything required to convert a portion of an IRI to a
-    portion of a URI.
-
-    @param text: the text to encode.
-    @type text: L{unicode}
-
-    @param safe: a string of safe characters.
-    @type safe: L{unicode}
-
-    @return: the encoded version of C{text}
-    @rtype: L{unicode}
-    """
-    quoted = urlquote(
-        normalize("NFC", text).encode("utf-8"), (safe + u'%').encode("ascii")
-    )
-    if not isinstance(quoted, unicode):
-        quoted = quoted.decode("ascii")
-    return quoted
-
-
-
 def _percentDecode(text):
     """
     Replace percent-encoded characters with their UTF-8 equivalents.
@@ -320,6 +333,9 @@ def _resolveDotSegments(path):
         segs.append(u'')
 
     return segs
+
+
+DEFAULT_ENCODING = 'utf8'
 
 
 def to_unicode(obj):
@@ -864,15 +880,13 @@ class URL(object):
         """
         return self.replace(
             host=self.host.encode("idna").decode("ascii"),
-            path=(_maximalPercentEncode(segment, _validInPath)
+            path=(_encode_path_part(segment, maximal=True)
                   for segment in self.path),
-            query=(
-                tuple(_maximalPercentEncode(x, _validInQuery)
-                      if x is not None else None
-                      for x in (k, v))
-                for k, v in self.query
-            ),
-            fragment=_maximalPercentEncode(self.fragment, _validInFragment)
+            query=(tuple(_encode_query_part(x, maximal=True)
+                         if x is not None else None
+                         for x in (k, v))
+                   for k, v in self.query),
+            fragment=_encode_fragment_part(self.fragment, maximal=True)
         )
 
 
@@ -931,14 +945,14 @@ class URL(object):
         scheme = self.scheme
         authority = self.authority(includeSecrets)
         path = u'/'.join(([u''] if (self.rooted and self.path) else [])
-                         + [_minimalPercentEncode(segment, _validInPath)
+                         + [_encode_path_part(segment, maximal=False)
                             for segment in self.path])
         query_string = u'&'.join(
-            u'='.join((_minimalPercentEncode(x, _validInQuery)
+            u'='.join((_encode_query_part(x, maximal=False)
                        for x in ([k] if v is None else [k, v])))
             for (k, v) in self.query
         )
-        fragment = self.fragment  # TODO: quote?
+        fragment = self.fragment
 
         parts = []
         _add = parts.append
