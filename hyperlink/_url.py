@@ -100,7 +100,6 @@ _QUERY_SAFE = _UNRESERVED_CHARS | _FRAGMENT_SAFE - set(u'&=+')
 _QUERY_DELIMS = _ALL_DELIMS - _QUERY_SAFE
 
 
-# TODO: port to unsafe approach
 def _make_quote_map(safe_chars):
     ret = {}
     # v is included in the dict for py3 mostly, because bytestrings

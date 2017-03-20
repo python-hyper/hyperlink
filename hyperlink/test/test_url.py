@@ -828,6 +828,8 @@ class TestURL(TestCase):
 
     def test_invalid_port(self):
         self.assertRaises(URLParseError, URL.fromText, 'ftp://portmouth:smash')
+        self.assertRaises(ValueError, URL.fromText,
+                          'http://reader.googlewebsite.com:neverforget')
 
     def test_idna(self):
         u1 = URL.fromText('http://bücher.ch')
