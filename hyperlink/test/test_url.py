@@ -9,6 +9,9 @@ import socket
 from unittest import TestCase
 
 from .. import URL, URLParseError
+# automatically import the py27 windows implementation when appropriate
+from .._url import inet_pton
+
 unicode = type(u'')
 
 
@@ -811,9 +814,8 @@ class TestURL(TestCase):
                             '::256.0.0.1']
         for ip in invalid_ipv6_ips:
             url_text = 'http://[' + ip + ']'
-            if hasattr(socket, 'inet_pton'):
-                self.assertRaises(socket.error, socket.inet_pton,
-                                  socket.AF_INET6, ip)
+            self.assertRaises(socket.error, inet_pton,
+                              socket.AF_INET6, ip)
             self.assertRaises(URLParseError, URL.fromText, url_text)
 
     def test_ip_family_detection(self):
