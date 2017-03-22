@@ -828,15 +828,15 @@ class URL(object):
         @see: RFC 3986 section 5, Reference Resolution
         """
         _typecheck("relative URL", href)
-        if not len(href):
-            return self
-
-        clicked = URL.fromText(href)
+        if href:
+            clicked = URL.fromText(href)
+            if clicked.absolute:
+                return clicked
+        else:
+            clicked = self
 
         query = clicked.query
-        if clicked.absolute:
-            return clicked
-        elif clicked.scheme and not clicked.rooted:
+        if clicked.scheme and not clicked.rooted:
             # Schemes with relative paths are not well-defined.  RFC 3986 calls
             # them a "loophole in prior specifications" that should be avoided,
             # or supported only for backwards compatibility.
