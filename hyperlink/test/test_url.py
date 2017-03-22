@@ -347,6 +347,12 @@ class TestURL(TestCase):
         self.assertEqual(u.click('http://www.python.org').asText(),
                          'http://www.python.org')
 
+        # https://twistedmatrix.com/trac/ticket/8184
+        u = URL.fromText('http://hatnote.com/a/b/../c/./d/e/..')
+        self.assertEqual(u.click('').asText(),
+                         'http://hatnote.com/a/c/d/')
+
+
     def test_clickRFC3986(self):
         """
         L{URL.click} should correctly resolve the examples in RFC 3986.
@@ -484,8 +490,7 @@ class TestURL(TestCase):
         self.assertEqual(u.get(''), ['x=x=x'])
         self.assertEqual(u.asText(), 'http://localhost/?=x%3Dx%3Dx')
         u = URL.fromText('http://localhost/?foo=x=x=x&bar=y')
-        self.assertEqual(u.query, (('foo', 'x=x=x'),
-                                             ('bar', 'y')))
+        self.assertEqual(u.query, (('foo', 'x=x=x'), ('bar', 'y')))
         self.assertEqual(u.asText(), 'http://localhost/?foo=x%3Dx%3Dx&bar=y')
 
     def test_empty(self):
