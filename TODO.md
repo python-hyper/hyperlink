@@ -3,8 +3,6 @@
 * Optimize percent decoding
 * README
 * pct encode userinfo
-* better error on URL constructor (single string argument leads to succesful instantiation with invalid scheme)
-* resolve dots on (empty) click
 
 ## Complete
 
@@ -13,6 +11,8 @@
 * Add netloc detection logic
 * Speed up percent encoding with urlutils approach
 * More default ports
+* resolve dots on (empty) click
+* better error on URL constructor (single string argument leads to succesful instantiation with invalid scheme)
 
 
 ## Questions
