@@ -894,3 +894,11 @@ class TestURL(TestCase):
         self.assertEquals(url2.to_text(), 'mailto:/path/to/heck')
 
         return
+
+    def test_wrong_constructor(self):
+        with self.assertRaises(ValueError):
+            # whole URL not allowed
+            URL(BASIC_URL)
+        with self.assertRaises(ValueError):
+            # explicitly bad scheme not allowed
+            URL('HTTP_____more_like_imHoTTeP')
