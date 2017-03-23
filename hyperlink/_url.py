@@ -77,6 +77,7 @@ _URL_RE = re.compile(r'^((?P<scheme>[^:/?#]+):)?'
                      r'(?P<path>[^?#]*)'
                      r'(\?(?P<query>[^#]*))?'
                      r'(#(?P<fragment>.*))?')
+_SCHEME_RE = re.compile(r'^[a-zA-Z0-9+-.]*$')
 
 
 _HEX_CHAR_MAP = dict([((a + b).encode('ascii'),
@@ -512,7 +513,7 @@ class URL(object):
         @type userinfo: L{unicode}
         """
         if host is not None and scheme is None:
-            scheme = u'http'
+            scheme = u'http'  # TODO: why
         if port is None:
             port = SCHEME_PORT_MAP.get(scheme)
         if host and query and not path:
@@ -529,6 +530,12 @@ class URL(object):
 
         # Set attributes.
         self._scheme = _typecheck("scheme", scheme)
+        if self._scheme:
+            if not _SCHEME_RE.match(self._scheme):
+                raise ValueError('invalid scheme: %r. Only alphanumeric, "+",'
+                                 ' "-", and "." allowed. Did you meant to call'
+                                 ' %s.from_text()?'
+                                 % (self._scheme, self.__class__.__name__))
         self._host = _typecheck("host", host)
         if isinstance(path, unicode):
             raise TypeError("expected iterable of text for path, not: %r"
