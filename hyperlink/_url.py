@@ -884,7 +884,10 @@ class URL(object):
             US-ASCII range.
         @rtype: L{URL}
         """
+        new_userinfo = u':'.join([_encode_userinfo_part(p) for p in
+                                  self.userinfo.split(':', 1)])
         return self.replace(
+            userinfo=new_userinfo,
             host=self.host.encode("idna").decode("ascii"),
             path=(_encode_path_part(segment, maximal=True)
                   for segment in self.path),
@@ -911,6 +914,8 @@ class URL(object):
             hostname appropriately decoded.
         @rtype: L{URL}
         """
+        new_userinfo = u':'.join([_percentDecode(p) for p in
+                                  self.userinfo.split(':', 1)])
         try:
             asciiHost = self.host.encode("ascii")
         except UnicodeEncodeError:
@@ -918,6 +923,7 @@ class URL(object):
         else:
             textHost = asciiHost.decode("idna")
         return self.replace(
+            userinfo=new_userinfo,
             host=textHost,
             path=[_percentDecode(segment) for segment in self.path],
             query=[
