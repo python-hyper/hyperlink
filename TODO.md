@@ -2,7 +2,6 @@
 
 * Optimize percent decoding
 * README
-* pct encode userinfo
 
 ## Complete
 
@@ -13,9 +12,10 @@
 * More default ports
 * resolve dots on (empty) click
 * better error on URL constructor (single string argument leads to succesful instantiation with invalid scheme)
-
+* pct encode userinfo
 
 ## Questions
 
 * Target readthedocs for documentation? Would require rewriting docstrings.
 * What's the deal with twisted.python.urlpath?
+* What's the deal with sip.URL
