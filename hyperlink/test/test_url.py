@@ -902,3 +902,11 @@ class TestURL(TestCase):
         with self.assertRaises(ValueError):
             # explicitly bad scheme not allowed
             URL('HTTP_____more_like_imHoTTeP')
+
+    def test_encoded_userinfo(self):
+        url = URL.from_text('http://user:pass@example.com')
+        assert url.userinfo == 'user:pass'
+        url = url.replace(userinfo='us%20her:pass')
+        iri = url.to_iri()
+        assert iri.to_text(includeSecrets=True) == 'http://us her:pass@example.com'
+        assert iri.to_uri().to_text(includeSecrets=True) == 'http://us%20her:pass@example.com'
