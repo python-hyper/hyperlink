@@ -2,6 +2,8 @@
 
 * Optimize percent decoding
 * README
+* `__hash__`
+* Get Mark to fix the git history
 
 ## Complete
 
@@ -19,3 +21,4 @@
 * Target readthedocs for documentation? Would require rewriting docstrings.
 * What's the deal with twisted.python.urlpath?
 * What's the deal with sip.URL
+* Do we need a separate .normalize()?
