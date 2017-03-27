@@ -910,3 +910,20 @@ class TestURL(TestCase):
         iri = url.to_iri()
         assert iri.to_text(includeSecrets=True) == 'http://us her:pass@example.com'
         assert iri.to_uri().to_text(includeSecrets=True) == 'http://us%20her:pass@example.com'
+
+    def test_hash(self):
+        url_map = {}
+        url1 = URL.from_text('http://blog.hatnote.com/ask?utm_source=geocity')
+        assert hash(url1) == hash(url1)  # sanity
+
+        url_map[url1] = 1
+
+        url2 = URL.from_text('http://blog.hatnote.com/ask')
+        url2 = url2.set('utm_source', 'geocity')
+
+        url_map[url2] = 2
+
+        assert len(url_map) == 1
+        assert list(url_map.values()) == [2]
+
+        assert hash(URL()) == hash(URL())  # slightly more sanity
