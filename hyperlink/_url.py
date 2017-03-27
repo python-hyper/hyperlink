@@ -655,6 +655,12 @@ class URL(object):
         return not self.__eq__(other)
 
 
+    def __hash__(self):
+        return hash((self.__class__, self.scheme, self.userinfo, self.host,
+                     self.path, self.query, self.fragment, self.port,
+                     self.rooted, self.family, self.uses_netloc))
+
+
     @property
     def absolute(self):
         """
