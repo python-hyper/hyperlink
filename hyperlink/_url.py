@@ -233,6 +233,35 @@ def register_scheme(text, uses_netloc=None, default_port=None):
     return
 
 
+def scheme_uses_netloc(scheme, default=None):
+    """Whether or not a URL uses :code:`:` or :code:`://` to separate the
+    scheme from the rest of the URL depends on the scheme's own
+    standard definition. There is no way to infer this behavior
+    from other parts of the URL. A scheme either supports network
+    locations or it does not.
+
+    The URL type's approach to this is to check for explicitly
+    registered schemes, with common schemes like HTTP
+    preregistered. This is the same approach taken by
+    :mod:`urlparse`.
+
+    URL adds two additional heuristics if the scheme as a whole is
+    not registered. First, it attempts to check the subpart of the
+    scheme after the last ``+`` character. This adds intuitive
+    behavior for schemes like ``git+ssh``. Second, if a URL with
+    an unrecognized scheme is loaded, it will maintain the
+    separator it sees.
+    """
+    scheme = scheme.lower()
+    if scheme in SCHEME_PORT_MAP:
+        return True
+    if scheme in NO_NETLOC_SCHEMES:
+        return False
+    if scheme.split('+')[-1] in SCHEME_PORT_MAP:
+        return True
+    return default
+
+
 class URLParseError(ValueError):
     """Exception inheriting from :exc:`ValueError`, raised when failing to
     parse a URL. Mostly raised on invalid ports and IPv6 addresses.
@@ -553,6 +582,8 @@ class URL(object):
         self._userinfo = _typecheck("userinfo", userinfo)
         self._family = _typecheck("family", family,
                                   type(socket.AF_INET), NoneType)
+        if self._scheme:
+            use_netloc = scheme_uses_netloc(self._scheme, use_netloc)
         self._use_netloc = _typecheck("use_netloc", use_netloc, bool, NoneType)
 
         return
@@ -566,6 +597,7 @@ class URL(object):
     rooted = property(lambda self: self._rooted)
     userinfo = property(lambda self: self._userinfo)
     family = property(lambda self: self._family)
+    uses_netloc = property(lambda self: self._use_netloc)
 
     @property
     def user(self):
@@ -573,36 +605,6 @@ class URL(object):
         The user portion of C{userinfo}; everything up to the first C{":"}.
         """
         return self.userinfo.split(u':')[0]
-
-
-    @property
-    def uses_netloc(self):
-        """Whether or not a URL uses :code:`:` or :code:`://` to separate the
-        scheme from the rest of the URL depends on the scheme's own
-        standard definition. There is no way to infer this behavior
-        from other parts of the URL. A scheme either supports network
-        locations or it does not.
-
-        The URL type's approach to this is to check for explicitly
-        registered schemes, with common schemes like HTTP
-        preregistered. This is the same approach taken by
-        :mod:`urlparse`.
-
-        URL adds two additional heuristics if the scheme as a whole is
-        not registered. First, it attempts to check the subpart of the
-        scheme after the last ``+`` character. This adds intuitive
-        behavior for schemes like ``git+ssh``. Second, if a URL with
-        an unrecognized scheme is loaded, it will maintain the
-        separator it sees.
-        """
-        default = self._use_netloc
-        if self.scheme in SCHEME_PORT_MAP:
-            return True
-        if self.scheme in NO_NETLOC_SCHEMES:
-            return False
-        if self.scheme.split('+')[-1] in SCHEME_PORT_MAP:
-            return True
-        return default
 
 
     def authority(self, includeSecrets=False):
