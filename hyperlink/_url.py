@@ -252,6 +252,8 @@ def scheme_uses_netloc(scheme, default=None):
     an unrecognized scheme is loaded, it will maintain the
     separator it sees.
     """
+    if not scheme:
+        return False
     scheme = scheme.lower()
     if scheme in SCHEME_PORT_MAP:
         return True
@@ -505,7 +507,7 @@ class URL(object):
     """
 
     def __init__(self, scheme=None, host=None, path=(), query=(), fragment=u'',
-                 port=None, rooted=None, userinfo=u'', family=None, use_netloc=None):
+                 port=None, rooted=None, userinfo=u'', family=None, uses_netloc=None):
         """
         Create a new L{URL} from structured information about itself.
 
@@ -582,9 +584,9 @@ class URL(object):
         self._userinfo = _typecheck("userinfo", userinfo)
         self._family = _typecheck("family", family,
                                   type(socket.AF_INET), NoneType)
-        if self._scheme:
-            use_netloc = scheme_uses_netloc(self._scheme, use_netloc)
-        self._use_netloc = _typecheck("use_netloc", use_netloc, bool, NoneType)
+
+        uses_netloc = scheme_uses_netloc(self._scheme, uses_netloc)
+        self._uses_netloc = _typecheck("uses_netloc", uses_netloc, bool, NoneType)
 
         return
 
@@ -597,7 +599,7 @@ class URL(object):
     rooted = property(lambda self: self._rooted)
     userinfo = property(lambda self: self._userinfo)
     family = property(lambda self: self._family)
-    uses_netloc = property(lambda self: self._use_netloc)
+    uses_netloc = property(lambda self: self._uses_netloc)
 
     @property
     def user(self):

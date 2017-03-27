@@ -884,7 +884,7 @@ class TestURL(TestCase):
 
         # also works when the input doesn't include '//'
         url = URL(scheme='git+ftp', path=('x', 'y', 'z' ,''),
-                  rooted=True, use_netloc=True)
+                  rooted=True, uses_netloc=True)
         # broken bc urlunsplit
         self.assertEquals(url.to_text(), 'git+ftp:///x/y/z/')
 
