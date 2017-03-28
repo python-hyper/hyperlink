@@ -728,9 +728,8 @@ class URL(object):
             userinfo=_optional(userinfo, self.userinfo),
         )
 
-
     @classmethod
-    def fromText(cls, s):
+    def from_text(cls, s):
         """
         Parse the given string into a URL object.
 
@@ -793,6 +792,7 @@ class URL(object):
         return cls(scheme, host, path, query, fragment, port,
                    rooted, userinfo, family, uses_netloc)
 
+    fromText = from_text  # twisted compat
 
     def child(self, *segments):
         """
@@ -810,11 +810,9 @@ class URL(object):
         @return: a new L{URL} with the additional path segments.
         @rtype: L{URL}
         """
-        return self.replace(
-            path=self.path[:-1 if (self.path and self.path[-1] == u'')
-                           else None] + segments
-        )
-
+        new_path = self.path[:-1 if (self.path and self.path[-1] == u'')
+                             else None] + segments
+        return self.replace(path=new_path)
 
     def sibling(self, segment):
         """
@@ -828,7 +826,6 @@ class URL(object):
         @rtype: L{URL}
         """
         return self.replace(path=self.path[:-1] + (segment,))
-
 
     def click(self, href):
         """
@@ -857,9 +854,8 @@ class URL(object):
             # Schemes with relative paths are not well-defined.  RFC 3986 calls
             # them a "loophole in prior specifications" that should be avoided,
             # or supported only for backwards compatibility.
-            raise NotImplementedError(
-                'absolute URI with rootless path: %r' % (href,)
-            )
+            raise NotImplementedError('absolute URI with rootless path: %r'
+                                      % (href,))
         else:
             if clicked.rooted:
                 path = clicked.path
@@ -869,17 +865,14 @@ class URL(object):
                 path = self.path
                 if not query:
                     query = self.query
-        return self.replace(
-            scheme=clicked.scheme or self.scheme,
-            host=clicked.host or self.host,
-            port=clicked.port or self.port,
-            path=_resolveDotSegments(path),
-            query=query,
-            fragment=clicked.fragment
-        )
+        return self.replace(scheme=clicked.scheme or self.scheme,
+                            host=clicked.host or self.host,
+                            port=clicked.port or self.port,
+                            path=_resolveDotSegments(path),
+                            query=query,
+                            fragment=clicked.fragment)
 
-
-    def asURI(self):
+    def to_uri(self):
         u"""
         Convert a L{URL} object that potentially contains non-ASCII characters
         into a L{URL} object where all non-ASCII text has been encoded
@@ -908,8 +901,9 @@ class URL(object):
             fragment=_encode_fragment_part(self.fragment, maximal=True)
         )
 
+    asURI = to_uri  # twisted compat
 
-    def asIRI(self):
+    def to_iri(self):
         """
         Convert a L{URL} object that potentially contains text that has been
         percent-encoded or IDNA encoded into a L{URL} object containing the
@@ -945,11 +939,13 @@ class URL(object):
             fragment=_percentDecode(self.fragment)
         )
 
-    def asText(self, includeSecrets=False):
+    asIRI = to_iri  # Twisted compat
+
+    def to_text(self, include_secrets=False):
         """
         Convert this URL to its canonical textual representation.
 
-        @param includeSecrets: Should the returned textual representation
+        @param include_secrets: Should the returned textual representation
             include potentially sensitive information?  The default, C{False},
             if not; C{True} if so.  Quoting from RFC3986, section 3.2.1:
 
@@ -958,14 +954,14 @@ class URL(object):
             unless the data after the colon is the empty string (indicating no
             password)."
 
-        @type includeSecrets: L{bool}
+        @type include_secrets: L{bool}
 
         @return: The serialized textual representation of this L{URL}, such as
             C{u"http://example.com/some/path?some=query"}.
         @rtype: L{unicode}
         """
         scheme = self.scheme
-        authority = self.authority(includeSecrets)
+        authority = self.authority(include_secrets)
         path = u'/'.join(([u''] if (self.rooted and self.path) else [])
                          + [_encode_path_part(segment, maximal=False)
                             for segment in self.path])
@@ -998,17 +994,15 @@ class URL(object):
             _add(fragment)
         return u''.join(parts)
 
-    to_uri = asURI
-    to_iri = asIRI
-    to_text = asText
-    from_text = fromText
+    def asText(self, includeSecrets=False):  # twisted compat
+        return self.to_text(include_secrets=includeSecrets)
 
     def __repr__(self):
         """
         Convert this URL to an C{eval}-able representation that shows all of
         its constituent parts.
         """
-        return 'URL.fromText(%r)' % self.asText()
+        return '%s.fromText(%r)' % (self.__class__.__name__, self.asText())
 
     def add(self, name, value=None):
         """
@@ -1031,7 +1025,6 @@ class URL(object):
         @return: a new L{URL} with the parameter added.
         """
         return self.replace(query=self.query + ((name, value),))
-
 
     def set(self, name, value=None):
         """
@@ -1061,7 +1054,6 @@ class URL(object):
         q[idx:idx] = [(name, value)]
         return self.replace(query=q)
 
-
     def get(self, name):
         """
         Retrieve a list of values for the given named query parameter.
@@ -1076,7 +1068,6 @@ class URL(object):
         @rtype: L{list} of L{unicode}
         """
         return [value for (key, value) in self.query if name == key]
-
 
     def remove(self, name):
         """
