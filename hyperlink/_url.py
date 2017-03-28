@@ -643,8 +643,8 @@ class URL(object):
         """
         if not isinstance(other, self.__class__):
             return NotImplemented
-        for attr in ['scheme', 'host', 'path', 'query',
-                     'fragment', 'port', 'rooted']:
+        for attr in ['scheme', 'userinfo', 'host', 'path', 'query',
+                     'fragment', 'port', 'rooted', 'family', 'uses_netloc']:
             if getattr(self, attr) != getattr(other, attr):
                 return False
         return True
