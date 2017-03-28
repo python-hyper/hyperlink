@@ -51,7 +51,7 @@ unicode = type(u'')
 try:
     unichr
 except NameError:
-    unichr = chr
+    unichr = chr  # py3
 NoneType = type(None)
 
 
@@ -106,11 +106,11 @@ def _make_quote_map(safe_chars):
     # v is included in the dict for py3 mostly, because bytestrings
     # are iterables of ints, of course!
     for i, v in zip(range(256), range(256)):
-        c = unichr(v)
+        c = chr(v)
         if c in safe_chars:
             ret[c] = ret[v] = c
         else:
-            ret[c] = ret[v] = ret[chr(v)] = '%{0:02X}'.format(i)
+            ret[c] = ret[v] = '%{0:02X}'.format(i)
     return ret
 
 
