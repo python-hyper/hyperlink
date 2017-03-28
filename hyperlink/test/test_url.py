@@ -517,8 +517,8 @@ class TestURL(TestCase):
         """
         URLs with equivalent components should compare equal.
         """
-        u1 = URL.fromText('http://localhost/')
-        u2 = URL.fromText('http://localhost/')
+        u1 = URL.fromText('http://u@localhost:8080/p/a/t/h?q=p#f')
+        u2 = URL.fromText('http://u@localhost:8080/p/a/t/h?q=p#f')
         self.assertEqual(u1, u2)
 
     def test_differentNotEqual(self):
@@ -545,15 +545,15 @@ class TestURL(TestCase):
         """
         Identical L{URL}s are not unequal (C{!=}) to each other.
         """
-        u = URL.fromText('http://localhost/')
+        u = URL.fromText('http://u@localhost:8080/p/a/t/h?q=p#f')
         self.assertFalse(u != u, "%r == itself" % u)
 
     def test_similarNotUnequal(self):
         """
         Structurally similar L{URL}s are not unequal (C{!=}) to each other.
         """
-        u1 = URL.fromText('http://localhost/')
-        u2 = URL.fromText('http://localhost/')
+        u1 = URL.fromText('http://u@localhost:8080/p/a/t/h?q=p#f')
+        u2 = URL.fromText('http://u@localhost:8080/p/a/t/h?q=p#f')
         self.assertFalse(u1 != u2, "%r == %r" % (u1, u2))
 
     def test_differentUnequal(self):
