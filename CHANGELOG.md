@@ -13,6 +13,7 @@
 * IPv6 support
 * Faster, regex-based parsing
 * URLParseError type for errors while parsing URLs
+* URL is now hashable, so feel free to use URLs as keys in dicts
 
 ## Pre-17.0.0
 
