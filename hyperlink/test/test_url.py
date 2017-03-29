@@ -927,3 +927,10 @@ class TestURL(TestCase):
         assert list(url_map.values()) == [2]
 
         assert hash(URL()) == hash(URL())  # slightly more sanity
+
+    def test_dir(self):
+        url = URL()
+        res = dir(url)
+
+        assert len(res) > 15
+        assert 'fromText' not in res
