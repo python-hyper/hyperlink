@@ -316,7 +316,7 @@ def _typecheck(name, value, *types):
     return value
 
 
-def _percentDecode(text):
+def _percent_decode(text):
     """
     Replace percent-encoded characters with their UTF-8 equivalents.
 
@@ -337,8 +337,7 @@ def _percentDecode(text):
         return text
 
 
-
-def _resolveDotSegments(path):
+def _resolve_dot_segments(path):
     """
     Normalise the URL path by resolving segments of '.' and '..'.
 
@@ -863,7 +862,7 @@ class URL(object):
         return self.replace(scheme=clicked.scheme or self.scheme,
                             host=clicked.host or self.host,
                             port=clicked.port or self.port,
-                            path=_resolveDotSegments(path),
+                            path=_resolve_dot_segments(path),
                             query=query,
                             fragment=clicked.fragment)
 
@@ -911,7 +910,7 @@ class URL(object):
             hostname appropriately decoded.
         @rtype: L{URL}
         """
-        new_userinfo = u':'.join([_percentDecode(p) for p in
+        new_userinfo = u':'.join([_percent_decode(p) for p in
                                   self.userinfo.split(':', 1)])
         try:
             asciiHost = self.host.encode("ascii")
@@ -919,19 +918,15 @@ class URL(object):
             textHost = self.host
         else:
             textHost = asciiHost.decode("idna")
-        return self.replace(
-            userinfo=new_userinfo,
-            host=textHost,
-            path=[_percentDecode(segment) for segment in self.path],
-            query=[
-                tuple(_percentDecode(x)
-                      if x is not None else None
-                      for x in (k, v))
-                for k, v in self.query
-            ],
-            fragment=_percentDecode(self.fragment)
-        )
-
+        return self.replace(userinfo=new_userinfo,
+                            host=textHost,
+                            path=[_percent_decode(segment)
+                                  for segment in self.path],
+                            query=[tuple(_percent_decode(x)
+                                         if x is not None else None
+                                         for x in (k, v))
+                                   for k, v in self.query],
+                            fragment=_percent_decode(self.fragment))
 
     def to_text(self, include_secrets=False):
         """
