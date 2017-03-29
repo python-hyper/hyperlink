@@ -413,7 +413,6 @@ def parse_host(host):
     return family, host
 
 
-
 class URL(object):
     u"""
     A L{URL} represents a URL and provides a convenient API for modifying its
@@ -608,8 +607,7 @@ class URL(object):
         """
         return self.userinfo.split(u':')[0]
 
-
-    def authority(self, includeSecrets=False):
+    def authority(self, include_secrets=False, **kw):
         """
         Compute and return the appropriate host/port/userinfo combination.
 
@@ -621,6 +619,10 @@ class URL(object):
             of the URL.
         @rtype: L{unicode}
         """
+        # first, a bit of twisted compat
+        include_secrets = kw.pop('includeSecrets', include_secrets)
+        if kw:
+            raise TypeError('got unexpected keyword arguments: %r' % kw.keys())
         if self.family == socket.AF_INET6:
             hostport = ['[' + self.host + ']']
         else:
@@ -630,12 +632,11 @@ class URL(object):
         authority = []
         if self.userinfo:
             userinfo = self.userinfo
-            if not includeSecrets and u":" in userinfo:
+            if not include_secrets and u":" in userinfo:
                 userinfo = userinfo[:userinfo.index(u":") + 1]
             authority.append(userinfo)
         authority.append(u":".join(hostport))
         return u"@".join(authority)
-
 
     def __eq__(self, other):
         """
@@ -649,7 +650,6 @@ class URL(object):
                 return False
         return True
 
-
     def __ne__(self, other):
         """
         L{URL}s are unequal to L{URL} objects whose attributes are unequal.
@@ -658,12 +658,10 @@ class URL(object):
             return NotImplemented
         return not self.__eq__(other)
 
-
     def __hash__(self):
         return hash((self.__class__, self.scheme, self.userinfo, self.host,
                      self.path, self.query, self.fragment, self.port,
                      self.rooted, self.family, self.uses_netloc))
-
 
     @property
     def absolute(self):
@@ -672,7 +670,6 @@ class URL(object):
         relative to a base-URI?
         """
         return bool(self.scheme and self.host)
-
 
     def replace(self, scheme=_unspecified, host=_unspecified,
                 path=_unspecified, query=_unspecified,
@@ -792,8 +789,6 @@ class URL(object):
         return cls(scheme, host, path, query, fragment, port,
                    rooted, userinfo, family, uses_netloc)
 
-    fromText = from_text  # twisted compat
-
     def child(self, *segments):
         """
         Construct a L{URL} where the given path segments are a child of this
@@ -901,8 +896,6 @@ class URL(object):
             fragment=_encode_fragment_part(self.fragment, maximal=True)
         )
 
-    asURI = to_uri  # twisted compat
-
     def to_iri(self):
         """
         Convert a L{URL} object that potentially contains text that has been
@@ -939,7 +932,6 @@ class URL(object):
             fragment=_percentDecode(self.fragment)
         )
 
-    asIRI = to_iri  # Twisted compat
 
     def to_text(self, include_secrets=False):
         """
@@ -994,15 +986,28 @@ class URL(object):
             _add(fragment)
         return u''.join(parts)
 
-    def asText(self, includeSecrets=False):  # twisted compat
-        return self.to_text(include_secrets=includeSecrets)
-
     def __repr__(self):
         """
         Convert this URL to an C{eval}-able representation that shows all of
         its constituent parts.
         """
         return '%s.fromText(%r)' % (self.__class__.__name__, self.asText())
+
+    # # Begin Twisted Compat Code
+    fromText = from_text
+    asURI = to_uri
+    asIRI = to_iri
+
+    def asText(self, includeSecrets=False):
+        return self.to_text(include_secrets=includeSecrets)
+
+    def __dir__(self):
+        # object.__dir__ == AttributeError  # pdw
+        ret = dir(self.__class__) + list(self.__dict__.keys())
+        ret = sorted(set(ret) - set(['fromText', 'asURI', 'asIRI', 'asText']))
+        return ret
+
+    # # End Twisted Compat Code
 
     def add(self, name, value=None):
         """
