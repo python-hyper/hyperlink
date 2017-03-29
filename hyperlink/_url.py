@@ -997,8 +997,11 @@ class URL(object):
         return self.to_text(include_secrets=includeSecrets)
 
     def __dir__(self):
-        # object.__dir__ == AttributeError  # pdw
-        ret = dir(self.__class__) + list(self.__dict__.keys())
+        try:
+            ret = object.__dir__(self)
+        except AttributeError:
+            # object.__dir__ == AttributeError  # pdw for py2
+            ret = dir(self.__class__) + list(self.__dict__.keys())
         ret = sorted(set(ret) - set(['fromText', 'asURI', 'asIRI', 'asText']))
         return ret
 
