@@ -86,6 +86,13 @@ Values can be modified and added using :meth:`~URL.set()` and
 
 Values can be unset with :meth:`~URL.remove()`.
 
+   >>> url = url.remove(u'a')
+   >>> url = url.remove(u'c')
+   >>> url.to_text()
+   u'http://example.com/?x=z'
+
+Note how all modifying methods return copies of the URL and do not
+mutate the URL in place, much like methods on strings.
 """
 
 import re
