@@ -934,3 +934,12 @@ class TestURL(TestCase):
 
         assert len(res) > 15
         assert 'fromText' not in res
+
+    def test_set_ordering(self):
+        # TODO
+        url = URL.from_text('http://example.com/?a=b&c')
+        url = url.set(u'x', u'x')
+        url = url.add(u'x', u'y')
+        assert url.to_text() == u'http://example.com/?a=b&x=x&c&x=y'
+        # Would expect:
+        # assert url.to_text() == u'http://example.com/?a=b&c&x=x&x=y'
