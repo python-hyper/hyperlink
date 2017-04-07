@@ -768,9 +768,9 @@ class URL(object):
 
     @property
     def absolute(self):
-        """
-        Is this URL complete enough to resolve a resource without resolution
-        relative to a base-URI?
+        """Whether or not the URL is "absolute", meaning that has both a
+        scheme and a host set. This means it's complete enough to
+        resolve to a resource without resolution relative to a base URI.
         """
         return bool(self.scheme and self.host)
 
@@ -886,52 +886,67 @@ class URL(object):
                    rooted, userinfo, family, uses_netloc)
 
     def child(self, *segments):
-        """
-        Construct a L{URL} where the given path segments are a child of this
-        url, presering the query and fragment.
+        """Make a new :class:`URL` where the given path segments are a child
+        of this URL, preserving other parts of the URL, including the
+        query string and fragment.
 
         For example::
 
-            >>> URL.fromText(u"http://localhost/a/b?x=y").child(u"c", u"d").asText()
+            >>> url = URL.fromText(u"http://localhost/a/b?x=y")
+            >>> child_url = url.child(u"c", u"d")
+            >>> child_url.to_text()
             u'http://localhost/a/b/c/d?x=y'
 
-        @param segments: A path segment.
-        @type segments: L{tuple} of L{unicode}
+        Args:
+           segments (str): Additional parts to be joined and added to the
+              path, like :func:`os.path.join`.
+
+        Returns:
+           URL: A copy of the current URL with the extra path segments.
 
         @return: a new L{URL} with the additional path segments.
         @rtype: L{URL}
+
         """
         new_path = self.path[:-1 if (self.path and self.path[-1] == u'')
                              else None] + segments
         return self.replace(path=new_path)
 
     def sibling(self, segment):
-        """
-        Construct a url where the given path segment is a sibling of this url.
+        """Make a new :class:`URL` with a single path segment that is a
+        sibling of this URL path.
 
-        @param segment: A path segment.
-        @type segment: L{unicode}
+        Args:
+           segment (str): A single path segment.
 
-        @return: a new L{URL} with its final path segment replaced with
-            C{segment}.
-        @rtype: L{URL}
+        Returns:
+           URL: A copy of the current URL with the last path segment
+              replaced by *segment*.
         """
         return self.replace(path=self.path[:-1] + (segment,))
 
     def click(self, href):
+        """Resolve the given URL relative to this URL.
+
+        The resulting URI should match what a web browser would
+        generate if you visited the current URL and clicked on *href*.
+
+           >>> url = URL.from_text('http://blog.hatnote.com/')
+           >>> url.click(u'/post/155074058790').to_text()
+           u'http://blog.hatnote.com/post/155074058790'
+           >>> url = URL.from_text('http://localhost/a/b/c/')
+           >>> url.click(u'../d/./e').to_text()
+           u'http://localhost/a/b/d/e'
+
+        Args:
+            href (str): A string representing a clicked URL.
+
+        Return:
+            URL: A copy of the current URL with navigation logic applied.
+
+        For more information, see RFC 3986 section 5.
         """
-        Resolve the given URI reference relative to this (base) URI.
-
-        The resulting URI should match what a web browser would generate if you
-        click on C{href} in the context of this URI.
-
-        @param href: a URI reference
-        @type href: L{unicode} or ASCII L{str}
-
-        @return: a new absolute L{URL}
-
-        @see: RFC 3986 section 5, Reference Resolution
-        """
+        # TODO: default arg? URL arg?
         _typecheck("relative URL", href)
         if href:
             clicked = URL.fromText(href)
