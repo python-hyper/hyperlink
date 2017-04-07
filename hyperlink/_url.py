@@ -55,7 +55,7 @@ to be used in sets, as well as dictionary keys.
 Query Parameters
 ----------------
 
-One of the format's most powerful features is query parameters,
+One of the URL format's most powerful features is query parameters,
 encoded in the query string portion of the URL.
 
 Query parameters are actually a type of "multidict", where a given key
@@ -598,40 +598,52 @@ class URL(object):
 
     def __init__(self, scheme=None, host=None, path=(), query=(), fragment=u'',
                  port=None, rooted=None, userinfo=u'', family=None, uses_netloc=None):
-        """
-        Create a new L{URL} from structured information about itself.
+        """From blogs to billboards, URLs are so common, that it's easy to
+        overlook their complexity and power. With hyperlink's
+        :class:`URL` type, working with URLs doesn't have to be hard.
 
-        @ivar scheme: The URI scheme.
-        @type scheme: L{unicode}
+        The URL constructor builds a URL from its individual
+        parts. Most of these parts are officially named in RFC 3986
+        and this diagram may prove handy in identifying them::
 
-        @ivar host: The host portion of the netloc.
-        @type host: L{unicode}
+           foo://user:pass@example.com:8042/over/there?name=ferret#nose
+           \_/   \_______/ \_________/ \__/\_________/ \_________/ \__/
+            |        |          |        |      |           |        |
+          scheme  userinfo     host     port   path       query   fragment
 
-        @ivar port: The port number indicated by this URL, or L{None} if none
-            is indicated.  (This is only L{None} if the default port for the
-            scheme is unknown; if the port number is unspecified in the text of
-            a URL, this will still be set to the default port for that scheme.)
-        @type port: L{int} or L{None}
 
-        @ivar path: The path segments.
-        @type path: Iterable of L{unicode}.
+        The :class:`URL` constructor does not do much value checking,
+        beyond type checks. All strings are expected to be decoded
+        (:class:`unicode` in Python 2). All arguments default to
+        respective empty values, so ``URL()`` is valid.
 
-        @ivar query: The query parameters, as name-value pairs
-        @type query: Iterable of pairs of L{unicode} (or L{None}, for values).
+        Args:
+           scheme (str): The text name of the scheme.
+           host (str): The host portion of the network location
+           port (int): The port part of the network location. If
+              ``None`` or no port is passed, the port will default to
+              the default port of the scheme, if it is known. See the
+              ``SCHEME_PORT_MAP`` and :func:`register_default_port`
+              for more info.
+           path (tuple): A tuple of strings representing the
+              slash-separated parts of the path.
+           query (tuple): The query parameters, as a tuple of
+              key-value pairs.
+           fragment (str): The fragment part of the URL.
+           rooted (bool): Whether or not the path begins with a slash.
+           userinfo (str): The username or colon-separated
+              username:password pair.
+           family: A socket module constant used when the host is an
+              IP constant to differentiate IPv4 and domain names, as
+              well as validate IPv6.
+           uses_netloc (bool): Indicates whether two slashes appear
+              between the scheme and the host (``http://eg.com`` vs
+              ``mailto:e@g.com``)
 
-        @ivar fragment: The fragment identifier.
-        @type fragment: L{unicode}
+        All of these parts are also exposed as read-only attributes of
+        URL instances, along with several useful methods. See below
+        for more info!
 
-        @ivar rooted: Does the path start with a C{/}?  This is taken from the
-            terminology in the BNF grammar, specifically the C{path-rootless},
-            rule, since "absolute path" and "absolute URI" are somewhat
-            ambiguous.  C{path} does not contain the implicit prefixed C{"/"}
-            since that is somewhat awkward to work with.
-        @type rooted: L{bool}
-
-        @ivar userinfo: The username and password portions of the URL, if
-            specified, separated with colons.
-        @type userinfo: L{unicode}
         """
         if host is not None and scheme is None:
             scheme = u'http'  # TODO: why
@@ -766,44 +778,37 @@ class URL(object):
                 path=_unspecified, query=_unspecified,
                 fragment=_unspecified, port=_unspecified,
                 rooted=_unspecified, userinfo=_unspecified):
-        """
-        Make a new instance of C{self.__class__}, passing along the given
-        arguments to its constructor.
+        """:class:`URL` objects are immutable, which means that attributes
+        are designed to be set only once, at construction. Instead of
+        modifying an existing URL, one simply creates a copy with the
+        desired changes.
 
-        @param scheme: the scheme of the new URL; if unspecified, the scheme of
-            this URL.
-        @type scheme: L{unicode}
+        If any of the following arguments is omitted, it defaults to
+        the value on the current URL.
 
-        @param host: the host of the new URL; if unspecified, the host of this
-            URL.
-        @type host: L{unicode}
+        Args:
+           scheme (str): The text name of the scheme.
+           host (str): The host portion of the network location
+           port (int): The port part of the network location.
+           path (tuple): A tuple of strings representing the
+              slash-separated parts of the path.
+           query (tuple): The query parameters, as a tuple of
+              key-value pairs.
+           fragment (str): The fragment part of the URL.
+           rooted (bool): Whether or not the path begins with a slash.
+           userinfo (str): The username or colon-separated
+              username:password pair.
+           family: A socket module constant used when the host is an
+              IP constant to differentiate IPv4 and domain names, as
+              well as validate IPv6.
+           uses_netloc (bool): Indicates whether two slashes appear
+              between the scheme and the host (``http://eg.com`` vs
+              ``mailto:e@g.com``)
 
-        @param path: the path segments of the new URL; if unspecified, the path
-            segments of this URL.
-        @type path: iterable of L{unicode}
+        Returns:
+           URL: a copy of the current :class:`URL`, with new values for
+              parameters passed.
 
-        @param query: the query elements of the new URL; if unspecified, the
-            query segments of this URL.
-        @type query: iterable of 2-L{tuple}s of key, value.
-
-        @param fragment: the fragment of the new URL; if unspecified, the query
-            segments of this URL.
-        @type fragment: L{unicode}
-
-        @param port: the port of the new URL; if unspecified, the port of this
-            URL.
-        @type port: L{int}
-
-        @param rooted: C{True} if the given C{path} are meant to start at the
-            root of the host; C{False} otherwise.  Only meaningful for relative
-            URIs.
-        @type rooted: L{bool}
-
-        @param userinfo: A string indicating information about an authenticated
-            user.
-        @type userinfo: L{unicode}
-
-        @return: a new L{URL}.
         """
         return self.__class__(
             scheme=_optional(scheme, self.scheme),
