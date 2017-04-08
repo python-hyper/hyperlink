@@ -522,13 +522,13 @@ class URL(object):
 
         >>> from hyperlink import URL
         >>> url = URL(scheme=u'https', host=u'example.com', path=[u'hello', u'world'])
-        >>> print(url.asText())
+        >>> print(url.to_text())
         https://example.com/hello/world
 
-    Or you can use the L{fromText} method you can see in the output there::
+    Or you can use the L{from_text} method you can see in the output there::
 
-        >>> url = URL.fromText(u'https://example.com/hello/world')
-        >>> print(url.asText())
+        >>> url = URL.from_text(u'https://example.com/hello/world')
+        >>> print(url.to_text())
         https://example.com/hello/world
 
     There are two major advantages of using L{URL} over representing URLs as
@@ -536,10 +536,10 @@ class URL(object):
     hyperlink, for example, when crawling documents, to figure out what is
     linked::
 
-        >>> URL.fromText(u'https://example.com/base/uri/').click(u"/absolute")
-        URL.fromText(u'https://example.com/absolute')
-        >>> URL.fromText(u'https://example.com/base/uri/').click(u"rel/path")
-        URL.fromText(u'https://example.com/base/uri/rel/path')
+        >>> URL.from_text(u'https://example.com/base/uri/').click(u"/absolute")
+        URL.from_text(u'https://example.com/absolute')
+        >>> URL.from_text(u'https://example.com/base/uri/').click(u"rel/path")
+        URL.from_text(u'https://example.com/base/uri/rel/path')
 
     The other is that URLs have two normalizations.  One representation is
     suitable for humans to read, because it can represent data from many
@@ -550,10 +550,10 @@ class URL(object):
     e representations according to certain rules.  L{URL} exposes these
     conversions as methods::
 
-        >>> URL.fromText(u"https://→example.com/foo⇧bar/").asURI()
-        URL.fromText(u'https://xn--example-dk9c.com/foo%E2%87%A7bar/')
-        >>> URL.fromText(u'https://xn--example-dk9c.com/foo%E2%87%A7bar/').asIRI()
-        URL.fromText(u'https://\\u2192example.com/foo\\u21e7bar/')
+        >>> URL.from_text(u"https://→example.com/foo⇧bar/").to_uri()
+        URL.from_text(u'https://xn--example-dk9c.com/foo%E2%87%A7bar/')
+        >>> URL.from_text(u'https://xn--example-dk9c.com/foo%E2%87%A7bar/').to_iri()
+        URL.from_text(u'https://\\u2192example.com/foo\\u21e7bar/')
 
     @see: U{RFC 3986, Uniform Resource Identifier (URI): Generic Syntax
         <https://tools.ietf.org/html/rfc3986>}
@@ -892,7 +892,7 @@ class URL(object):
 
         For example::
 
-            >>> url = URL.fromText(u"http://localhost/a/b?x=y")
+            >>> url = URL.from_text(u"http://localhost/a/b?x=y")
             >>> child_url = url.child(u"c", u"d")
             >>> child_url.to_text()
             u'http://localhost/a/b/c/d?x=y'
@@ -949,7 +949,7 @@ class URL(object):
         # TODO: default arg? URL arg?
         _typecheck("relative URL", href)
         if href:
-            clicked = URL.fromText(href)
+            clicked = URL.from_text(href)
             if clicked.absolute:
                 return clicked
         else:
@@ -985,8 +985,8 @@ class URL(object):
         appropriately.  This is useful to do in preparation for sending a
         L{URL}, or portions of it, over a wire protocol.  For example::
 
-            >>> URL.fromText(u"https://→example.com/foo⇧bar/").asURI()
-            URL.fromText(u'https://xn--example-dk9c.com/foo%E2%87%A7bar/')
+            >>> URL.from_text(u"https://→example.com/foo⇧bar/").to_uri()
+            URL.from_text(u'https://xn--example-dk9c.com/foo%E2%87%A7bar/')
 
         @return: a new L{URL} with its path-segments, query-parameters, and
             hostname appropriately decoded, so that they are all in the
@@ -1015,8 +1015,8 @@ class URL(object):
 
         For example::
 
-            >>> URL.fromText(u'https://xn--example-dk9c.com/foo%E2%87%A7bar/').asIRI()
-            URL.fromText(u'https://\u2192example.com/foo\u21e7bar/')
+            >>> URL.from_text(u'https://xn--example-dk9c.com/foo%E2%87%A7bar/').to_iri()
+            URL.from_text(u'https://\u2192example.com/foo\u21e7bar/')
 
         @return: a new L{URL} with its path-segments, query-parameters, and
             hostname appropriately decoded.
@@ -1098,7 +1098,7 @@ class URL(object):
         Convert this URL to an C{eval}-able representation that shows all of
         its constituent parts.
         """
-        return '%s.fromText(%r)' % (self.__class__.__name__, self.asText())
+        return '%s.from_text(%r)' % (self.__class__.__name__, self.to_text())
 
     # # Begin Twisted Compat Code
     fromText = from_text
@@ -1124,10 +1124,10 @@ class URL(object):
         Create a new L{URL} with a given query argument, C{name}, added to it
         with the value C{value}, like so::
 
-            >>> URL.fromText(u'https://example.com/?x=y').add(u'x')
-            URL.fromText(u'https://example.com/?x=y&x')
-            >>> URL.fromText(u'https://example.com/?x=y').add(u'x', u'z')
-            URL.fromText(u'https://example.com/?x=y&x=z')
+            >>> URL.from_text(u'https://example.com/?x=y').add(u'x')
+            URL.from_text(u'https://example.com/?x=y&x')
+            >>> URL.from_text(u'https://example.com/?x=y').add(u'x', u'z')
+            URL.from_text(u'https://example.com/?x=y&x=z')
 
         @param name: The name (the part before the C{=}) of the query parameter
             to add.
@@ -1147,10 +1147,10 @@ class URL(object):
         C{name}, if any, removed, then add the argument with the given value,
         like so::
 
-            >>> URL.fromText(u'https://example.com/?x=y').set(u'x')
-            URL.fromText(u'https://example.com/?x')
-            >>> URL.fromText(u'https://example.com/?x=y').set(u'x', u'z')
-            URL.fromText(u'https://example.com/?x=z')
+            >>> URL.from_text(u'https://example.com/?x=y').set(u'x')
+            URL.from_text(u'https://example.com/?x')
+            >>> URL.from_text(u'https://example.com/?x=y').set(u'x', u'z')
+            URL.from_text(u'https://example.com/?x=z')
 
         @param name: The name (the part before the C{=}) of the query parameter
             to add.
