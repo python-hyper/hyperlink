@@ -979,19 +979,19 @@ class URL(object):
                             fragment=clicked.fragment)
 
     def to_uri(self):
-        u"""
-        Convert a L{URL} object that potentially contains non-ASCII characters
-        into a L{URL} object where all non-ASCII text has been encoded
-        appropriately.  This is useful to do in preparation for sending a
-        L{URL}, or portions of it, over a wire protocol.  For example::
+        u""" Make a new :class:`URL` instance with all non-ASCII characters
+        appropriately percent-encoded.  This is useful to do in preparation
+        for sending a :class:`URL` over a network protocol.
+
+        For example::
 
             >>> URL.from_text(u"https://→example.com/foo⇧bar/").to_uri()
             URL.from_text(u'https://xn--example-dk9c.com/foo%E2%87%A7bar/')
 
-        @return: a new L{URL} with its path-segments, query-parameters, and
-            hostname appropriately decoded, so that they are all in the
+        Returns:
+            URL: A new instance with its path segments, query parameters, and
+            hostname encoded, so that they are all in the standard
             US-ASCII range.
-        @rtype: L{URL}
         """
         new_userinfo = u':'.join([_encode_userinfo_part(p) for p in
                                   self.userinfo.split(':', 1)])
@@ -1008,19 +1008,19 @@ class URL(object):
         )
 
     def to_iri(self):
-        """
-        Convert a L{URL} object that potentially contains text that has been
-        percent-encoded or IDNA encoded into a L{URL} object containing the
-        text as it should be presented to a human for reading.
+        u"""Make a new :class:`URL` instance with all but a few reserved
+        characters decoded into human-readable format.
 
-        For example::
+        Percent-encoded Unicode and IDNA-encoded hostnames are
+        decoded, like so::
 
-            >>> URL.from_text(u'https://xn--example-dk9c.com/foo%E2%87%A7bar/').to_iri()
-            URL.from_text(u'https://\u2192example.com/foo\u21e7bar/')
+            >>> url = URL.from_text(u'https://xn--example-dk9c.com/foo%E2%87%A7bar/')
+            >>> print(url.to_iri().to_text())
+            https://→example.com/foo⇧bar/
 
-        @return: a new L{URL} with its path-segments, query-parameters, and
-            hostname appropriately decoded.
-        @rtype: L{URL}
+        Returns:
+            URL: A new instance with its path segments, query parameters, and
+            hostname decoded for display purposes.
         """
         new_userinfo = u':'.join([_percent_decode(p) for p in
                                   self.userinfo.split(':', 1)])
@@ -1041,23 +1041,25 @@ class URL(object):
                             fragment=_percent_decode(self.fragment))
 
     def to_text(self, include_secrets=False):
-        """
-        Convert this URL to its canonical textual representation.
+        """Render this URL to its textual representation.
 
-        @param include_secrets: Should the returned textual representation
-            include potentially sensitive information?  The default, C{False},
-            if not; C{True} if so.  Quoting from RFC3986, section 3.2.1:
+        By default, the URL text will *not* include a password, if one
+        is set. RFC 3986 considers using URLs to represent such
+        sensitive information as deprecated. Quoting from RFC3986,
+        section 3.2.1:
 
             "Applications should not render as clear text any data after the
             first colon (":") character found within a userinfo subcomponent
             unless the data after the colon is the empty string (indicating no
             password)."
 
-        @type include_secrets: L{bool}
+        Args:
+            include_secrets (bool): Whether or not to include the
+               password in the URL text. Defaults to False.
 
-        @return: The serialized textual representation of this L{URL}, such as
-            C{u"http://example.com/some/path?some=query"}.
-        @rtype: L{unicode}
+        Returns:
+            str: The serialized textual representation of this URL,
+            such as ``u"http://example.com/some/path?some=query"``.
         """
         scheme = self.scheme
         authority = self.authority(include_secrets)
@@ -1067,8 +1069,8 @@ class URL(object):
         query_string = u'&'.join(
             u'='.join((_encode_query_part(x, maximal=False)
                        for x in ([k] if v is None else [k, v])))
-            for (k, v) in self.query
-        )
+            for (k, v) in self.query)
+
         fragment = self.fragment
 
         parts = []
@@ -1094,9 +1096,9 @@ class URL(object):
         return u''.join(parts)
 
     def __repr__(self):
-        """
-        Convert this URL to an C{eval}-able representation that shows all of
-        its constituent parts.
+        """Convert this URL to an representation that shows all of its
+        constituent parts, as well as being a valid argument to
+        :func:`eval`.
         """
         return '%s.from_text(%r)' % (self.__class__.__name__, self.to_text())
 
@@ -1120,47 +1122,45 @@ class URL(object):
     # # End Twisted Compat Code
 
     def add(self, name, value=None):
-        """
-        Create a new L{URL} with a given query argument, C{name}, added to it
-        with the value C{value}, like so::
+        """Make a new :class:`URL` instance with a given query argument,
+        *name*, added to it with the value *value*, like so::
 
             >>> URL.from_text(u'https://example.com/?x=y').add(u'x')
             URL.from_text(u'https://example.com/?x=y&x')
             >>> URL.from_text(u'https://example.com/?x=y').add(u'x', u'z')
             URL.from_text(u'https://example.com/?x=y&x=z')
 
-        @param name: The name (the part before the C{=}) of the query parameter
-            to add.
-        @type name: L{unicode}
+        Args:
+            name (str): The name of the query parameter to add. The
+                part before the ``=``.
+            value (str): The value of the query parameter to add. The
+                part after the ``=``. Defaults to ``None``, meaning no
+                value.
 
-        @param value: The value (the part after the C{=}) of the query
-            parameter to add.
-        @type value: L{unicode}
-
-        @return: a new L{URL} with the parameter added.
+        Returns:
+            URL: A new :class:`URL` instance with the parameter added.
         """
         return self.replace(query=self.query + ((name, value),))
 
     def set(self, name, value=None):
-        """
-        Create a new L{URL} with all existing occurrences of the query argument
-        C{name}, if any, removed, then add the argument with the given value,
-        like so::
+        """Make a new :class:`URL` instance with the query parameter *name*
+        set to *value*. All existing occurences, if any are replaced
+        by the single name-value pair.
 
             >>> URL.from_text(u'https://example.com/?x=y').set(u'x')
             URL.from_text(u'https://example.com/?x')
             >>> URL.from_text(u'https://example.com/?x=y').set(u'x', u'z')
             URL.from_text(u'https://example.com/?x=z')
 
-        @param name: The name (the part before the C{=}) of the query parameter
-            to add.
-        @type name: L{unicode}
+        Args:
+            name (str): The name of the query parameter to set. The
+                part before the ``=``.
+            value (str): The value of the query parameter to set. The
+                part after the ``=``. Defaults to ``None``, meaning no
+                value.
 
-        @param value: The value (the part after the C{=}) of the query
-            parameter to add.
-        @type value: L{unicode}
-
-        @return: a new L{URL} with the parameter added or changed.
+        Returns:
+            URL: A new :class:`URL` instance with the parameter set.
         """
         # Preserve the original position of the query key in the list
         q = [(k, v) for (k, v) in self.query if k != name]
@@ -1170,29 +1170,34 @@ class URL(object):
         return self.replace(query=q)
 
     def get(self, name):  # TODO: default
-        """
-        Retrieve a list of values for the given named query parameter.
+        """Get a list of values for the given query parameter, *name*::
 
-        @param name: The name of the query parameter to retrieve.
-        @type name: L{unicode}
+            >>> url = URL.from_text('?x=1&x=2')
+            >>> url.get('x')
+            [u'1', u'2']
+            >>> url.get('y')
+            []
 
-        @return: all the values associated with the key; for example, for the
-            query string C{u"x=1&x=2"}, C{url.query.get(u"x")} would return
-            C{[u'1', u'2']}; C{url.query.get(u"y")} (since there is no C{"y"}
-            parameter) would return the empty list, C{[]}.
-        @rtype: L{list} of L{unicode}
+        Args:
+            name (str): The name of the query parameter to get.
+
+        Returns:
+            list: A list of all the values associated with the key, in
+                string form.
         """
         return [value for (key, value) in self.query if name == key]
 
     def remove(self, name):
-        """
-        Create a new L{URL} with all query arguments with the given name
-        removed.
+        """Make a new :class:`URL` instance with all occurrences of the query
+        parameter *name* removed. No exception is raised if the
+        parameter is not already set.
 
-        @param name: The name of the query parameter to remove.
-        @type name: L{unicode}
+        Args:
+            name (str): The name of the query parameter to remove.
 
-        @return: a new L{URL} with the parameter removed.
+        Returns:
+            URL: A new :class:`URL` instance with the parameter removed.
+
         """
         return self.replace(query=((k, v) for (k, v) in self.query
                                    if k != name))
