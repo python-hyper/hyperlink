@@ -156,7 +156,7 @@ _validInFragment = _validInPath + u'/?'
 _validInQuery = (_validInFragment
                  .replace(u'&', u'').replace(u'=', u'').replace(u'+', u''))
 
-_unspecified = object()
+_unspecified = _UNSPECIFIED = object()
 
 
 # The unreserved URI characters (per RFC 3986 Section 2.3)
@@ -364,17 +364,7 @@ class URLParseError(ValueError):
 
 
 def _optional(argument, default):
-    """
-    If the given value is C{_unspecified}, return C{default}; otherwise return
-    C{argument}.
-
-    @param argument: The argument passed.
-
-    @param default: The default to use if C{argument} is C{_unspecified}.
-
-    @return: C{argument} or C{default}
-    """
-    if argument is _unspecified:
+    if argument is _UNSPECIFIED:
         return default
     else:
         return argument
@@ -382,29 +372,15 @@ def _optional(argument, default):
 
 def _typecheck(name, value, *types):
     """
-    Check that the given C{value} is of the given C{type}, or raise an
-    exception describing the problem using C{name}.
-
-    @param name: a name to use to describe the type mismatch in the error if
-        one occurs
-    @type name: native L{str}
-
-    @param value: the value to check
-    @type value: L{object}
-
-    @param types: the expected types of C{value}
-    @type types: L{tuple} of L{type}
-
-    @raise TypeError: if there is a type mismatch between C{value} and C{type}
-
-    @return: C{value} if the type check succeeds
+    Check that the given *value* is one of the given *types*, or raise an
+    exception describing the problem using *name*.
     """
     if not types:
         types = (unicode,)
     if not isinstance(value, types):
-        raise TypeError("expected {0} for {1}, got {2}".format(
-            " or ".join([t.__name__ for t in types]), name, repr(value),
-        ))
+        raise TypeError("expected %s for %s, got %s"
+                        % (" or ".join([t.__name__ for t in types]),
+                           name, repr(value)))
     return value
 
 
@@ -430,15 +406,15 @@ def _percent_decode(text):
 
 
 def _resolve_dot_segments(path):
-    """
-    Normalise the URL path by resolving segments of '.' and '..'.
+    """Normalize the URL path by resolving segments of '.' and '..'. For
+    more details, see RFC 3986 section 5.2.4, Remove Dot Segments.
 
-    @param path: list of path segments
+    Args:
+       path (list): path segments in string form
 
-    @see: RFC 3986 section 5.2.4, Remove Dot Segments
-
-    @return: a new L{list} of path segments with the '.' and '..' elements
-        removed and resolved.
+    Returns:
+       list: a new list of path segments with the '.' and '..' elements
+          removed and resolved.
     """
     segs = []
 
@@ -468,9 +444,14 @@ def to_unicode(obj):
 
 
 def parse_host(host):
-    """\
-    returns:
-      family (socket constant or None), host (string)
+    """\ Parse the host into a tuple of ``(family, host)``, where family
+    is the appropriate :mod:`socket` module constant when the host is
+    an IP address. Family is ``None`` when the host is not an IP.
+
+    Will raise :class:`URLParseError` on invalid IPv6 constants.
+
+    Returns:
+      tuple: family (socket constant or None), host (string)
 
     >>> parse_host('googlewebsite.com') == (None, 'googlewebsite.com')
     True
@@ -478,9 +459,6 @@ def parse_host(host):
     True
     >>> parse_host('192.168.1.1') == (socket.AF_INET, '192.168.1.1')
     True
-
-    (odd doctest formatting above due to py3's switch from int to enums
-    for socket constants)
     """
     if not host:
         return None, u''
@@ -711,16 +689,22 @@ class URL(object):
         return self.userinfo.split(u':')[0]
 
     def authority(self, include_secrets=False, **kw):
-        """
-        Compute and return the appropriate host/port/userinfo combination.
+        """Compute and return the appropriate host/port/userinfo combination.
 
-        @param includeSecrets: should the return value of this method include
-            secret information?  C{True} if so, C{False} if not
-        @type includeSecrets: L{bool}
+        >>> url = URL.from_text(u'http://user:pass@localhost:8080/a/b?x=y')
+        >>> url.authority()
+        u'user:@localhost:8080'
+        >>> url.authority(include_secrets=True)
+        u'user:pass@localhost:8080'
 
-        @return: The authority (network location and user information) portion
-            of the URL.
-        @rtype: L{unicode}
+        Args:
+           include_secrets (bool): Whether the return value of this
+              method include the password in the URL, if it is
+              set. Defaults to False.
+
+        Returns:
+           str: The authority (network location and user information) portion
+              of the URL.
         """
         # first, a bit of twisted compat
         include_secrets = kw.pop('includeSecrets', include_secrets)
