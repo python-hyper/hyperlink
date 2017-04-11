@@ -1,98 +1,18 @@
 # -*- coding: utf-8 -*-
 u"""Hyperlink provides Pythonic URL parsing, construction, and rendering.
 
-Usage is straightforward:
+Usage is straightforward, and centered around the :class:`URL` object:
 
+   >>> from hyperlink import URL
    >>> url = URL.from_text('http://github.com/mahmoud/hyperlink?utm_source=docs')
-   >>> print(url.host)
-   github.com
+   >>> url.host
+   u'github.com'
    >>> secure_url = url.replace(scheme=u'https')
-   >>> print(secure_url.get('utm_source')[0])
-   docs
+   >>> secure_url.get('utm_source')[0]
+   u'docs'
 
+URLs are lightweight and immutable.
 
-A Tale of Two Representations
------------------------------
-
-The URL is a powerful construct with two canonical representations
-that have historically caused some confusion: the URI and the
-IRI. (The W3C even recognized this themselves.) Hyperlink's URL sets
-this record straight. Simply:
-
-* URI: Fully-encoded, suitable for network transfer
-* IRI: Fully-decoded, suitable for display (e.g., in a browser bar)
-
-   >>> url = URL.from_text('http://example.com/café')
-   >>> url.to_uri().to_text()
-   u'http://example.com/caf%C3%A9'
-
-Ah, there's that percent encoding, characteristic of URIs. Still,
-Hyperlink's distinction between URIs and IRIs is limited to
-output. Input can contain any mix of percent encoding and Unicode,
-without issue:
-
-   >>> url = URL.from_text('http://example.com/caf%C3%A9/au láit')
-   >>> print(url.to_iri().to_text())
-   http://example.com/café/au láit
-   >>> print(url.to_uri().to_text())
-   http://example.com/caf%C3%A9/au%20l%C3%A1it
-
-Note that the URI and IRI representation of the same resource are
-still different URLs:
-
-   >>> url.to_uri() == url.to_iri()
-   False
-
-Immutability
-------------
-
-Hyperlink's URL is also notable for being an immutable
-representation. Once constructed, instances are not changed. Methods
-like :meth:`~URL.click()`, :meth:`~URL.set()`, and
-:meth:`~URL.replace()`, all return new URL objects. This enables URLs
-to be used in sets, as well as dictionary keys.
-
-Query Parameters
-----------------
-
-One of the URL format's most powerful features is query parameters,
-encoded in the query string portion of the URL.
-
-Query parameters are actually a type of "multidict", where a given key
-can have multiple values. This is why the :meth:`~URL.get()` method
-returns a list of strings. Keys can also have no value, which is
-conventionally interpreted as a truthy flag.
-
-   >>> url = URL.from_text('http://example.com/?a=b&c')
-   >>> url.get(u'a')
-   ['b']
-   >>> url.get(u'c')
-   [None]
-   >>> url.get('missing')  # returns None
-   []
-
-
-Values can be modified and added using :meth:`~URL.set()` and
-:meth:`~URL.add()`.
-
-   >>> url = url.add(u'x', u'x')
-   >>> url = url.add(u'x', u'y')
-   >>> url.to_text()
-   u'http://example.com/?a=b&c&x=x&x=y'
-   >>> url = url.set(u'x', u'z')
-   >>> url.to_text()
-   u'http://example.com/?a=b&c&x=z'
-
-
-Values can be unset with :meth:`~URL.remove()`.
-
-   >>> url = url.remove(u'a')
-   >>> url = url.remove(u'c')
-   >>> url.to_text()
-   u'http://example.com/?x=z'
-
-Note how all modifying methods return copies of the URL and do not
-mutate the URL in place, much like methods on strings.
 """
 
 import re
@@ -302,7 +222,7 @@ def register_scheme(text, uses_netloc=None, default_port=None):
         default_port (int): The default port, if any, for netloc-using
            schemes.
 
-    .. _file an issue: https://github.com/mahmoud/boltons/issues
+    .. _file an issue: https://github.com/mahmoud/hyperlink/issues
     """
     text = text.lower()
     if default_port is not None:
@@ -483,6 +403,54 @@ def parse_host(host):
 
 
 class URL(object):
+    """From blogs to billboards, URLs are so common, that it's easy to
+    overlook their complexity and power. With hyperlink's
+    :class:`URL` type, working with URLs doesn't have to be hard.
+
+    The URL constructor builds a URL from its individual
+    parts. Most of these parts are officially named in RFC 3986
+    and this diagram may prove handy in identifying them::
+
+       foo://user:pass@example.com:8042/over/there?name=ferret#nose
+       \_/   \_______/ \_________/ \__/\_________/ \_________/ \__/
+        |        |          |        |      |           |        |
+      scheme  userinfo     host     port   path       query   fragment
+
+
+    The :class:`URL` constructor does not do much value checking,
+    beyond type checks. All strings are expected to be decoded
+    (:class:`unicode` in Python 2). All arguments default to
+    respective empty values, so ``URL()`` is valid.
+
+    Args:
+       scheme (str): The text name of the scheme.
+       host (str): The host portion of the network location
+       port (int): The port part of the network location. If
+          ``None`` or no port is passed, the port will default to
+          the default port of the scheme, if it is known. See the
+          ``SCHEME_PORT_MAP`` and :func:`register_default_port`
+          for more info.
+       path (tuple): A tuple of strings representing the
+          slash-separated parts of the path.
+       query (tuple): The query parameters, as a tuple of
+          key-value pairs.
+       fragment (str): The fragment part of the URL.
+       rooted (bool): Whether or not the path begins with a slash.
+       userinfo (str): The username or colon-separated
+          username:password pair.
+       family: A socket module constant used when the host is an
+          IP constant to differentiate IPv4 and domain names, as
+          well as validate IPv6.
+       uses_netloc (bool): Indicates whether two slashes appear
+          between the scheme and the host (``http://eg.com`` vs
+          ``mailto:e@g.com``)
+
+    All of these parts are also exposed as read-only attributes of
+    URL instances, along with several useful methods. See below
+    for more info!
+
+    """
+
     u"""
     A L{URL} represents a URL and provides a convenient API for modifying its
     parts.
@@ -576,53 +544,6 @@ class URL(object):
 
     def __init__(self, scheme=None, host=None, path=(), query=(), fragment=u'',
                  port=None, rooted=None, userinfo=u'', family=None, uses_netloc=None):
-        """From blogs to billboards, URLs are so common, that it's easy to
-        overlook their complexity and power. With hyperlink's
-        :class:`URL` type, working with URLs doesn't have to be hard.
-
-        The URL constructor builds a URL from its individual
-        parts. Most of these parts are officially named in RFC 3986
-        and this diagram may prove handy in identifying them::
-
-           foo://user:pass@example.com:8042/over/there?name=ferret#nose
-           \_/   \_______/ \_________/ \__/\_________/ \_________/ \__/
-            |        |          |        |      |           |        |
-          scheme  userinfo     host     port   path       query   fragment
-
-
-        The :class:`URL` constructor does not do much value checking,
-        beyond type checks. All strings are expected to be decoded
-        (:class:`unicode` in Python 2). All arguments default to
-        respective empty values, so ``URL()`` is valid.
-
-        Args:
-           scheme (str): The text name of the scheme.
-           host (str): The host portion of the network location
-           port (int): The port part of the network location. If
-              ``None`` or no port is passed, the port will default to
-              the default port of the scheme, if it is known. See the
-              ``SCHEME_PORT_MAP`` and :func:`register_default_port`
-              for more info.
-           path (tuple): A tuple of strings representing the
-              slash-separated parts of the path.
-           query (tuple): The query parameters, as a tuple of
-              key-value pairs.
-           fragment (str): The fragment part of the URL.
-           rooted (bool): Whether or not the path begins with a slash.
-           userinfo (str): The username or colon-separated
-              username:password pair.
-           family: A socket module constant used when the host is an
-              IP constant to differentiate IPv4 and domain names, as
-              well as validate IPv6.
-           uses_netloc (bool): Indicates whether two slashes appear
-              between the scheme and the host (``http://eg.com`` vs
-              ``mailto:e@g.com``)
-
-        All of these parts are also exposed as read-only attributes of
-        URL instances, along with several useful methods. See below
-        for more info!
-
-        """
         if host is not None and scheme is None:
             scheme = u'http'  # TODO: why
         if port is None:
@@ -684,7 +605,7 @@ class URL(object):
     @property
     def user(self):
         """
-        The user portion of C{userinfo}; everything up to the first C{":"}.
+        The user portion of :attr:`userinfo`.
         """
         return self.userinfo.split(u':')[0]
 
@@ -726,9 +647,6 @@ class URL(object):
         return u"@".join(authority)
 
     def __eq__(self, other):
-        """
-        L{URL}s are equal to L{URL} objects whose attributes are equal.
-        """
         if not isinstance(other, self.__class__):
             return NotImplemented
         for attr in ['scheme', 'userinfo', 'host', 'path', 'query',
@@ -738,9 +656,6 @@ class URL(object):
         return True
 
     def __ne__(self, other):
-        """
-        L{URL}s are unequal to L{URL} objects whose attributes are unequal.
-        """
         if not isinstance(other, self.__class__):
             return NotImplemented
         return not self.__eq__(other)
@@ -752,9 +667,12 @@ class URL(object):
 
     @property
     def absolute(self):
-        """Whether or not the URL is "absolute", meaning that has both a
-        scheme and a host set. This means it's complete enough to
-        resolve to a resource without resolution relative to a base URI.
+        """Whether or not the URL is "absolute". Absolute URLs are complete
+        enough to resolve to a network resource without being relative
+        to a base URI.
+
+        In short, absolute URLs must have both a scheme and a host
+        set.
         """
         return bool(self.scheme and self.host)
 
@@ -806,19 +724,22 @@ class URL(object):
         )
 
     @classmethod
-    def from_text(cls, s):
+    def from_text(cls, text):
+        """Parse the given string into a URL object. Also used as the
+        :func:`repr` of :class:`URL` objects.
+
+        >>> URL.from_text('http://example.com')
+        URL.from_text('http://example.com')
+        >>> URL.from_text('?a=b&x=y')
+        URL.from_text('?a=b&x=y')
+
+        Args:
+           text (str): A valid URL string.
+
+        Returns:
+           URL: The structured object version of the parsed string.
         """
-        Parse the given string into a URL object.
-
-        Relative path references are not supported.
-
-        @param s: a valid URI or IRI
-        @type s: L{unicode}
-
-        @return: the parsed representation of C{s}
-        @rtype: L{URL}
-        """
-        s = to_unicode(s)
+        s = to_unicode(text)
         um = _URL_RE.match(s)
         try:
             gs = um.groupdict()
@@ -1087,9 +1008,12 @@ class URL(object):
         return '%s.from_text(%r)' % (self.__class__.__name__, self.to_text())
 
     # # Begin Twisted Compat Code
-    fromText = from_text
     asURI = to_uri
     asIRI = to_iri
+
+    @classmethod
+    def fromText(cls, s):
+        return cls.from_text(s)
 
     def asText(self, includeSecrets=False):
         return self.to_text(include_secrets=includeSecrets)
