@@ -703,21 +703,31 @@ class URL(object):
 
     @classmethod
     def from_text(cls, text):
-        """Parse the given string into a URL object. Also used as the
-        :func:`repr` of :class:`URL` objects.
+        """Whereas the :class:`URL` constructor is useful for constructing
+        URLs from parts, :meth:`~URL.from_text` supports parsing whole
+        URLs from their string form::
 
-        >>> URL.from_text('http://example.com')
-        URL.from_text('http://example.com')
-        >>> URL.from_text('?a=b&x=y')
-        URL.from_text('?a=b&x=y')
+           >>> URL.from_text('http://example.com')
+           URL.from_text('http://example.com')
+           >>> URL.from_text('?a=b&x=y')
+           URL.from_text('?a=b&x=y')
 
-        The natural counterpart to :func:`~URL.to_text()`.
+        As you can see above, it's also used as the :func:`repr` of
+        :class:`URL` objects. The natural counterpart to
+        :func:`~URL.to_text()`.
 
         Args:
            text (str): A valid URL string.
 
         Returns:
            URL: The structured object version of the parsed string.
+
+        Somewhat unexpectedly, URLs are a far more permissive format
+        than most would assume. Many strings which don't look like
+        URLs are still valid URLs. As a result, this method only
+        raises :class:`URLParseError` on invalid port and IPv6 values
+        in the host portion of the URL.
+
         """
         s = to_unicode(text)
         um = _URL_RE.match(s)
