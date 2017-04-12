@@ -12,7 +12,6 @@ Usage is straightforward, and centered around the :class:`URL` object:
    u'docs'
 
 URLs are lightweight and immutable.
-
 """
 
 import re
@@ -22,7 +21,7 @@ import socket
 try:
     from socket import inet_pton
 except ImportError:
-    # from https://gist.github.com/nnemkin/4966028
+    # based on https://gist.github.com/nnemkin/4966028
     # this code only applies on Windows Python 2.7
     import ctypes
 
@@ -308,11 +307,11 @@ def _percent_decode(text):
     """
     Replace percent-encoded characters with their UTF-8 equivalents.
 
-    @param text: The text with percent-encoded UTF-8 in it.
-    @type text: L{unicode}
+    Args:
+       text (unicode): The text with percent-encoded UTF-8 in it.
 
-    @return: the encoded version of C{text}
-    @rtype: L{unicode}
+    Returns:
+       unicode: The encoded version of *text*.
     """
     try:
         quotedBytes = text.encode("ascii")
@@ -407,20 +406,28 @@ class URL(object):
     overlook their complexity and power. With hyperlink's
     :class:`URL` type, working with URLs doesn't have to be hard.
 
-    The URL constructor builds a URL from its individual
-    parts. Most of these parts are officially named in RFC 3986
-    and this diagram may prove handy in identifying them::
+    URLs are made of many parts. Most of these parts are officially
+    named in RFC 3986 and this diagram may prove handy in identifying
+    them::
 
        foo://user:pass@example.com:8042/over/there?name=ferret#nose
        \_/   \_______/ \_________/ \__/\_________/ \_________/ \__/
         |        |          |        |      |           |        |
       scheme  userinfo     host     port   path       query   fragment
 
+    While :meth:`~URL.from_text` is used for parsing whole URLs, the
+    :class:`URL` constructor builds a URL from the individual
+    components, like so::
 
-    The :class:`URL` constructor does not do much value checking,
-    beyond type checks. All strings are expected to be decoded
-    (:class:`unicode` in Python 2). All arguments default to
-    respective empty values, so ``URL()`` is valid.
+        >>> from hyperlink import URL
+        >>> url = URL(scheme=u'https', host=u'example.com', path=[u'hello', u'world'])
+        >>> print(url.to_text())
+        https://example.com/hello/world
+
+    The constructor runs basic type checks. All strings are expected
+    to be decoded (:class:`unicode` in Python 2). All arguments are
+    optional, defaulting to appropriately empty values. A full list of
+    constructor arguments is below.
 
     Args:
        scheme (str): The text name of the scheme.
@@ -443,63 +450,21 @@ class URL(object):
           well as validate IPv6.
        uses_netloc (bool): Indicates whether two slashes appear
           between the scheme and the host (``http://eg.com`` vs
-          ``mailto:e@g.com``)
+          ``mailto:e@g.com``). Set automatically based on scheme.
 
     All of these parts are also exposed as read-only attributes of
-    URL instances, along with several useful methods. See below
-    for more info!
-
+    URL instances, along with several useful methods.
     """
 
     u"""
-    A L{URL} represents a URL and provides a convenient API for modifying its
-    parts.
 
-    A URL is split into a number of distinct parts: scheme, host, port, path
-    segments, query parameters and fragment identifier::
-
-        http://example.com:8080/a/b/c?d=e#f
-        ^ scheme           ^ port     ^ query parameters
-               ^ host           ^ path segments
-                                          ^ fragment
-
-    You can construct L{URL} objects by passing in these components directly,
     like so::
-
-        >>> from hyperlink import URL
-        >>> url = URL(scheme=u'https', host=u'example.com', path=[u'hello', u'world'])
-        >>> print(url.to_text())
-        https://example.com/hello/world
 
     Or you can use the L{from_text} method you can see in the output there::
 
         >>> url = URL.from_text(u'https://example.com/hello/world')
         >>> print(url.to_text())
         https://example.com/hello/world
-
-    There are two major advantages of using L{URL} over representing URLs as
-    strings.  The first is that it's really easy to evaluate a relative
-    hyperlink, for example, when crawling documents, to figure out what is
-    linked::
-
-        >>> URL.from_text(u'https://example.com/base/uri/').click(u"/absolute")
-        URL.from_text(u'https://example.com/absolute')
-        >>> URL.from_text(u'https://example.com/base/uri/').click(u"rel/path")
-        URL.from_text(u'https://example.com/base/uri/rel/path')
-
-    The other is that URLs have two normalizations.  One representation is
-    suitable for humans to read, because it can represent data from many
-    character sets - this is the Internationalized, or IRI, normalization.  The
-    other is the older, US-ASCII-only representation, which is necessary for
-    most contexts where you would need to put a URI.  You can convert *between*
-    thes
-    e representations according to certain rules.  L{URL} exposes these
-    conversions as methods::
-
-        >>> URL.from_text(u"https://→example.com/foo⇧bar/").to_uri()
-        URL.from_text(u'https://xn--example-dk9c.com/foo%E2%87%A7bar/')
-        >>> URL.from_text(u'https://xn--example-dk9c.com/foo%E2%87%A7bar/').to_iri()
-        URL.from_text(u'https://\\u2192example.com/foo\\u21e7bar/')
 
     @see: U{RFC 3986, Uniform Resource Identifier (URI): Generic Syntax
         <https://tools.ietf.org/html/rfc3986>}
@@ -534,11 +499,7 @@ class URL(object):
     @ivar fragment: The fragment identifier.
     @type fragment: L{unicode}
 
-    @ivar rooted: Does the path start with a C{/}?  This is taken from the
-        terminology in the BNF grammar, specifically the C{path-rootless},
-        rule, since "absolute path" and "absolute URI" are somewhat ambiguous.
-        C{path} does not contain the implicit prefixed C{"/"} since that is
-        somewhat awkward to work with.
+    @ivar rooted:
     @type rooted: L{bool}
     """
 
@@ -597,7 +558,20 @@ class URL(object):
     path = property(lambda self: self._path)
     query = property(lambda self: self._query)
     fragment = property(lambda self: self._fragment)
-    rooted = property(lambda self: self._rooted)
+
+    @property
+    def rooted(self):
+        """Whether or not the path starts with a forward slash (``/``).
+
+        This is taken from the terminology in the BNF grammar,
+        specifically the "path-rootless", rule, since "absolute path"
+        and "absolute URI" are somewhat ambiguous. :attr:`path` does
+        not contain the implicit prefixed ``"/"`` since that is
+        somewhat awkward to work with.
+
+        """
+        return self._rooted
+
     userinfo = property(lambda self: self._userinfo)
     family = property(lambda self: self._family)
     uses_netloc = property(lambda self: self._uses_netloc)
@@ -671,8 +645,12 @@ class URL(object):
         enough to resolve to a network resource without being relative
         to a base URI.
 
-        In short, absolute URLs must have both a scheme and a host
-        set.
+        >>> URL.from_text('http://wikipedia.org/').absolute
+        True
+        >>> URL.from_text('?a=b&c=d').absolute
+        False
+
+        Absolute URLs must have both a scheme and a host set.
         """
         return bool(self.scheme and self.host)
 
@@ -732,6 +710,8 @@ class URL(object):
         URL.from_text('http://example.com')
         >>> URL.from_text('?a=b&x=y')
         URL.from_text('?a=b&x=y')
+
+        The natural counterpart to :func:`~URL.to_text()`.
 
         Args:
            text (str): A valid URL string.
@@ -808,10 +788,6 @@ class URL(object):
 
         Returns:
            URL: A copy of the current URL with the extra path segments.
-
-        @return: a new L{URL} with the additional path segments.
-        @rtype: L{URL}
-
         """
         new_path = self.path[:-1 if (self.path and self.path[-1] == u'')
                              else None] + segments
@@ -885,7 +861,7 @@ class URL(object):
 
     def to_uri(self):
         u""" Make a new :class:`URL` instance with all non-ASCII characters
-        appropriately percent-encoded.  This is useful to do in preparation
+        appropriately percent-encoded. This is useful to do in preparation
         for sending a :class:`URL` over a network protocol.
 
         For example::
@@ -950,7 +926,7 @@ class URL(object):
 
         By default, the URL text will *not* include a password, if one
         is set. RFC 3986 considers using URLs to represent such
-        sensitive information as deprecated. Quoting from RFC3986,
+        sensitive information as deprecated. Quoting from RFC 3986,
         section 3.2.1:
 
             "Applications should not render as clear text any data after the
