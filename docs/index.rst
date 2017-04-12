@@ -32,13 +32,16 @@ Then, URLs are just an import away away::
 
   from hyperlink import URL
 
-  url = URL.from_text('http://github.com/mahmoud/hyperlink?utm_souce=README')
-  utm_source = url.get('utm_source')
+  url = URL.from_text('http://github.com/mahmoud/hyperlink?utm_souce=readthedocs')
+
   better_url = url.replace(scheme='https')
   user_url = better_url.click('..')
 
   print(user_url.to_text())
-  # prints: http://github.com/mahmoud
+  # prints: https://github.com/mahmoud
+
+  print(user_url.get('utm_source'))
+  # prints: readthedocs
 
 See the API docs for more usage examples.
 
