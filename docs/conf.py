@@ -92,12 +92,8 @@ else: # only import and set the theme if we're building docs locally
     html_theme = 'sphinx_rtd_theme'
     html_theme_path = ['_themes', sphinx_rtd_theme.get_html_theme_path()]
 
-html_theme_options = {'navigation_depth': 4}
-
-# Theme options are theme-specific and customize the look and feel of a theme
-# further.  For a list of options available for each theme, see the
-# documentation.
-#html_theme_options = {}
+html_theme_options = {'navigation_depth': 3,
+                      'collapse_navigation': False}
 
 # Add any paths that contain custom themes here, relative to this directory.
 # html_theme_path = []
