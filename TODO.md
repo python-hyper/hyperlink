@@ -1,11 +1,12 @@
 # hyperlink TODO
 
-* Optimize percent decoding
+* CI
 * Get Mark to fix the git history
-* docstrings
+* Optimize percent decoding
 
 ## Complete
 
+* docstrings
 * Parse with regular expression
 * Parse/emit IPv6
 * Add netloc detection logic
