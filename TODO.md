@@ -23,3 +23,5 @@
 * What's the deal with twisted.python.urlpath?
 * What's the deal with sip.URL
 * Do we need a separate .normalize()?
+* Is whitespace really allowed in IRIs?
+* Can we drop the ':' when password isn't displayed?
