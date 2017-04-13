@@ -583,17 +583,17 @@ class URL(object):
         """
         return self.userinfo.split(u':')[0]
 
-    def authority(self, include_secrets=False, **kw):
+    def authority(self, with_password=False, **kw):
         """Compute and return the appropriate host/port/userinfo combination.
 
         >>> url = URL.from_text(u'http://user:pass@localhost:8080/a/b?x=y')
         >>> url.authority()
         u'user:@localhost:8080'
-        >>> url.authority(include_secrets=True)
+        >>> url.authority(with_password=True)
         u'user:pass@localhost:8080'
 
         Args:
-           include_secrets (bool): Whether the return value of this
+           with_password (bool): Whether the return value of this
               method include the password in the URL, if it is
               set. Defaults to False.
 
@@ -602,7 +602,7 @@ class URL(object):
               of the URL.
         """
         # first, a bit of twisted compat
-        include_secrets = kw.pop('includeSecrets', include_secrets)
+        with_password = kw.pop('includeSecrets', with_password)
         if kw:
             raise TypeError('got unexpected keyword arguments: %r' % kw.keys())
         if self.family == socket.AF_INET6:
@@ -614,7 +614,7 @@ class URL(object):
         authority = []
         if self.userinfo:
             userinfo = self.userinfo
-            if not include_secrets and u":" in userinfo:
+            if not with_password and u":" in userinfo:
                 userinfo = userinfo[:userinfo.index(u":") + 1]
             authority.append(userinfo)
         authority.append(u":".join(hostport))
@@ -870,7 +870,7 @@ class URL(object):
                             fragment=clicked.fragment)
 
     def to_uri(self):
-        u""" Make a new :class:`URL` instance with all non-ASCII characters
+        u"""Make a new :class:`URL` instance with all non-ASCII characters
         appropriately percent-encoded. This is useful to do in preparation
         for sending a :class:`URL` over a network protocol.
 
@@ -931,7 +931,7 @@ class URL(object):
                                    for k, v in self.query],
                             fragment=_percent_decode(self.fragment))
 
-    def to_text(self, include_secrets=False):
+    def to_text(self, with_password=False):
         """Render this URL to its textual representation.
 
         By default, the URL text will *not* include a password, if one
@@ -945,15 +945,17 @@ class URL(object):
             password)."
 
         Args:
-            include_secrets (bool): Whether or not to include the
+            with_password (bool): Whether or not to include the
                password in the URL text. Defaults to False.
 
         Returns:
             str: The serialized textual representation of this URL,
             such as ``u"http://example.com/some/path?some=query"``.
+
+        The natural counterpart to :class:`URL.from_text()`.
         """
         scheme = self.scheme
-        authority = self.authority(include_secrets)
+        authority = self.authority(with_password)
         path = u'/'.join(([u''] if (self.rooted and self.path) else [])
                          + [_encode_path_part(segment, maximal=False)
                             for segment in self.path])
@@ -1002,7 +1004,7 @@ class URL(object):
         return cls.from_text(s)
 
     def asText(self, includeSecrets=False):
-        return self.to_text(include_secrets=includeSecrets)
+        return self.to_text(with_password=includeSecrets)
 
     def __dir__(self):
         try:
