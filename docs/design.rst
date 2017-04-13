@@ -68,6 +68,16 @@ well as dictionary keys.
 .. _uri clarification: https://www.w3.org/TR/uri-clarification/
 .. _BNF grammar: https://tools.ietf.org/html/rfc3986#appendix-A
 
+
+.. _RFC 3986: https://tools.ietf.org/html/rfc3986
+.. _section 5.4: https://tools.ietf.org/html/rfc3986#section-5.4
+.. _section 3.4: https://tools.ietf.org/html/rfc3986#section-3.4
+.. _section 5.2.4: https://tools.ietf.org/html/rfc3986#section-5.2.4
+.. _section 2.2: https://tools.ietf.org/html/rfc3986#section-2.2
+.. _section 2.3: https://tools.ietf.org/html/rfc3986#section-2.3
+.. _section 3.2.1: https://tools.ietf.org/html/rfc3986#section-3.2.1
+
+
 Query parameters
 ----------------
 
