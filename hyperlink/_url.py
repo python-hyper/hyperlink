@@ -1064,7 +1064,7 @@ class URL(object):
         q[idx:idx] = [(name, value)]
         return self.replace(query=q)
 
-    def get(self, name):  # TODO: default
+    def get(self, name):
         """Get a list of values for the given query parameter, *name*::
 
             >>> url = URL.from_text('?x=1&x=2')
@@ -1073,12 +1073,16 @@ class URL(object):
             >>> url.get('y')
             []
 
+        If the given *name* is not set, an empty list is returned. A
+        list is always returned, and this method raises no exceptions.
+
         Args:
             name (str): The name of the query parameter to get.
 
         Returns:
             list: A list of all the values associated with the key, in
                 string form.
+
         """
         return [value for (key, value) in self.query if name == key]
 
