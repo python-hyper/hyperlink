@@ -908,8 +908,9 @@ class TestURL(TestCase):
         assert url.userinfo == 'user:pass'
         url = url.replace(userinfo='us%20her:pass')
         iri = url.to_iri()
-        assert iri.to_text(include_secrets=True) == 'http://us her:pass@example.com'
-        assert iri.to_uri().to_text(include_secrets=True) == 'http://us%20her:pass@example.com'
+        assert iri.to_text(with_password=True) == 'http://us her:pass@example.com'
+        assert iri.to_text(with_password=False) == 'http://us her:@example.com'
+        assert iri.to_uri().to_text(with_password=True) == 'http://us%20her:pass@example.com'
 
     def test_hash(self):
         url_map = {}
