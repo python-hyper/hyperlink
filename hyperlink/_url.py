@@ -816,7 +816,7 @@ class URL(object):
         """
         return self.replace(path=self.path[:-1] + (segment,))
 
-    def click(self, href):
+    def click(self, href=u''):
         """Resolve the given URL relative to this URL.
 
         The resulting URI should match what a web browser would
@@ -837,7 +837,6 @@ class URL(object):
 
         For more information, see RFC 3986 section 5.
         """
-        # TODO: default arg? URL arg?
         _typecheck("relative URL", href)
         if href:
             clicked = URL.from_text(href)
