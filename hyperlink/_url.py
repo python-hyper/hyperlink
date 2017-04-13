@@ -363,7 +363,7 @@ def to_unicode(obj):
 
 
 def parse_host(host):
-    """\ Parse the host into a tuple of ``(family, host)``, where family
+    """Parse the host into a tuple of ``(family, host)``, where family
     is the appropriate :mod:`socket` module constant when the host is
     an IP address. Family is ``None`` when the host is not an IP.
 

@@ -25,3 +25,5 @@
 * Do we need a separate .normalize()?
 * Is whitespace really allowed in IRIs?
 * Can we drop the ':' when password isn't displayed?
+* Why is the constructor's default scheme "http" when host is not None?
+* What should the default port of the "s3" scheme be? premature?
