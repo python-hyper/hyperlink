@@ -349,9 +349,12 @@ class TestURL(TestCase):
 
         # https://twistedmatrix.com/trac/ticket/8184
         u = URL.from_text('http://hatnote.com/a/b/../c/./d/e/..')
-        self.assertEqual(u.click('').to_text(),
-                         'http://hatnote.com/a/c/d/')
+        res = 'http://hatnote.com/a/c/d/'
+        self.assertEqual(u.click('').to_text(), res)
 
+
+        # test click default arg is same as empty string above
+        self.assertEqual(u.click().to_text(), res)
 
     def test_clickRFC3986(self):
         """
