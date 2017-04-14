@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 u"""Hyperlink provides Pythonic URL parsing, construction, and rendering.
 
-Usage is straightforward, and centered around the :class:`URL` object:
+Usage is straightforward::
 
    >>> from hyperlink import URL
    >>> url = URL.from_text('http://github.com/mahmoud/hyperlink?utm_source=docs')
@@ -11,7 +11,8 @@ Usage is straightforward, and centered around the :class:`URL` object:
    >>> secure_url.get('utm_source')[0]
    u'docs'
 
-URLs are lightweight and immutable.
+As seen here, the API revolves around the lightweight and immutable
+:class:`URL` type, documented below.
 """
 
 import re
@@ -66,19 +67,11 @@ except NameError:
 NoneType = type(None)
 
 
-# RFC 3986 section 2.2, Reserved Characters
-_genDelims = u':/?#[]@'
-_subDelims = u"!$&'()*+,;="
-
-_validInPath = _subDelims + u':@'
-_validInFragment = _validInPath + u'/?'
-_validInQuery = (_validInFragment
-                 .replace(u'&', u'').replace(u'=', u'').replace(u'+', u''))
-
 _unspecified = _UNSPECIFIED = object()
 
 
-# The unreserved URI characters (per RFC 3986 Section 2.3)
+# RFC 3986 Section 2.3, Unreserved URI Characters
+#   https://tools.ietf.org/html/rfc3986#section-2.3
 _UNRESERVED_CHARS = frozenset('~-._0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ'
                               'abcdefghijklmnopqrstuvwxyz')
 
@@ -98,6 +91,7 @@ _ASCII_RE = re.compile('([\x00-\x7f]+)')
 
 
 # RFC 3986 section 2.2, Reserved Characters
+#   https://tools.ietf.org/html/rfc3986#section-2.2
 _GEN_DELIMS = frozenset(u':/?#[]@')
 _SUB_DELIMS = frozenset(u"!$&'()*+,;=")
 _ALL_DELIMS = _GEN_DELIMS | _SUB_DELIMS
@@ -326,7 +320,7 @@ def _percent_decode(text):
 
 def _resolve_dot_segments(path):
     """Normalize the URL path by resolving segments of '.' and '..'. For
-    more details, see RFC 3986 section 5.2.4, Remove Dot Segments.
+    more details, see `RFC 3986 section 5.2.4, Remove Dot Segments`_.
 
     Args:
        path (list): path segments in string form
@@ -334,6 +328,8 @@ def _resolve_dot_segments(path):
     Returns:
        list: a new list of path segments with the '.' and '..' elements
           removed and resolved.
+
+    .. _RFC 3986 section 5.2.4, Remove Dot Segments: https://tools.ietf.org/html/rfc3986#section-5.2.4
     """
     segs = []
 
@@ -407,7 +403,7 @@ class URL(object):
     :class:`URL` type, working with URLs doesn't have to be hard.
 
     URLs are made of many parts. Most of these parts are officially
-    named in RFC 3986 and this diagram may prove handy in identifying
+    named in `RFC 3986`_ and this diagram may prove handy in identifying
     them::
 
        foo://user:pass@example.com:8042/over/there?name=ferret#nose
@@ -454,53 +450,9 @@ class URL(object):
 
     All of these parts are also exposed as read-only attributes of
     URL instances, along with several useful methods.
-    """
 
-    u"""
-
-    like so::
-
-    Or you can use the L{from_text} method you can see in the output there::
-
-        >>> url = URL.from_text(u'https://example.com/hello/world')
-        >>> print(url.to_text())
-        https://example.com/hello/world
-
-    @see: U{RFC 3986, Uniform Resource Identifier (URI): Generic Syntax
-        <https://tools.ietf.org/html/rfc3986>}
-    @see: U{RFC 3987, Internationalized Resource Identifiers
-        <https://tools.ietf.org/html/rfc3987>}
-
-    @ivar scheme: The URI scheme.
-    @type scheme: L{unicode}
-
-    @ivar user: The username portion of the URL, if specified; otherwise the
-        empty string.
-    @type user: L{unicode}
-
-    @ivar userinfo: The username and password portions of the URL, if
-        specified, separated with colons.  If not specified, the empty string.
-    @type userinfo: L{unicode}
-
-    @ivar host: The host name.
-    @type host: L{unicode}
-
-    @ivar port: The port number.
-    @type port: L{int}
-
-    @ivar path: The path segments.
-    @type path: L{tuple} of L{unicode}.
-
-    @ivar query: The query parameters, as (name, value) pairs.
-    @type query: L{tuple} of 2-L{tuple}s of (name: L{unicode}, value:
-        (L{unicode} for values or L{None} for stand-alone query parameters with
-        no C{=} in them)).
-
-    @ivar fragment: The fragment identifier.
-    @type fragment: L{unicode}
-
-    @ivar rooted:
-    @type rooted: L{bool}
+    .. _RFC 3986: https://tools.ietf.org/html/rfc3986
+    .. _RFC 3987: https://tools.ietf.org/html/rfc3987
     """
 
     def __init__(self, scheme=None, host=None, path=(), query=(), fragment=u'',
@@ -835,7 +787,9 @@ class URL(object):
         Return:
             URL: A copy of the current URL with navigation logic applied.
 
-        For more information, see RFC 3986 section 5.
+        For more information, see `RFC 3986 section 5`_.
+
+        .. _RFC 3986 section 5: https://tools.ietf.org/html/rfc3986#section-5
         """
         _typecheck("relative URL", href)
         if href:
@@ -936,7 +890,7 @@ class URL(object):
         By default, the URL text will *not* include a password, if one
         is set. RFC 3986 considers using URLs to represent such
         sensitive information as deprecated. Quoting from RFC 3986,
-        section 3.2.1:
+        `section 3.2.1`:
 
             "Applications should not render as clear text any data after the
             first colon (":") character found within a userinfo subcomponent
@@ -952,6 +906,8 @@ class URL(object):
             such as ``u"http://example.com/some/path?some=query"``.
 
         The natural counterpart to :class:`URL.from_text()`.
+
+        .. _section 3.2.1: https://tools.ietf.org/html/rfc3986#section-3.2.1
         """
         scheme = self.scheme
         authority = self.authority(with_password)
