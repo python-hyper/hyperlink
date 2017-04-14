@@ -1,17 +1,22 @@
 Hyperlink API
-===========
+=============
 
 .. automodule:: hyperlink._url
 
 Creation
 --------
 
+Before you can work with URLs, you must create URLs. There are two
+ways to create URLs, from parts and from text.
 
 .. autoclass:: hyperlink.URL
 .. automethod:: hyperlink.URL.from_text
 
 Transformation
 --------------
+
+Once a URL is created, some of the most common tasks are to transform
+it into other URLs and text.
 
 .. automethod:: hyperlink.URL.to_text
 .. automethod:: hyperlink.URL.to_uri
@@ -21,12 +26,17 @@ Transformation
 Navigation
 ----------
 
+Go places with URLs. Simulate browser behavior and perform semantic
+path operations.
+
 .. automethod:: hyperlink.URL.click
 .. automethod:: hyperlink.URL.sibling
 .. automethod:: hyperlink.URL.child
 
 Query Parameters
 ----------------
+
+CRUD operations on the query string multimap.
 
 .. automethod:: hyperlink.URL.get
 .. automethod:: hyperlink.URL.add
@@ -35,6 +45,8 @@ Query Parameters
 
 Attributes
 ----------
+
+URLs have many parts, and URL objects have many attributes to represent them.
 
 .. autoattribute:: hyperlink.URL.absolute
 .. autoattribute:: hyperlink.URL.scheme
@@ -50,8 +62,10 @@ Attributes
 Low-level functions
 -------------------
 
-.. autofunction:: hyperlink._url.parse_host
-.. autoclass:: hyperlink._url.URLParseError
+A couple of notable helpers used by the :class:`~hyperlink.URL` type.
 
-.. TODO: headings within class docs? navigation, query parameter manipulation, transformation (to/from)
+.. autoclass:: hyperlink._url.URLParseError
+.. autofunction:: hyperlink._url.parse_host
+
+
 .. TODO: run doctests in docs?
