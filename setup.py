@@ -9,7 +9,7 @@ from setuptools import setup
 
 
 __author__ = 'Mahmoud Hashemi and Glyph Lefkowitz'
-__version__ = '17.1.0'
+__version__ = '17.1.1dev'
 __contact__ = 'mahmoud@hatnote.com'
 __url__ = 'https://github.com/mahmoud/hyperlink'
 __license__ = 'BSD'
