@@ -7,12 +7,13 @@ hyperlink
 |release| |calver|
 
 **Hyperlink** provides a pure-Python implementation of immutable
-URLs. Based on RFC 3986 and 3987, the Hyperlink URL makes working with
-both URIs and IRIs easy.
+URLs. Based on `RFC 3986`_ and `RFC 3987`_, the Hyperlink URL balances
+simplicity and correctness for both :ref:`URIs and IRIs <two_representations>`.
 
 Hyperlink is tested against Python 2.7, 3.4, 3.5, and PyPy.
 
-
+.. _RFC 3986: https://tools.ietf.org/html/rfc3986
+.. _RFC 3987: https://tools.ietf.org/html/rfc3987
 .. |release| image:: https://img.shields.io/pypi/v/hyperlink.svg
              :target: https://pypi.python.org/pypi/hyperlink
 

@@ -6,6 +6,8 @@ work has gone into translating the standards, `RFC 3986`_ and `RFC
 3987`_, into a Pythonic interface. Hyperlink's design strikes a unique
 balance of correctness and usability.
 
+.. _uris_and_iris:
+
 A Tale of Two Representations
 -----------------------------
 
