@@ -2,9 +2,9 @@ Hyperlink Design
 ================
 
 The URL is a nuanced format with a long history. Suitably, a lot of
-work has gone into translating it into a Pythonic
-interface. Hyperlink's design strikes a unique balance of correctness
-and usability.
+work has gone into translating the standards, `RFC 3986`_ and `RFC
+3987`_, into a Pythonic interface. Hyperlink's design strikes a unique
+balance of correctness and usability.
 
 A Tale of Two Representations
 -----------------------------
@@ -15,25 +15,26 @@ and computers.
 This dual purpose has resulted in two canonical representations: the
 URI and the IRI.
 
-Even though the W3C themselves have recognized the confusion this can
+Even though the W3C themselves have `recognized the confusion`_ this can
 cause, Hyperlink's URL makes the distinction quite natural. Simply:
 
 * **URI**: Fully-encoded, ASCII-only, suitable for network transfer
 * **IRI**: Fully-decoded, Unicode-friendly, suitable for display (e.g., in a browser bar)
 
-Hyperlink's dual support in action::
+We can use Hyperlink to very easily demonstrate the difference::
 
    >>> url = URL.from_text('http://example.com/café')
    >>> url.to_uri().to_text()
    u'http://example.com/caf%C3%A9'
 
-We construct a URL from text containing Unicode, then transform it
-using :meth:`~URL.to_uri()`. This results in ASCII-only
-percent-encoding characteristic of URIs.
+We construct a URL from text containing Unicode (``é``), then
+transform it using :meth:`~URL.to_uri()`. This results in ASCII-only
+percent-encoding familiar to all web developers, and a common
+characteristic of URIs.
 
-Still, Hyperlink's distinction between URIs and IRIs is limited to
-output. Input can contain *any mix* of percent encoding and Unicode,
-without issue:
+Still, Hyperlink's distinction between URIs and IRIs is pragmatic, and
+only limited to output. Input can contain *any mix* of percent
+encoding and Unicode, without issue:
 
    >>> url = URL.from_text('http://example.com/caf%C3%A9/au láit')
    >>> print(url.to_iri().to_text())
@@ -41,14 +42,16 @@ without issue:
    >>> print(url.to_uri().to_text())
    http://example.com/caf%C3%A9/au%20l%C3%A1it
 
-Note that even when a URI and IRI point to the same resource, they can
-still easily be different URLs:
+Note that even when a URI and IRI point to the same resource, they
+will often be different URLs:
 
    >>> url.to_uri() == url.to_iri()
    False
 
-And just like that, you're qualified to correct other people (and
-their code) on the nuances of URI vs IRI.
+And with that caveat out of the way, you're qualified to correct other
+people (and their code) on the nuances of URI vs IRI.
+
+.. _recognized the confusion: https://www.w3.org/TR/uri-clarification/
 
 Immutability
 ------------
@@ -70,6 +73,7 @@ well as dictionary keys.
 
 
 .. _RFC 3986: https://tools.ietf.org/html/rfc3986
+.. _RFC 3987: https://tools.ietf.org/html/rfc3987
 .. _section 5.4: https://tools.ietf.org/html/rfc3986#section-5.4
 .. _section 3.4: https://tools.ietf.org/html/rfc3986#section-3.4
 .. _section 5.2.4: https://tools.ietf.org/html/rfc3986#section-5.2.4
