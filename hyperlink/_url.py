@@ -536,7 +536,7 @@ class URL(object):
         >>> URL.from_text('http://example.com/pa/th').port
         80
         >>> URL.from_text('foo://example.com/pa/th').port
-        >>> URL.from_text('foo://example.com/pa/th:8042').port
+        >>> URL.from_text('foo://example.com:8042/pa/th').port
         8042
 
         .. note::
