@@ -8,7 +8,7 @@ hyperlink
 
 **Hyperlink** provides a pure-Python implementation of immutable
 URLs. Based on `RFC 3986`_ and `RFC 3987`_, the Hyperlink URL balances
-simplicity and correctness for both :ref:`URIs and IRIs <two_representations>`.
+simplicity and correctness for both :ref:`URIs and IRIs <uris_and_iris>`.
 
 Hyperlink is tested against Python 2.7, 3.4, 3.5, and PyPy.
 
@@ -44,7 +44,7 @@ Then, URLs are just an import away away::
   print(user_url.get('utm_source'))
   # prints: readthedocs
 
-See the API docs for more usage examples.
+See :ref:`the API docs <hyperlink_api>` for more usage examples.
 
 Gaps
 ----
@@ -62,3 +62,4 @@ Section listing
 
    design
    api
+   faq

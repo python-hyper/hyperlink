@@ -1,3 +1,5 @@
+.. _hyperlink_api:
+
 Hyperlink API
 =============
 
@@ -58,14 +60,15 @@ URLs have many parts, and URL objects have many attributes to represent them.
 .. autoattribute:: hyperlink.URL.userinfo
 .. autoattribute:: hyperlink.URL.user
 .. autoattribute:: hyperlink.URL.rooted
+.. autoattribute:: hyperlink.URL.family
 
 Low-level functions
 -------------------
 
 A couple of notable helpers used by the :class:`~hyperlink.URL` type.
 
-.. autoclass:: hyperlink._url.URLParseError
-.. autofunction:: hyperlink._url.parse_host
-
+.. autoclass:: hyperlink.URLParseError
+.. autofunction:: hyperlink.register_scheme
+.. autofunction:: hyperlink.parse_host
 
 .. TODO: run doctests in docs?

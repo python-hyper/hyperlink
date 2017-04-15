@@ -504,12 +504,82 @@ class URL(object):
 
         return
 
-    scheme = property(lambda self: self._scheme)
-    host = property(lambda self: self._host)
-    port = property(lambda self: self._port)
-    path = property(lambda self: self._path)
-    query = property(lambda self: self._query)
-    fragment = property(lambda self: self._fragment)
+    @property
+    def scheme(self):
+        """The scheme is a string, and the first part of an absolute URL, the
+        part before the first colon, and the part which defines the
+        semantics of the rest of the URL. Examples include "http",
+        "https", "ssh", "file", "mailto", and many others. See
+        :func:`~hyperlink.register_scheme()` for more info.
+        """
+        return self._scheme
+
+    @property
+    def host(self):
+        """The host is a string, and the second standard part of an absolute
+        URL. When present, a valid host must be a domain name, or an
+        IP (v4 or v6). It occurs before the first slash, or the second
+        colon, if a :attr:`~hyperlink.URL.port` is provided.
+        """
+        return self._host
+
+    @property
+    def port(self):
+        """The port is an integer that is commonly used in connecting to the
+        :attr:`host`, and almost never appears without it.
+
+        When not present in the original URL, this attribute defaults
+        to the scheme's default port. If the scheme's default port is
+        not known, and the port is not provided, this attribute will
+        be set to None.
+
+        >>> URL.from_text('http://example.com/pa/th').port
+        80
+        >>> URL.from_text('foo://example.com/pa/th').port
+        >>> URL.from_text('foo://example.com/pa/th:8042').port
+        8042
+
+        .. note::
+
+           Per the standard, when the port is the same as the schemes
+           default port, it will be omitted in the text URL.
+
+        """
+        return self._port
+
+    @property
+    def path(self):
+        """A tuple of strings, created by splitting the slash-separated
+        hierarchical path. Started by the first slash after the host,
+        terminated by a "?", which indicates the start of the
+        :attr:`~hyperlink.URL.query` string.
+        """
+        return self._path
+
+    @property
+    def query(self):
+        """Tuple of pairs, created by splitting the ampersand-separated
+        mapping of keys and optional values representing
+        non-hierarchical data used to identify the resource. Keys are
+        always strings. Values are strings when present, or None when
+        missing.
+
+        For more operations on the mapping, see
+        :meth:`~hyperlink.URL.get()`, :meth:`~hyperlink.URL.add()`,
+        :meth:`~hyperlink.URL.set()`, and
+        :meth:`~hyperlink.URL.delete()`.
+        """
+        return self._query
+
+    @property
+    def fragment(self):
+        """A string, the last part of the URL, indicated by the first "#"
+        after the :attr:`~hyperlink.URL.path` or
+        :attr:`~hyperlink.URL.query`. Enables indirect identification
+        of a secondary resource, like an anchor within an HTML page.
+
+        """
+        return self._fragment
 
     @property
     def rooted(self):
@@ -524,14 +594,32 @@ class URL(object):
         """
         return self._rooted
 
-    userinfo = property(lambda self: self._userinfo)
-    family = property(lambda self: self._family)
-    uses_netloc = property(lambda self: self._uses_netloc)
+    @property
+    def userinfo(self):
+        """The colon-separated string forming the username-password
+        combination.
+        """
+        return self._userinfo
+
+    @property
+    def family(self):
+        """Set to a socket constant (:data:`socket.AF_INET` or
+        :data:`socket.AF_INET6`) when the :attr:`~hyperlink.URL.host`
+        is an IP address. Set to ``None`` if the host is a domain name or
+        not set.
+        """
+        return self._family
+
+    @property
+    def uses_netloc(self):
+        """
+        """
+        return self._uses_netloc
 
     @property
     def user(self):
         """
-        The user portion of :attr:`userinfo`.
+        The user portion of :attr:`~hyperlink.URL.userinfo`.
         """
         return self.userinfo.split(u':')[0]
 
