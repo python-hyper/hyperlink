@@ -2,6 +2,8 @@
 
 * Polish logo
 * Optimize percent decoding
+* Get coverage up
+* Switch off ctypes/socket for IP validation
 
 ## Complete
 
