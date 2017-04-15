@@ -85,3 +85,5 @@ And if you're worried that URLs are just another technology with an
 obsoletion date planned in advance, I'll direct your attention to the
 ``IPvFuture`` rule in the `BNF grammar`_. If it has plans to outlast
 IPv6, the URL will probably outlast you and me, too.
+
+.. _BNF grammar: https://tools.ietf.org/html/rfc3986#appendix-A
