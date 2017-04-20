@@ -40,9 +40,10 @@ after_test:
 on_success:
     # Report coverage results to codecov.io
     # and export tox environment variables
+    - "%PYTHON%/Scripts/tox -e coverage-report"
     - "%PYTHON%/Scripts/pip install codecov"
     - set OS=WINDOWS
-    - "%PYTHON%/Scripts/codecov -e TOX_ENV OS"
+    - "%PYTHON%/Scripts/codecov -e TOX_ENV OS -f .tox\\coverage"
 
 artifacts:
   - path: dist\*

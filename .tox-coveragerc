@@ -1,0 +1,10 @@
+[run]
+branch = True
+source =
+    hyperlink
+
+[paths]
+source =
+   ../hyperlink
+   */lib/python*/site-packages/hyperlink
+   pypy/site-packages/hyperlink
