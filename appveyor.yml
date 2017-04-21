@@ -43,7 +43,7 @@ on_success:
     - "%PYTHON%/Scripts/tox -e coverage-report"
     - "%PYTHON%/Scripts/pip install codecov"
     - set OS=WINDOWS
-    - "%PYTHON%/Scripts/codecov -e TOX_ENV OS -f .tox\\coverage"
+    - "%PYTHON%/Scripts/codecov -e TOX_ENV OS -f .tox\\.coverage"
 
 artifacts:
   - path: dist\*
