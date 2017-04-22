@@ -2,13 +2,17 @@
 
 *Cool URLs that don't change.*
 
+<a href="https://hyperlink.readthedocs.io/en/latest/"><img src="https://img.shields.io/badge/docs-latest-brightgreen.svg?style=flat"></a>
+<a href="https://pypi.python.org/pypi/hyperlink"><img src="https://img.shields.io/pypi/v/boltons.svg"></a>
+<a href="http://calver.org"><img src="https://img.shields.io/badge/calver-YY.MINOR.MICRO-22bfda.svg"></a>
+
 Hyperlink provides a pure-Python implementation of immutable
 URLs. Based on RFC 3986 and 3987, the Hyperlink URL makes working with
 both URIs and IRIs easy.
 
 Hyperlink is tested against Python 2.7, 3.4, 3.5, and PyPy.
 
-Full documentation is available on [Read the Docs](#).
+Full documentation is available on [Read the Docs](http://hyperlink.readthedocs.io/en/latest/).
 
 ## Installation
 
