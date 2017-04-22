@@ -28,9 +28,10 @@ script:
 
 
 before_install:
-  - pip install codecov
+  - pip install codecov coverage
 
 
 after_success:
   - tox -e coverage-report
-  - COVERAGE_FILE=.tox/.coverage codecov
+  - COVERAGE_FILE=.tox/.coverage coverage xml
+  - codecov -f coverage.xml
