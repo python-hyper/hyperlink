@@ -33,4 +33,4 @@ before_install:
 
 after_success:
   - tox -e coverage-report
-  - cd .tox && codecov
+  - COVERAGE_FILE=.tox/.coverage codecov
