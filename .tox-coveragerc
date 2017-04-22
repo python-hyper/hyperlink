@@ -7,4 +7,5 @@ source =
 source =
    ../hyperlink
    */lib/python*/site-packages/hyperlink
+   */Lib/site-packages/hyperlink
    pypy/site-packages/hyperlink
