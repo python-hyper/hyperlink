@@ -67,7 +67,59 @@ except NameError:
 NoneType = type(None)
 
 
-_unspecified = _UNSPECIFIED = object()
+# from boltons.typeutils
+def make_sentinel(name='_MISSING', var_name=None):
+    """Creates and returns a new **instance** of a new class, suitable for
+    usage as a "sentinel", a kind of singleton often used to indicate
+    a value is missing when ``None`` is a valid input.
+
+    Args:
+        name (str): Name of the Sentinel
+        var_name (str): Set this name to the name of the variable in
+            its respective module enable pickleability.
+
+    >>> make_sentinel(var_name='_MISSING')
+    _MISSING
+
+    The most common use cases here in boltons are as default values
+    for optional function arguments, partly because of its
+    less-confusing appearance in automatically generated
+    documentation. Sentinels also function well as placeholders in queues
+    and linked lists.
+
+    .. note::
+
+      By design, additional calls to ``make_sentinel`` with the same
+      values will not produce equivalent objects.
+
+      >>> make_sentinel('TEST') == make_sentinel('TEST')
+      False
+      >>> type(make_sentinel('TEST')) == type(make_sentinel('TEST'))
+      False
+
+    """
+    class Sentinel(object):
+        def __init__(self):
+            self.name = name
+            self.var_name = var_name
+
+        def __repr__(self):
+            if self.var_name:
+                return self.var_name
+            return '%s(%r)' % (self.__class__.__name__, self.name)
+        if var_name:
+            def __reduce__(self):
+                return self.var_name
+
+        def __nonzero__(self):
+            return False
+
+        __bool__ = __nonzero__
+
+    return Sentinel()
+
+
+_unspecified = _UNSET = make_sentinel('_UNSET')
 
 
 # RFC 3986 Section 2.3, Unreserved URI Characters
@@ -277,7 +329,7 @@ class URLParseError(ValueError):
 
 
 def _optional(argument, default):
-    if argument is _UNSPECIFIED:
+    if argument is _UNSET:
         return default
     else:
         return argument
@@ -694,10 +746,8 @@ class URL(object):
         """
         return bool(self.scheme and self.host)
 
-    def replace(self, scheme=_unspecified, host=_unspecified,
-                path=_unspecified, query=_unspecified,
-                fragment=_unspecified, port=_unspecified,
-                rooted=_unspecified, userinfo=_unspecified):
+    def replace(self, scheme=_UNSET, host=_UNSET, path=_UNSET, query=_UNSET,
+                fragment=_UNSET, port=_UNSET, rooted=_UNSET, userinfo=_UNSET):
         """:class:`URL` objects are immutable, which means that attributes
         are designed to be set only once, at construction. Instead of
         modifying an existing URL, one simply creates a copy with the
