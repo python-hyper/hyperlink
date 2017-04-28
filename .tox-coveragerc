@@ -2,9 +2,11 @@
 branch = True
 source =
     hyperlink
+    ../hyperlink
 
 [paths]
 source =
    ../hyperlink
    */lib/python*/site-packages/hyperlink
-   pypy/site-packages/hyperlink
+   */Lib/site-packages/hyperlink
+   */pypy/site-packages/hyperlink
