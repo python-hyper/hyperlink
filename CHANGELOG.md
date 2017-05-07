@@ -1,8 +1,19 @@
 # Hyperlink Changelog
 
-## "dev"
+## dev (not yet released)
+
+* *None so far*
+
+## 17.1.1
 
 * Python 2.6 support
+* Added LICENSE
+* Automated CI and code coverage
+* When a host and a query string are present, empty paths are now
+  rendered as a single slash. This is slightly more in line with RFC
+  3986 section 6.2.3, but might need to go further and use an empty
+  slash whenever the authority is present. This also better replicates
+  Twisted URL's old behavior.
 
 ## 17.1.0
 
