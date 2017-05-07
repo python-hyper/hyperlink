@@ -514,7 +514,10 @@ class URL(object):
         if port is None:
             port = SCHEME_PORT_MAP.get(scheme)
         if host and query and not path:
-            path = ()  # (u'',)
+            # per RFC 3986 6.2.3, "a URI that uses the generic syntax
+            # for authority with an empty path should be normalized to
+            # a path of '/'."
+            path = (u'',)
 
         # Now that we're done detecting whether they were passed, we can set
         # them to their defaults:
@@ -1049,7 +1052,7 @@ class URL(object):
         """
         scheme = self.scheme
         authority = self.authority(with_password)
-        path = u'/'.join(([u''] if (self.rooted and self.path) else [])
+        path = u'/'.join(([u''] if self.rooted else [])
                          + [_encode_path_part(segment, maximal=False)
                             for segment in self.path])
         query_string = u'&'.join(

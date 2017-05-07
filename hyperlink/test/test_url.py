@@ -97,7 +97,7 @@ ROUNDTRIP_TESTS = (
 
     'http://googlewebsite.com/e-shops.aspx',
     'http://example.com:8080/search?q=123&business=Nothing%20Special',
-    'http://hatnote.com:9000?arg=1&arg=2&arg=3',
+    'http://hatnote.com:9000/?arg=1&arg=2&arg=3',
     'https://xn--bcher-kva.ch',
     'http://xn--ggbla1c4e.xn--ngbc5azd/',
     'http://tools.ietf.org/html/rfc3986#section-3.4',
@@ -431,7 +431,7 @@ class TestURL(TestCase):
             URL.from_text("http://www.foo.com/a/nice/path/")
             .add(u"foo", u"bar").to_text())
         self.assertEqual(
-            "http://www.foo.com?foo=bar",
+            "http://www.foo.com/?foo=bar",
             URL(host=u"www.foo.com").add(u"foo", u"bar")
             .to_text())
         urlpath = URL.from_text(BASIC_URL)
