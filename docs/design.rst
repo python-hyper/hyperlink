@@ -141,4 +141,4 @@ If you are porting a Twisted project to use Hyperlink's URL, and
 encounter any sort of incompatibility, please do not hesitate to `file
 an issue`_.
 
-.. _file an issue: https://github.com/mahmoud/hyperlink/issues
+.. _file an issue: https://github.com/python-hyper/hyperlink/issues

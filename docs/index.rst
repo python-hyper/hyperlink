@@ -51,8 +51,8 @@ Gaps
 
 Found something missing in hyperlink? `Pull Requests`_ and `Issues`_ weclome!
 
-.. _Pull Requests: https://github.com/mahmoud/hyperlink/pulls
-.. _Issues: https://github.com/mahmoud/hyperlink/issues
+.. _Pull Requests: https://github.com/mahmoud/python-hyper/pulls
+.. _Issues: https://github.com/mahmoud/python-hyper/issues
 
 Section listing
 ---------------
