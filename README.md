@@ -36,15 +36,15 @@ Then, hyperlink away!
 
 ```
 
-See the full API docs [here](#).
+See the full API docs [here](https://hyperlink.readthedocs.io/en/latest/).
 
 ## More information
 
 Hyperlink would not have been possible without the help of
-[Glyph Lefkowitz](#) and many other community members, especially
-considering that it started as an extract from the Twisted networking
-library. Thanks to them, Hyperlink's URL has been production-grade for
-well over a decade.
+[Glyph Lefkowitz](https://glyph.twistedmatrix.com/) and many other
+community members, especially considering that it started as an
+extract from the Twisted networking library. Thanks to them,
+Hyperlink's URL has been production-grade for well over a decade.
 
 Still, should you encounter any issues, do file an issue, or submit a
 pull request.
