@@ -962,6 +962,7 @@ class TestURL(TestCase):
         # assert url.to_text() == u'http://example.com/?a=b&c&x=x&x=y'
 
     def test_schemeless_path(self):
+        "See issue #4"
         u1 = URL.from_text("urn%3Aietf%3Awg%3Aoauth%3A2.0%3Aoob")
         u2 = URL.from_text(u1.to_text())
         assert u1 == u2  # sanity testing roundtripping
@@ -977,6 +978,13 @@ class TestURL(TestCase):
 
         u6 = URL.from_text(u5.to_text()).to_uri()
         assert u5 == u6  # colons stay decoded bc they're not in the first seg
+
+    def test_emoji_domain(self):
+        "See issue #7, affecting only narrow builds (2.6-3.3)"
+        url = URL.from_text('https://xn--vi8hiv.ws')
+        iri = url.to_iri()
+        iri.to_text()
+        # as long as we don't get ValueErrors, we're good
 
     # python 2.6 compat
     def assertRaises(self, excClass, callableObj=None, *args, **kwargs):
