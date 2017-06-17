@@ -962,13 +962,21 @@ class TestURL(TestCase):
         # assert url.to_text() == u'http://example.com/?a=b&c&x=x&x=y'
 
     def test_schemeless_path(self):
-        u1 = URL.fromText("urn%3Aietf%3Awg%3Aoauth%3A2.0%3Aoob")
-        u2 = URL.fromText(u1.asText())
+        u1 = URL.from_text("urn%3Aietf%3Awg%3Aoauth%3A2.0%3Aoob")
+        u2 = URL.from_text(u1.to_text())
         assert u1 == u2  # sanity testing roundtripping
 
-        u3 = URL.fromText(u1.asIRI().asText())
+        u3 = URL.from_text(u1.to_iri().to_text())
         assert u1 == u3
         assert u2 == u3
+
+        # test that colons are ok past the first segment
+        u4 = URL.from_text("first-segment/urn%3Aietf%3Awg%3Aoauth%3A2.0%3Aoob")
+        u5 = u4.to_iri()
+        assert u5.to_text() == u'first-segment/urn:ietf:wg:oauth:2.0:oob'
+
+        u6 = URL.from_text(u5.to_text()).to_uri()
+        assert u5 == u6  # colons stay decoded bc they're not in the first seg
 
     # python 2.6 compat
     def assertRaises(self, excClass, callableObj=None, *args, **kwargs):
