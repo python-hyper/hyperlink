@@ -1059,14 +1059,13 @@ class URL(object):
         try:
             asciiHost = self.host.encode("ascii")
         except UnicodeEncodeError:
-            # ValueErrors are from narrow Python builds, see #7
             textHost = self.host
         else:
             try:
                 textHost = asciiHost.decode("idna")
             except ValueError:
-                # only reached on narrow Python builds, see #7
-                textHost = asciiHost
+                # only reached on "narrow" (UCS-2) Python builds <3.4, see #7
+                textHost = self.host
         return self.replace(userinfo=new_userinfo,
                             host=textHost,
                             path=[_percent_decode(segment)
