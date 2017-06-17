@@ -1058,7 +1058,8 @@ class URL(object):
                                   self.userinfo.split(':', 1)])
         try:
             asciiHost = self.host.encode("ascii")
-        except UnicodeEncodeError:
+        except (UnicodeEncodeError, ValueError):
+            # ValueErrors are from narrow Python builds, see #7
             textHost = self.host
         else:
             textHost = asciiHost.decode("idna")
