@@ -1050,6 +1050,14 @@ class URL(object):
             >>> print(url.to_iri().to_text())
             https://→example.com/foo⇧bar/
 
+        .. note::
+
+            As a general Python issue, "narrow" (UCS-2) builds of
+            Python may not be able to fully decode certain URLs, and
+            the in those cases, this method will return a best-effort,
+            partially-decoded, URL which is still valid. This issue
+            does not affect any Python builds 3.4+.
+
         Returns:
             URL: A new instance with its path segments, query parameters, and
             hostname decoded for display purposes.
