@@ -152,6 +152,8 @@ _USERINFO_SAFE = _UNRESERVED_CHARS | _SUB_DELIMS
 _USERINFO_DELIMS = _ALL_DELIMS - _USERINFO_SAFE
 _PATH_SAFE = _UNRESERVED_CHARS | _SUB_DELIMS | set(u':@%')
 _PATH_DELIMS = _ALL_DELIMS - _PATH_SAFE
+_SCHEMELESS_PATH_SAFE = _PATH_SAFE - set(':')
+_SCHEMELESS_PATH_DELIMS = _ALL_DELIMS - _SCHEMELESS_PATH_SAFE
 _FRAGMENT_SAFE = _UNRESERVED_CHARS | _PATH_SAFE | set(u'/?')
 _FRAGMENT_DELIMS = _ALL_DELIMS - _FRAGMENT_SAFE
 _QUERY_SAFE = _UNRESERVED_CHARS | _FRAGMENT_SAFE - set(u'&=+')
@@ -173,12 +175,35 @@ def _make_quote_map(safe_chars):
 
 _USERINFO_PART_QUOTE_MAP = _make_quote_map(_USERINFO_SAFE)
 _PATH_PART_QUOTE_MAP = _make_quote_map(_PATH_SAFE)
+_SCHEMELESS_PATH_PART_QUOTE_MAP = _make_quote_map(_SCHEMELESS_PATH_SAFE)
 _QUERY_PART_QUOTE_MAP = _make_quote_map(_QUERY_SAFE)
 _FRAGMENT_QUOTE_MAP = _make_quote_map(_FRAGMENT_SAFE)
 
 
 def _encode_path_part(text, maximal=True):
-    """Percent-encode a single segment of a URL path.
+    "Percent-encode a single segment of a URL path."
+    if maximal:
+        bytestr = normalize('NFC', to_unicode(text)).encode('utf8')
+        return u''.join([_PATH_PART_QUOTE_MAP[b] for b in bytestr])
+    return u''.join([_PATH_PART_QUOTE_MAP[t] if t in _PATH_DELIMS else t
+                     for t in text])
+
+
+def _encode_schemeless_path_part(text, maximal=True):
+    """Percent-encode the first segment of a URL path for a URL without a
+    scheme specified.
+    """
+    if maximal:
+        bytestr = normalize('NFC', to_unicode(text)).encode('utf8')
+        return u''.join([_SCHEMELESS_PATH_PART_QUOTE_MAP[b] for b in bytestr])
+    return u''.join([_SCHEMELESS_PATH_PART_QUOTE_MAP[t]
+                     if t in _SCHEMELESS_PATH_DELIMS else t for t in text])
+
+
+def _encode_path_parts(text_parts, rooted=False, has_scheme=True,
+                       has_authority=True, joined=True, maximal=True):
+    """
+    Percent-encode a tuple of path parts into a complete path.
 
     Setting *maximal* to False percent-encodes only the reserved
     characters that are syntactically necessary for serialization,
@@ -187,12 +212,33 @@ def _encode_path_part(text, maximal=True):
     Leaving *maximal* set to its default True percent-encodes
     everything required to convert a portion of an IRI to a portion of
     a URI.
+
+    RFC 3986 3.3:
+
+       If a URI contains an authority component, then the path component
+       must either be empty or begin with a slash ("/") character.  If a URI
+       does not contain an authority component, then the path cannot begin
+       with two slash characters ("//").  In addition, a URI reference
+       (Section 4.1) may be a relative-path reference, in which case the
+       first path segment cannot contain a colon (":") character.
     """
-    if maximal:
-        bytestr = normalize('NFC', to_unicode(text)).encode('utf8')
-        return u''.join([_PATH_PART_QUOTE_MAP[b] for b in bytestr])
-    return u''.join([_PATH_PART_QUOTE_MAP[t] if t in _PATH_DELIMS else t
-                     for t in text])
+    if not text_parts:
+        return u'' if joined else text_parts
+    if rooted:
+        text_parts = (u'',) + text_parts
+    # elif has_authority and text_parts:
+    #     raise Exception('see rfc above')  # TODO: too late to fail like this?
+    encoded_parts = []
+    if has_scheme:
+        encoded_parts = [_encode_path_part(part, maximal=maximal)
+                         if part else part for part in text_parts]
+    else:
+        encoded_parts = [_encode_schemeless_path_part(text_parts[0])]
+        encoded_parts.extend([_encode_path_part(part, maximal=maximal)
+                              if part else part for part in text_parts[1:]])
+    if joined:
+        return u'/'.join(encoded_parts)
+    return tuple(encoded_parts)
 
 
 def _encode_query_part(text, maximal=True):
@@ -980,15 +1026,16 @@ class URL(object):
         """
         new_userinfo = u':'.join([_encode_userinfo_part(p) for p in
                                   self.userinfo.split(':', 1)])
+        new_path = _encode_path_parts(self.path, has_scheme=bool(self.scheme),
+                                      rooted=False, joined=False, maximal=True)
         return self.replace(
             userinfo=new_userinfo,
             host=self.host.encode("idna").decode("ascii"),
-            path=(_encode_path_part(segment, maximal=True)
-                  for segment in self.path),
-            query=(tuple(_encode_query_part(x, maximal=True)
-                         if x is not None else None
-                         for x in (k, v))
-                   for k, v in self.query),
+            path=new_path,
+            query=tuple([tuple(_encode_query_part(x, maximal=True)
+                               if x is not None else None
+                               for x in (k, v))
+                         for k, v in self.query]),
             fragment=_encode_fragment_part(self.fragment, maximal=True)
         )
 
@@ -1052,9 +1099,11 @@ class URL(object):
         """
         scheme = self.scheme
         authority = self.authority(with_password)
-        path = u'/'.join(([u''] if self.rooted else [])
-                         + [_encode_path_part(segment, maximal=False)
-                            for segment in self.path])
+        path = _encode_path_parts(self.path,
+                                  rooted=self.rooted,
+                                  has_scheme=bool(scheme),
+                                  has_authority=bool(authority),
+                                  maximal=False)
         query_string = u'&'.join(
             u'='.join((_encode_query_part(x, maximal=False)
                        for x in ([k] if v is None else [k, v])))
