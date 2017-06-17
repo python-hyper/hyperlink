@@ -961,6 +961,15 @@ class TestURL(TestCase):
         # Would expect:
         # assert url.to_text() == u'http://example.com/?a=b&c&x=x&x=y'
 
+    def test_schemeless_path(self):
+        u1 = URL.fromText("urn%3Aietf%3Awg%3Aoauth%3A2.0%3Aoob")
+        u2 = URL.fromText(u1.asText())
+        assert u1 == u2  # sanity testing roundtripping
+
+        u3 = URL.fromText(u1.asIRI().asText())
+        assert u1 == u3
+        assert u2 == u3
+
     # python 2.6 compat
     def assertRaises(self, excClass, callableObj=None, *args, **kwargs):
         """Fail unless an exception of class excClass is raised
