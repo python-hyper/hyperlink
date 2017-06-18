@@ -985,9 +985,13 @@ class TestURL(TestCase):
         iri.to_text()
         # as long as we don't get ValueErrors, we're good
 
-    def test_slash_in_host(self):
-        # URL(scheme=u'http', userinfo=u'', host=u'a', port=80, path=(u'c',))
+    def test_delim_in_param(self):
+        "Per issue #6 and #8"
         self.assertRaises(ValueError, URL, scheme=u'http', host=u'a/c')
+        self.assertRaises(ValueError, URL, path=(u"?",))
+        self.assertRaises(ValueError, URL, path=(u"#",))
+        self.assertRaises(ValueError, URL, query=((u"&", "test")))
+
 
     # python 2.6 compat
     def assertRaises(self, excClass, callableObj=None, *args, **kwargs):
