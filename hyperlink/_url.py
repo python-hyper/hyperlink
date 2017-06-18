@@ -179,6 +179,8 @@ _SCHEMELESS_PATH_PART_QUOTE_MAP = _make_quote_map(_SCHEMELESS_PATH_SAFE)
 _QUERY_PART_QUOTE_MAP = _make_quote_map(_QUERY_SAFE)
 _FRAGMENT_QUOTE_MAP = _make_quote_map(_FRAGMENT_SAFE)
 
+_ROOT_PATHS = frozenset(((), (u'',)))
+
 
 def _encode_path_part(text, maximal=True):
     "Percent-encode a single segment of a URL path."
@@ -779,11 +781,14 @@ class URL(object):
     def __eq__(self, other):
         if not isinstance(other, self.__class__):
             return NotImplemented
-        for attr in ['scheme', 'userinfo', 'host', 'path', 'query',
-                     'fragment', 'port', 'rooted', 'family', 'uses_netloc']:
+        for attr in ['scheme', 'userinfo', 'host', 'query',
+                     'fragment', 'port', 'family', 'uses_netloc']:
             if getattr(self, attr) != getattr(other, attr):
                 return False
-        return True
+        if self.path == other.path or (self.path in _ROOT_PATHS
+                                       and other.path in _ROOT_PATHS):
+            return True
+        return False
 
     def __ne__(self, other):
         if not isinstance(other, self.__class__):
