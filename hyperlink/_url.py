@@ -949,11 +949,13 @@ class URL(object):
             u'http://localhost/a/b/c/d?x=y'
 
         Args:
-           segments (str): Additional parts to be joined and added to the
-              path, like :func:`os.path.join`.
+           segments (str): Additional parts to be joined and added to
+              the path, like :func:`os.path.join`. Special characters
+              in segments will be percent encoded.
 
         Returns:
            URL: A copy of the current URL with the extra path segments.
+
         """
         segments = [_textcheck('path segment', s) for s in segments]
         new_segs = _encode_path_parts(segments, joined=False, maximal=False)
@@ -970,9 +972,13 @@ class URL(object):
 
         Returns:
            URL: A copy of the current URL with the last path segment
-              replaced by *segment*.
+              replaced by *segment*. Special characters such as
+              ``/?#`` will be percent encoded.
+
         """
-        return self.replace(path=self.path[:-1] + (segment,))
+        _textcheck('path segment', segment)
+        new_path = self.path[:-1] + (_encode_path_part(segment),)
+        return self.replace(path=new_path)
 
     def click(self, href=u''):
         """Resolve the given URL relative to this URL.
