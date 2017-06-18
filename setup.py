@@ -9,7 +9,7 @@ from setuptools import setup
 
 
 __author__ = 'Mahmoud Hashemi and Glyph Lefkowitz'
-__version__ = '17.1.2dev'
+__version__ = '17.2.0'
 __contact__ = 'mahmoud@hatnote.com'
 __url__ = 'https://github.com/python-hyper/hyperlink'
 __license__ = 'BSD'
