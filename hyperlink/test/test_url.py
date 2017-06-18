@@ -724,7 +724,7 @@ class TestURL(TestCase):
             def __repr__(self):
                 return "<unexpected>"
 
-        defaultExpectation = "unicode" if bytes is str else "str"
+        defaultExpectation = "unicode"
 
         def assertRaised(raised, expectation, name):
             self.assertEqual(str(raised.exception),
@@ -737,7 +737,6 @@ class TestURL(TestCase):
                 URL(**{param: Unexpected()})
 
             assertRaised(raised, expectation, param)
-
 
         check("scheme")
         check("host")
@@ -985,6 +984,10 @@ class TestURL(TestCase):
         iri = url.to_iri()
         iri.to_text()
         # as long as we don't get ValueErrors, we're good
+
+    def test_slash_in_host(self):
+        # URL(scheme=u'http', userinfo=u'', host=u'a', port=80, path=(u'c',))
+        self.assertRaises(ValueError, URL, scheme=u'http', host=u'a/c')
 
     # python 2.6 compat
     def assertRaises(self, excClass, callableObj=None, *args, **kwargs):
