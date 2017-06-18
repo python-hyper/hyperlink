@@ -4,6 +4,15 @@
 
 * *None so far*
 
+## 17.2.1
+
+*(June 18, 2017)*
+
+A small bugfix release after yesterday's big changes. This patch
+version simply reverts an exception message for parameters expecting
+strings on Python 3, returning to compliance with Twisted's test
+suite.
+
 ## 17.2.0
 
 *(June 17, 2017)*
