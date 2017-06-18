@@ -1000,6 +1000,28 @@ class TestURL(TestCase):
         self.assertRaises(ValueError, URL, path=(u"#",))
         self.assertRaises(ValueError, URL, query=((u"&", "test")))
 
+    def test_empty_paths_eq(self):
+        u1 = URL.from_text('http://example.com/')
+        u2 = URL.from_text('http://example.com')
+
+        assert u1 == u2
+
+        u1 = URL.from_text('http://example.com')
+        u2 = URL.from_text('http://example.com')
+
+        assert u1 == u2
+
+        u1 = URL.from_text('http://example.com')
+        u2 = URL.from_text('http://example.com/')
+
+        assert u1 == u2
+
+        u1 = URL.from_text('http://example.com/')
+        u2 = URL.from_text('http://example.com/')
+
+        assert u1 == u2
+
+
     # python 2.6 compat
     def assertRaises(self, excClass, callableObj=None, *args, **kwargs):
         """Fail unless an exception of class excClass is raised
