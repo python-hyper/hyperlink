@@ -11,7 +11,7 @@ from setuptools import setup
 
 
 __author__ = 'Mahmoud Hashemi and Glyph Lefkowitz'
-__version__ = '17.2.0'
+__version__ = '17.2.1dev'
 __contact__ = 'mahmoud@hatnote.com'
 __url__ = 'https://github.com/python-hyper/hyperlink'
 __license__ = 'BSD'
@@ -52,7 +52,7 @@ A brief checklist for release:
 * python setup.py sdist bdist_wheel upload
 * bump docs/conf.py version
 * git commit
-* git tag -a x.y.z -m "brief summary"
+* git tag -a vx.y.z -m "brief summary"
 * write CHANGELOG
 * git commit
 * bump setup.py version onto n+1 dev
