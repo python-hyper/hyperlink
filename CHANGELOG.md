@@ -4,6 +4,27 @@
 
 * *None so far*
 
+## 17.2.0
+
+*(June 17, 2017)*
+
+Fixed a great round of issues based on the amazing community review
+(@wsanchez and @jvanasco) after our first listserv announcement and
+[PyConWeb talk](https://www.youtube.com/watch?v=EIkmADO-r10).
+
+* Add checking for invalid unescaped delimiters in parameters to the
+  `URL` constructor. No more slashes and question marks allowed in
+  path segments themselves.
+* More robust support for IDNA decoding on "narrow"/UCS-2 Python
+  builds (e.g., Mac's built-in Python).
+* Correctly encode colons in the first segment of relative paths for
+  URLs with no scheme set.
+* Make URLs with empty paths compare as equal (`http://example.com`
+  vs. `http://example.com/`) per RFC 3986. If you need the stricter
+  check, you can check the attributes directly or compare the strings.
+* Automatically escape the arguments to `.child()` and `.sibling()`
+* Fix some IPv6 and port parsing corner cases.
+
 ## 17.1.1
 
 * Python 2.6 support
