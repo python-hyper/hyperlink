@@ -724,7 +724,7 @@ class TestURL(TestCase):
             def __repr__(self):
                 return "<unexpected>"
 
-        defaultExpectation = "unicode"
+        defaultExpectation = "unicode" if bytes is str else "str"
 
         def assertRaised(raised, expectation, name):
             self.assertEqual(str(raised.exception),

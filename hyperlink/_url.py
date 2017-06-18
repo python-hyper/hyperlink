@@ -402,7 +402,8 @@ def _textcheck(name, value, delims=frozenset(), nullable=False):
         if nullable and value is None:
             return value  # used by query string values
         else:
-            exp = 'unicode or NoneType' if nullable else 'unicode'
+            str_name = "unicode" if bytes is str else "str"
+            exp = str_name + ' or NoneType' if nullable else str_name
             raise TypeError('expected %s for %s, got %r' % (exp, name, value))
     if delims and set(value) & set(delims):  # TODO: test caching into regexes
         raise ValueError('one or more reserved delimiters %s present in %s: %r'
