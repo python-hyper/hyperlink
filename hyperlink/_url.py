@@ -387,11 +387,24 @@ def _typecheck(name, value, *types):
     exception describing the problem using *name*.
     """
     if not types:
-        types = (unicode,)
+        raise ValueError('expected one or more types, maybe use _textcheck?')
     if not isinstance(value, types):
-        raise TypeError("expected %s for %s, got %s"
+        raise TypeError("expected %s for %s, got %r"
                         % (" or ".join([t.__name__ for t in types]),
-                           name, repr(value)))
+                           name, value))
+    return value
+
+
+def _textcheck(name, value, delims=frozenset(), nullable=False):
+    if not isinstance(value, unicode):
+        if nullable and value is None:
+            return value  # used by query string values
+        else:
+            exp = 'unicode or NoneType' if nullable else 'unicode'
+            raise TypeError('expected %s for %s, got %r' % (exp, name, value))
+    if delims and set(value) & set(delims):  # TODO: test caching into regexes
+        raise ValueError('one or more reserved delimiters %s present in %s: %r'
+                         % (''.join(delims), name, value))
     return value
 
 
@@ -575,34 +588,36 @@ class URL(object):
             rooted = bool(host)
 
         # Set attributes.
-        self._scheme = _typecheck("scheme", scheme)
+        self._scheme = _textcheck("scheme", scheme)
         if self._scheme:
             if not _SCHEME_RE.match(self._scheme):
                 raise ValueError('invalid scheme: %r. Only alphanumeric, "+",'
                                  ' "-", and "." allowed. Did you meant to call'
                                  ' %s.from_text()?'
                                  % (self._scheme, self.__class__.__name__))
-        self._host = _typecheck("host", host)
+        self._host = _textcheck("host", host, '/?#@')
         if isinstance(path, unicode):
             raise TypeError("expected iterable of text for path, not: %r"
                             % (path,))
-        self._path = tuple((_typecheck("path segment", segment)
+        self._path = tuple((_textcheck("path segment", segment, '/?#')
                             for segment in path))
         self._query = tuple(
-            (_typecheck("query parameter name", k),
-             _typecheck("query parameter value", v, unicode, NoneType))
+            (_textcheck("query parameter name", k, '&=#'),
+             _textcheck("query parameter value", v, '&#', nullable=True))
             for (k, v) in query
         )
-        self._fragment = _typecheck("fragment", fragment)
+        self._fragment = _textcheck("fragment", fragment)
         self._port = _typecheck("port", port, int, NoneType)
         self._rooted = _typecheck("rooted", rooted, bool)
-        self._userinfo = _typecheck("userinfo", userinfo)
+        self._userinfo = _textcheck("userinfo", userinfo, '/?#@')
         self._family = _typecheck("family", family,
                                   type(socket.AF_INET), NoneType)
+        if ':' in self._host and self._family != socket.AF_INET6:
+            raise ValueError('invalid ":" present in host: %r' % self._host)
 
         uses_netloc = scheme_uses_netloc(self._scheme, uses_netloc)
-        self._uses_netloc = _typecheck("uses_netloc", uses_netloc, bool, NoneType)
-
+        self._uses_netloc = _typecheck("uses_netloc",
+                                       uses_netloc, bool, NoneType)
         return
 
     @property
@@ -883,8 +898,10 @@ class URL(object):
 
         host, port = None, None
         if hostinfo:
-            host, sep, port_str = hostinfo.partition(u':')
-            if sep:
+            host, sep, port_str = hostinfo.rpartition(u':')
+            if not sep:
+                host = port_str
+            else:
                 if u']' in port_str:
                     host = hostinfo  # wrong split, was an ipv6
                 else:
@@ -938,8 +955,10 @@ class URL(object):
         Returns:
            URL: A copy of the current URL with the extra path segments.
         """
+        segments = [_textcheck('path segment', s) for s in segments]
+        new_segs = _encode_path_parts(segments, joined=False, maximal=False)
         new_path = self.path[:-1 if (self.path and self.path[-1] == u'')
-                             else None] + segments
+                             else None] + new_segs
         return self.replace(path=new_path)
 
     def sibling(self, segment):
@@ -978,7 +997,7 @@ class URL(object):
 
         .. _RFC 3986 section 5: https://tools.ietf.org/html/rfc3986#section-5
         """
-        _typecheck("relative URL", href)
+        _textcheck("relative URL", href)
         if href:
             clicked = URL.from_text(href)
             if clicked.absolute:
