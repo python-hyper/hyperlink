@@ -10,7 +10,7 @@ from unittest import TestCase
 
 from .. import URL, URLParseError
 # automatically import the py27 windows implementation when appropriate
-from .._url import inet_pton
+from .._url import inet_pton, SCHEME_PORT_MAP
 
 unicode = type(u'')
 
@@ -816,6 +816,14 @@ class TestURL(TestCase):
         url = URL.from_text('ztp:test:com')
         self.assertEqual(url.uses_netloc, False)
 
+    def test_ipv6_with_port(self):
+        t = 'https://[2001:0db8:85a3:0000:0000:8a2e:0370:7334]:80/'
+        url = URL.from_text(t)
+        assert url.host == '2001:0db8:85a3:0000:0000:8a2e:0370:7334'
+        assert url.port == 80
+        assert url.family == socket.AF_INET6
+        assert SCHEME_PORT_MAP[url.scheme] != url.port
+
     def test_invalid_ipv6(self):
         invalid_ipv6_ips = ['2001::0234:C1ab::A0:aabc:003F',
                             '2001::1::3F',
@@ -991,7 +999,6 @@ class TestURL(TestCase):
         self.assertRaises(ValueError, URL, path=(u"?",))
         self.assertRaises(ValueError, URL, path=(u"#",))
         self.assertRaises(ValueError, URL, query=((u"&", "test")))
-
 
     # python 2.6 compat
     def assertRaises(self, excClass, callableObj=None, *args, **kwargs):
