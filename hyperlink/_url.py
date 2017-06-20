@@ -321,7 +321,7 @@ def register_scheme(text, uses_netloc=None, default_port=None):
     if default_port is not None:
         try:
             default_port = int(default_port)
-        except ValueError:
+        except (ValueError, TypeError):
             raise ValueError('default_port expected integer or None, not %r'
                              % (default_port,))
 
