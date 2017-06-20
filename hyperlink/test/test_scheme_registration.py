@@ -26,6 +26,14 @@ class TestSchemeRegistration(HyperlinkTestCase):
         assert u3.to_text() == 'deltron://example.com'
 
         register_scheme('nonetron', default_port=3031)
+        u4 = URL(scheme='nonetron')
+        u4 = u4.replace(host='example.com')
+        assert u4.to_text() == 'nonetron://example.com'
+
+        register_scheme('noloctron', uses_netloc=False)
+        u4 = URL(scheme='noloctron')
+        u4 = u4.replace(path=("example", "path"))
+        assert u4.to_text() == 'noloctron:example/path'
 
     def test_register_no_netloc_scheme(self):
         register_scheme('netlocless', uses_netloc=False)
