@@ -35,7 +35,7 @@ library. The easiest way to install is with pip::
 
   pip install hyperlink
 
-Then, URLs are just an import away away::
+Then, URLs are just an import away::
 
   from hyperlink import URL
 
