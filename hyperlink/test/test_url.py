@@ -234,6 +234,14 @@ class TestURL(HyperlinkTestCase):
             result = URL.from_text(test).to_text()
             self.assertEqual(test, result)
 
+    def test_roundtrip_iri(self):
+        for test in ROUNDTRIP_TESTS:
+            url = URL.from_text(test)
+            iri = url.to_iri()
+            assert iri == url.to_iri()
+            assert iri.to_text() == url.to_iri().to_text()
+        return
+
     def test_equality(self):
         """
         Two URLs decoded using L{URL.from_text} will be equal (C{==}) if they
