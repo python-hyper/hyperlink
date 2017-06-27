@@ -819,7 +819,8 @@ class URL(object):
         return bool(self.scheme and self.host)
 
     def replace(self, scheme=_UNSET, host=_UNSET, path=_UNSET, query=_UNSET,
-                fragment=_UNSET, port=_UNSET, rooted=_UNSET, userinfo=_UNSET):
+                fragment=_UNSET, port=_UNSET, rooted=_UNSET, userinfo=_UNSET,
+                family=_UNSET, uses_netloc=_UNSET):
         """:class:`URL` objects are immutable, which means that attributes
         are designed to be set only once, at construction. Instead of
         modifying an existing URL, one simply creates a copy with the
@@ -861,6 +862,8 @@ class URL(object):
             port=_optional(port, self.port),
             rooted=_optional(rooted, self.rooted),
             userinfo=_optional(userinfo, self.userinfo),
+            family=_optional(family, self.family),
+            uses_netloc=_optional(uses_netloc, self.uses_netloc)
         )
 
     @classmethod
