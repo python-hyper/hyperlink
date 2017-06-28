@@ -7,6 +7,13 @@
 * Get coverage up
 * Switch off ctypes/socket for IP validation
 
+## normalize method
+
+* unquote all unreserved characters (RFC 3986 2.3)
+* lowercase scheme
+* lowercase host
+* resolve path parts (RFC 3986 6.2.2)
+
 ## Complete
 
 * docstrings
