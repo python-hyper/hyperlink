@@ -56,7 +56,7 @@ class TestHyperlink(TestCase):
 
     def test_assertRaisesWithCallableDoesNotRaise(self):
         """HyperlinkTestCase.assertRaises raises an AssertionError when given
-        a callable that, when called, does not raise any exception.x
+        a callable that, when called, does not raise any exception.
 
         """
 
