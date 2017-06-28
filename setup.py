@@ -14,7 +14,7 @@ __author__ = 'Mahmoud Hashemi and Glyph Lefkowitz'
 __version__ = '17.2.2dev'
 __contact__ = 'mahmoud@hatnote.com'
 __url__ = 'https://github.com/python-hyper/hyperlink'
-__license__ = 'BSD'
+__license__ = 'MIT'
 
 
 setup(name='hyperlink',
