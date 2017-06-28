@@ -299,7 +299,7 @@ NO_NETLOC_SCHEMES = set(['urn', 'about', 'bitcoin', 'blob', 'data', 'geo',
 # As of Mar 11, 2017, there were 44 netloc schemes, and 13 non-netloc
 
 
-def register_scheme(text, uses_netloc=None, default_port=None):
+def register_scheme(text, uses_netloc=True, default_port=None):
     """Registers new scheme information, resulting in correct port and
     slash behavior from the URL object. There are dozens of standard
     schemes preregistered, so this function is mostly meant for
@@ -311,11 +311,13 @@ def register_scheme(text, uses_netloc=None, default_port=None):
         text (str): Text representing the scheme.
            (the 'http' in 'http://hatnote.com')
         uses_netloc (bool): Does the scheme support specifying a
-           network host? For instance, "http" does, "mailto" does not.
+           network host? For instance, "http" does, "mailto" does
+           not. Defaults to True.
         default_port (int): The default port, if any, for netloc-using
            schemes.
 
     .. _file an issue: https://github.com/mahmoud/hyperlink/issues
+
     """
     text = text.lower()
     if default_port is not None:
@@ -332,8 +334,8 @@ def register_scheme(text, uses_netloc=None, default_port=None):
             raise ValueError('unexpected default port while specifying'
                              ' non-netloc scheme: %r' % default_port)
         NO_NETLOC_SCHEMES.add(text)
-    elif uses_netloc is not None:
-        raise ValueError('uses_netloc expected True, False, or None')
+    else:
+        raise ValueError('uses_netloc expected bool, not: %r' % uses_netloc)
 
     return
 
