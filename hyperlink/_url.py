@@ -141,7 +141,6 @@ _HEX_CHAR_MAP = dict([((a + b).encode('ascii'),
                       for a in string.hexdigits for b in string.hexdigits])
 _ASCII_RE = re.compile('([\x00-\x7f]+)')
 
-
 # RFC 3986 section 2.2, Reserved Characters
 #   https://tools.ietf.org/html/rfc3986#section-2.2
 _GEN_DELIMS = frozenset(u':/?#[]@')
@@ -158,6 +157,16 @@ _FRAGMENT_SAFE = _UNRESERVED_CHARS | _PATH_SAFE | set(u'/?')
 _FRAGMENT_DELIMS = _ALL_DELIMS - _FRAGMENT_SAFE
 _QUERY_SAFE = _UNRESERVED_CHARS | _FRAGMENT_SAFE - set(u'&=+')
 _QUERY_DELIMS = _ALL_DELIMS - _QUERY_SAFE
+
+
+_PATH_HEX_MAP = dict(_HEX_CHAR_MAP)
+for delim in _PATH_DELIMS:
+    _hexord = hex(ord(delim))[2:].encode('ascii')
+    try:
+        _PATH_HEX_MAP.pop(_hexord.lower())
+        _PATH_HEX_MAP.pop(_hexord.upper())
+    except KeyError:
+        print('not present:', delim)
 
 
 def _make_quote_map(safe_chars):
@@ -274,6 +283,7 @@ def _encode_userinfo_part(text, maximal=True):
         return u''.join([_USERINFO_PART_QUOTE_MAP[b] for b in bytestr])
     return u''.join([_USERINFO_PART_QUOTE_MAP[t] if t in _USERINFO_DELIMS
                      else t for t in text])
+
 
 
 # This port list painstakingly curated by hand searching through
@@ -413,7 +423,11 @@ def _textcheck(name, value, delims=frozenset(), nullable=False):
     return value
 
 
-def _percent_decode(text):
+def _decode_path_part(text):
+    return _percent_decode(text, _hex_map=_PATH_HEX_MAP)
+
+
+def _percent_decode(text, _hex_map=_HEX_CHAR_MAP):
     """
     Replace percent-encoded characters with their UTF-8 equivalents.
 
@@ -427,11 +441,68 @@ def _percent_decode(text):
         quotedBytes = text.encode("ascii")
     except UnicodeEncodeError:
         return text
-    unquotedBytes = urlunquote(quotedBytes)
+    unquotedBytes = _unquote_to_bytes(quotedBytes, _hex_map=_hex_map)
+    # unquotedBytes = urlunquote(quotedBytes)
     try:
         return unquotedBytes.decode("utf-8")
     except UnicodeDecodeError:
         return text
+
+'''
+def _unquote(text, encoding='utf-8', errors='replace', _hex_map=_HEX_CHAR_MAP):
+    """Percent-decode a string, by replacing %xx escapes with their
+    single-character equivalent. The optional *encoding* and *errors*
+    parameters specify how to decode percent-encoded sequences into
+    Unicode characters, as accepted by the :meth:`bytes.decode()` method.  By
+    default, percent-encoded sequences are decoded with UTF-8, and
+    invalid sequences are replaced by a placeholder character.
+
+    # >>> unquote(u'abc%20def')
+    # u'abc def'
+    """
+    if '%' not in text:
+        text.split
+        return text
+    if encoding is None:
+        encoding = 'utf-8'
+    if errors is None:
+        errors = 'replace'
+    bits = _ASCII_RE.split(text)
+    res = [bits[0]]
+    append = res.append
+    for i in range(1, len(bits), 2):
+        append(_unquote_to_bytes(bits[i],
+                                 _hex_map=_hex_map).decode(encoding, errors))
+        append(bits[i + 1])
+    return ''.join(res)
+'''
+
+
+def _unquote_to_bytes(text, _hex_map=_HEX_CHAR_MAP):
+    """unquote_to_bytes('abc%20def') -> b'abc def'."""
+    # Note: strings are encoded as UTF-8. This is only an issue if it contains
+    # unescaped non-ASCII characters, which URIs should not.
+    if not text:
+        # Is it a string-like object?
+        text.split
+        return b''
+    if isinstance(text, unicode):
+        text = text.encode('utf-8')
+    bits = text.split(b'%')
+    if len(bits) == 1:
+        return text
+
+    res = [bits[0]]
+    append = res.append
+
+    for item in bits[1:]:
+        try:
+            append(_hex_map[item[:2]])
+            append(item[2:])
+        except KeyError:
+            append(b'%')
+            append(item)
+    return b''.join(res)
 
 
 def _resolve_dot_segments(path):
@@ -1112,7 +1183,7 @@ class URL(object):
                 textHost = self.host
         return self.replace(userinfo=new_userinfo,
                             host=textHost,
-                            path=[_percent_decode(segment)
+                            path=[_decode_path_part(segment)
                                   for segment in self.path],
                             query=[tuple(_percent_decode(x)
                                          if x is not None else None
