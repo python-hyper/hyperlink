@@ -159,14 +159,16 @@ _QUERY_SAFE = _UNRESERVED_CHARS | _FRAGMENT_SAFE - set(u'&=+')
 _QUERY_DELIMS = _ALL_DELIMS - _QUERY_SAFE
 
 
-_PATH_HEX_MAP = dict(_HEX_CHAR_MAP)
-for delim in _PATH_DELIMS:
-    _hexord = hex(ord(delim))[2:].encode('ascii')
-    try:
-        _PATH_HEX_MAP.pop(_hexord.lower())
-        _PATH_HEX_MAP.pop(_hexord.upper())
-    except KeyError:
-        print('not present:', delim)
+def _make_decode_map(delims):
+    ret = dict(_HEX_CHAR_MAP)
+    for delim in delims:
+        _hexord = hex(ord(delim))[2:].zfill(2).encode('ascii')
+        try:
+            ret.pop(_hexord.lower())
+            ret.pop(_hexord.upper())
+        except KeyError:
+            print('not present:', delim)  # TODO: pass
+    return ret
 
 
 def _make_quote_map(safe_chars):
@@ -184,6 +186,7 @@ def _make_quote_map(safe_chars):
 
 _USERINFO_PART_QUOTE_MAP = _make_quote_map(_USERINFO_SAFE)
 _PATH_PART_QUOTE_MAP = _make_quote_map(_PATH_SAFE)
+_PATH_DECODE_MAP = _make_decode_map(_PATH_DELIMS)
 _SCHEMELESS_PATH_PART_QUOTE_MAP = _make_quote_map(_SCHEMELESS_PATH_SAFE)
 _QUERY_PART_QUOTE_MAP = _make_quote_map(_QUERY_SAFE)
 _FRAGMENT_QUOTE_MAP = _make_quote_map(_FRAGMENT_SAFE)
@@ -424,10 +427,10 @@ def _textcheck(name, value, delims=frozenset(), nullable=False):
 
 
 def _decode_path_part(text):
-    return _percent_decode(text, _hex_map=_PATH_HEX_MAP)
+    return _percent_decode(text, _decode_map=_PATH_DECODE_MAP)
 
 
-def _percent_decode(text, _hex_map=_HEX_CHAR_MAP):
+def _percent_decode(text, _decode_map=_HEX_CHAR_MAP):
     """
     Replace percent-encoded characters with their UTF-8 equivalents.
 
@@ -441,44 +444,15 @@ def _percent_decode(text, _hex_map=_HEX_CHAR_MAP):
         quotedBytes = text.encode("ascii")
     except UnicodeEncodeError:
         return text
-    unquotedBytes = _unquote_to_bytes(quotedBytes, _hex_map=_hex_map)
+    unquotedBytes = _unquote_to_bytes(quotedBytes, _decode_map=_decode_map)
     # unquotedBytes = urlunquote(quotedBytes)
     try:
         return unquotedBytes.decode("utf-8")
     except UnicodeDecodeError:
         return text
 
-'''
-def _unquote(text, encoding='utf-8', errors='replace', _hex_map=_HEX_CHAR_MAP):
-    """Percent-decode a string, by replacing %xx escapes with their
-    single-character equivalent. The optional *encoding* and *errors*
-    parameters specify how to decode percent-encoded sequences into
-    Unicode characters, as accepted by the :meth:`bytes.decode()` method.  By
-    default, percent-encoded sequences are decoded with UTF-8, and
-    invalid sequences are replaced by a placeholder character.
 
-    # >>> unquote(u'abc%20def')
-    # u'abc def'
-    """
-    if '%' not in text:
-        text.split
-        return text
-    if encoding is None:
-        encoding = 'utf-8'
-    if errors is None:
-        errors = 'replace'
-    bits = _ASCII_RE.split(text)
-    res = [bits[0]]
-    append = res.append
-    for i in range(1, len(bits), 2):
-        append(_unquote_to_bytes(bits[i],
-                                 _hex_map=_hex_map).decode(encoding, errors))
-        append(bits[i + 1])
-    return ''.join(res)
-'''
-
-
-def _unquote_to_bytes(text, _hex_map=_HEX_CHAR_MAP):
+def _unquote_to_bytes(text, _decode_map=_HEX_CHAR_MAP):
     """unquote_to_bytes('abc%20def') -> b'abc def'."""
     # Note: strings are encoded as UTF-8. This is only an issue if it contains
     # unescaped non-ASCII characters, which URIs should not.
@@ -497,7 +471,7 @@ def _unquote_to_bytes(text, _hex_map=_HEX_CHAR_MAP):
 
     for item in bits[1:]:
         try:
-            append(_hex_map[item[:2]])
+            append(_decode_map[item[:2]])
             append(item[2:])
         except KeyError:
             append(b'%')
