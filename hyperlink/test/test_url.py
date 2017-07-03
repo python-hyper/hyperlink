@@ -1062,3 +1062,8 @@ class TestURL(HyperlinkTestCase):
         u2 = URL.from_text('http://example.com/')
 
         assert u1 == u2
+
+    def test_from_text_type(self):
+        assert URL.from_text(u'#ok').fragment == u'ok'  # sanity
+        self.assertRaises(TypeError, URL.from_text, b'bytes://x.y.z')
+        self.assertRaises(TypeError, URL.from_text, object())

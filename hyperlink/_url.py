@@ -4,7 +4,7 @@ u"""Hyperlink provides Pythonic URL parsing, construction, and rendering.
 Usage is straightforward::
 
    >>> from hyperlink import URL
-   >>> url = URL.from_text('http://github.com/mahmoud/hyperlink?utm_source=docs')
+   >>> url = URL.from_text(u'http://github.com/mahmoud/hyperlink?utm_source=docs')
    >>> url.host
    u'github.com'
    >>> secure_url = url.replace(scheme=u'https')
@@ -194,7 +194,7 @@ _ROOT_PATHS = frozenset(((), (u'',)))
 def _encode_path_part(text, maximal=True):
     "Percent-encode a single segment of a URL path."
     if maximal:
-        bytestr = normalize('NFC', to_unicode(text)).encode('utf8')
+        bytestr = normalize('NFC', text).encode('utf8')
         return u''.join([_PATH_PART_QUOTE_MAP[b] for b in bytestr])
     return u''.join([_PATH_PART_QUOTE_MAP[t] if t in _PATH_DELIMS else t
                      for t in text])
@@ -205,7 +205,7 @@ def _encode_schemeless_path_part(text, maximal=True):
     scheme specified.
     """
     if maximal:
-        bytestr = normalize('NFC', to_unicode(text)).encode('utf8')
+        bytestr = normalize('NFC', text).encode('utf8')
         return u''.join([_SCHEMELESS_PATH_PART_QUOTE_MAP[b] for b in bytestr])
     return u''.join([_SCHEMELESS_PATH_PART_QUOTE_MAP[t]
                      if t in _SCHEMELESS_PATH_DELIMS else t for t in text])
@@ -257,7 +257,7 @@ def _encode_query_part(text, maximal=True):
     Percent-encode a single query string key or value.
     """
     if maximal:
-        bytestr = normalize('NFC', to_unicode(text)).encode('utf8')
+        bytestr = normalize('NFC', text).encode('utf8')
         return u''.join([_QUERY_PART_QUOTE_MAP[b] for b in bytestr])
     return u''.join([_QUERY_PART_QUOTE_MAP[t] if t in _QUERY_DELIMS else t
                      for t in text])
@@ -268,7 +268,7 @@ def _encode_fragment_part(text, maximal=True):
     subdelimiters, so the whole URL fragment can be passed.
     """
     if maximal:
-        bytestr = normalize('NFC', to_unicode(text)).encode('utf8')
+        bytestr = normalize('NFC', text).encode('utf8')
         return u''.join([_FRAGMENT_QUOTE_MAP[b] for b in bytestr])
     return u''.join([_FRAGMENT_QUOTE_MAP[t] if t in _FRAGMENT_DELIMS else t
                      for t in text])
@@ -279,7 +279,7 @@ def _encode_userinfo_part(text, maximal=True):
     section of the URL.
     """
     if maximal:
-        bytestr = normalize('NFC', to_unicode(text)).encode('utf8')
+        bytestr = normalize('NFC', text).encode('utf8')
         return u''.join([_USERINFO_PART_QUOTE_MAP[b] for b in bytestr])
     return u''.join([_USERINFO_PART_QUOTE_MAP[t] if t in _USERINFO_DELIMS
                      else t for t in text])
@@ -318,7 +318,7 @@ def register_scheme(text, uses_netloc=True, default_port=None):
     `file an issue`_!
 
     Args:
-        text (str): Text representing the scheme.
+        text (unicode): Text representing the scheme.
            (the 'http' in 'http://hatnote.com')
         uses_netloc (bool): Does the scheme support specifying a
            network host? For instance, "http" does, "mailto" does
@@ -519,16 +519,6 @@ def _resolve_dot_segments(path):
     return segs
 
 
-DEFAULT_ENCODING = 'utf8'
-
-
-def to_unicode(obj):
-    try:
-        return unicode(obj)
-    except UnicodeDecodeError:
-        return unicode(obj, encoding=DEFAULT_ENCODING)
-
-
 def parse_host(host):
     """Parse the host into a tuple of ``(family, host)``, where family
     is the appropriate :mod:`socket` module constant when the host is
@@ -597,8 +587,8 @@ class URL(object):
     constructor arguments is below.
 
     Args:
-       scheme (str): The text name of the scheme.
-       host (str): The host portion of the network location
+       scheme (unicode): The text name of the scheme.
+       host (unicode): The host portion of the network location
        port (int): The port part of the network location. If
           ``None`` or no port is passed, the port will default to
           the default port of the scheme, if it is known. See the
@@ -608,9 +598,9 @@ class URL(object):
           slash-separated parts of the path.
        query (tuple): The query parameters, as a tuple of
           key-value pairs.
-       fragment (str): The fragment part of the URL.
+       fragment (unicode): The fragment part of the URL.
        rooted (bool): Whether or not the path begins with a slash.
-       userinfo (str): The username or colon-separated
+       userinfo (unicode): The username or colon-separated
           username:password pair.
        family: A socket module constant used when the host is an
           IP constant to differentiate IPv4 and domain names, as
@@ -709,10 +699,10 @@ class URL(object):
         not known, and the port is not provided, this attribute will
         be set to None.
 
-        >>> URL.from_text('http://example.com/pa/th').port
+        >>> URL.from_text(u'http://example.com/pa/th').port
         80
-        >>> URL.from_text('foo://example.com/pa/th').port
-        >>> URL.from_text('foo://example.com:8042/pa/th').port
+        >>> URL.from_text(u'foo://example.com/pa/th').port
+        >>> URL.from_text(u'foo://example.com:8042/pa/th').port
         8042
 
         .. note::
@@ -864,9 +854,9 @@ class URL(object):
         enough to resolve to a network resource without being relative
         to a base URI.
 
-        >>> URL.from_text('http://wikipedia.org/').absolute
+        >>> URL.from_text(u'http://wikipedia.org/').absolute
         True
-        >>> URL.from_text('?a=b&c=d').absolute
+        >>> URL.from_text(u'?a=b&c=d').absolute
         False
 
         Absolute URLs must have both a scheme and a host set.
@@ -885,16 +875,16 @@ class URL(object):
         the value on the current URL.
 
         Args:
-           scheme (str): The text name of the scheme.
-           host (str): The host portion of the network location
+           scheme (unicode): The text name of the scheme.
+           host (unicode): The host portion of the network location
            port (int): The port part of the network location.
            path (tuple): A tuple of strings representing the
               slash-separated parts of the path.
            query (tuple): The query parameters, as a tuple of
               key-value pairs.
-           fragment (str): The fragment part of the URL.
+           fragment (unicode): The fragment part of the URL.
            rooted (bool): Whether or not the path begins with a slash.
-           userinfo (str): The username or colon-separated
+           userinfo (unicode): The username or colon-separated
               username:password pair.
            family: A socket module constant used when the host is an
               IP constant to differentiate IPv4 and domain names, as
@@ -927,34 +917,36 @@ class URL(object):
         URLs from parts, :meth:`~URL.from_text` supports parsing whole
         URLs from their string form::
 
-           >>> URL.from_text('http://example.com')
-           URL.from_text('http://example.com')
-           >>> URL.from_text('?a=b&x=y')
-           URL.from_text('?a=b&x=y')
+           >>> URL.from_text(u'http://example.com')
+           URL.from_text(u'http://example.com')
+           >>> URL.from_text(u'?a=b&x=y')
+           URL.from_text(u'?a=b&x=y')
 
         As you can see above, it's also used as the :func:`repr` of
         :class:`URL` objects. The natural counterpart to
-        :func:`~URL.to_text()`.
+        :func:`~URL.to_text()`. This method only accepts *text*, so be
+        sure to decode those bytestrings.
 
         Args:
-           text (str): A valid URL string.
+           text (unicode): A valid URL string.
 
         Returns:
            URL: The structured object version of the parsed string.
 
-        Somewhat unexpectedly, URLs are a far more permissive format
-        than most would assume. Many strings which don't look like
-        URLs are still valid URLs. As a result, this method only
-        raises :class:`URLParseError` on invalid port and IPv6 values
-        in the host portion of the URL.
+        .. note::
+
+            Somewhat unexpectedly, URLs are a far more permissive
+            format than most would assume. Many strings which don't
+            look like URLs are still valid URLs. As a result, this
+            method only raises :class:`URLParseError` on invalid port
+            and IPv6 values in the host portion of the URL.
 
         """
-        s = to_unicode(text)
-        um = _URL_RE.match(s)
+        um = _URL_RE.match(_textcheck('text', text))
         try:
             gs = um.groupdict()
         except AttributeError:
-            raise URLParseError('could not parse url: %r' % s)
+            raise URLParseError('could not parse url: %r' % text)
 
         au_text = gs['authority']
         userinfo, hostinfo = u'', au_text
@@ -1009,13 +1001,13 @@ class URL(object):
 
         For example::
 
-            >>> url = URL.from_text(u"http://localhost/a/b?x=y")
+            >>> url = URL.from_text(u'http://localhost/a/b?x=y')
             >>> child_url = url.child(u"c", u"d")
             >>> child_url.to_text()
             u'http://localhost/a/b/c/d?x=y'
 
         Args:
-           segments (str): Additional parts to be joined and added to
+           segments (unicode): Additional parts to be joined and added to
               the path, like :func:`os.path.join`. Special characters
               in segments will be percent encoded.
 
@@ -1034,7 +1026,7 @@ class URL(object):
         sibling of this URL path.
 
         Args:
-           segment (str): A single path segment.
+           segment (unicode): A single path segment.
 
         Returns:
            URL: A copy of the current URL with the last path segment
@@ -1052,15 +1044,15 @@ class URL(object):
         The resulting URI should match what a web browser would
         generate if you visited the current URL and clicked on *href*.
 
-           >>> url = URL.from_text('http://blog.hatnote.com/')
+           >>> url = URL.from_text(u'http://blog.hatnote.com/')
            >>> url.click(u'/post/155074058790').to_text()
            u'http://blog.hatnote.com/post/155074058790'
-           >>> url = URL.from_text('http://localhost/a/b/c/')
+           >>> url = URL.from_text(u'http://localhost/a/b/c/')
            >>> url.click(u'../d/./e').to_text()
            u'http://localhost/a/b/d/e'
 
         Args:
-            href (str): A string representing a clicked URL.
+            href (unicode): A string representing a clicked URL.
 
         Return:
             URL: A copy of the current URL with navigation logic applied.
@@ -1107,7 +1099,7 @@ class URL(object):
 
         For example::
 
-            >>> URL.from_text(u"https://→example.com/foo⇧bar/").to_uri()
+            >>> URL.from_text(u'https://→example.com/foo⇧bar/').to_uri()
             URL.from_text(u'https://xn--example-dk9c.com/foo%E2%87%A7bar/')
 
         Returns:
@@ -1275,9 +1267,9 @@ class URL(object):
             URL.from_text(u'https://example.com/?x=y&x=z')
 
         Args:
-            name (str): The name of the query parameter to add. The
+            name (unicode): The name of the query parameter to add. The
                 part before the ``=``.
-            value (str): The value of the query parameter to add. The
+            value (unicode): The value of the query parameter to add. The
                 part after the ``=``. Defaults to ``None``, meaning no
                 value.
 
@@ -1297,9 +1289,9 @@ class URL(object):
             URL.from_text(u'https://example.com/?x=z')
 
         Args:
-            name (str): The name of the query parameter to set. The
+            name (unicode): The name of the query parameter to set. The
                 part before the ``=``.
-            value (str): The value of the query parameter to set. The
+            value (unicode): The value of the query parameter to set. The
                 part after the ``=``. Defaults to ``None``, meaning no
                 value.
 
@@ -1316,7 +1308,7 @@ class URL(object):
     def get(self, name):
         """Get a list of values for the given query parameter, *name*::
 
-            >>> url = URL.from_text('?x=1&x=2')
+            >>> url = URL.from_text(u'?x=1&x=2')
             >>> url.get('x')
             [u'1', u'2']
             >>> url.get('y')
@@ -1326,7 +1318,7 @@ class URL(object):
         list is always returned, and this method raises no exceptions.
 
         Args:
-            name (str): The name of the query parameter to get.
+            name (unicode): The name of the query parameter to get.
 
         Returns:
             list: A list of all the values associated with the key, in
@@ -1341,7 +1333,7 @@ class URL(object):
         parameter is not already set.
 
         Args:
-            name (str): The name of the query parameter to remove.
+            name (unicode): The name of the query parameter to remove.
 
         Returns:
             URL: A new :class:`URL` instance with the parameter removed.
