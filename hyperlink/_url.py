@@ -17,8 +17,8 @@ As seen here, the API revolves around the lightweight and immutable
 
 import re
 import string
-
 import socket
+from unicodedata import normalize
 try:
     from socket import inet_pton
 except ImportError:
@@ -51,13 +51,6 @@ except ImportError:
             return ctypes.string_at(addr.ipv6_addr, 16)
         raise socket.error('unknown address family')
 
-
-try:
-    from urllib import unquote as urlunquote
-except ImportError:
-    from urllib.parse import unquote_to_bytes as urlunquote
-
-from unicodedata import normalize
 
 unicode = type(u'')
 try:
@@ -141,7 +134,6 @@ _HEX_CHAR_MAP = dict([((a + b).encode('ascii'),
                       for a in string.hexdigits for b in string.hexdigits])
 _ASCII_RE = re.compile('([\x00-\x7f]+)')
 
-
 # RFC 3986 section 2.2, Reserved Characters
 #   https://tools.ietf.org/html/rfc3986#section-2.2
 _GEN_DELIMS = frozenset(u':/?#[]@')
@@ -160,6 +152,19 @@ _QUERY_SAFE = _UNRESERVED_CHARS | _FRAGMENT_SAFE - set(u'&=+')
 _QUERY_DELIMS = _ALL_DELIMS - _QUERY_SAFE
 
 
+def _make_decode_map(delims, allow_percent=False):
+    ret = dict(_HEX_CHAR_MAP)
+    if not allow_percent:
+        delims = set(delims) | set([u'%'])
+    for delim in delims:
+        _hexord = hex(ord(delim))[2:].zfill(2).encode('ascii').upper()
+        _hexord_lower = _hexord.lower()
+        ret.pop(_hexord)
+        if _hexord != _hexord_lower:
+            ret.pop(_hexord_lower)
+    return ret
+
+
 def _make_quote_map(safe_chars):
     ret = {}
     # v is included in the dict for py3 mostly, because bytestrings
@@ -174,10 +179,14 @@ def _make_quote_map(safe_chars):
 
 
 _USERINFO_PART_QUOTE_MAP = _make_quote_map(_USERINFO_SAFE)
+_USERINFO_DECODE_MAP = _make_decode_map(_USERINFO_DELIMS)
 _PATH_PART_QUOTE_MAP = _make_quote_map(_PATH_SAFE)
 _SCHEMELESS_PATH_PART_QUOTE_MAP = _make_quote_map(_SCHEMELESS_PATH_SAFE)
+_PATH_DECODE_MAP = _make_decode_map(_PATH_DELIMS)
 _QUERY_PART_QUOTE_MAP = _make_quote_map(_QUERY_SAFE)
+_QUERY_DECODE_MAP = _make_decode_map(_QUERY_DELIMS)
 _FRAGMENT_QUOTE_MAP = _make_quote_map(_FRAGMENT_SAFE)
+_FRAGMENT_DECODE_MAP = _make_decode_map(_FRAGMENT_DELIMS)
 
 _ROOT_PATHS = frozenset(((), (u'',)))
 
@@ -274,6 +283,7 @@ def _encode_userinfo_part(text, maximal=True):
         return u''.join([_USERINFO_PART_QUOTE_MAP[b] for b in bytestr])
     return u''.join([_USERINFO_PART_QUOTE_MAP[t] if t in _USERINFO_DELIMS
                      else t for t in text])
+
 
 
 # This port list painstakingly curated by hand searching through
@@ -413,23 +423,68 @@ def _textcheck(name, value, delims=frozenset(), nullable=False):
     return value
 
 
-def _percent_decode(text):
-    """
-    Replace percent-encoded characters with their UTF-8 equivalents.
+def _decode_userinfo_part(text):
+    return _percent_decode(text, _decode_map=_USERINFO_DECODE_MAP)
+
+
+def _decode_path_part(text):
+    return _percent_decode(text, _decode_map=_PATH_DECODE_MAP)
+
+
+def _decode_query_part(text):
+    return _percent_decode(text, _decode_map=_QUERY_DECODE_MAP)
+
+
+def _decode_fragment_part(text):
+    return _percent_decode(text, _decode_map=_FRAGMENT_DECODE_MAP)
+
+
+def _percent_decode(text, _decode_map=_HEX_CHAR_MAP):
+    """Convert percent-encoded text characters to their normal,
+    human-readable equivalents.
+
+    All characters in the input text must be valid ASCII. All special
+    characters underlying the values in the percent-encoding must be
+    valid UTF-8.
+
+    Only called by field-tailored variants, e.g.,
+    :func:`_decode_path_part`, as every percent-encodable part of the
+    URL has characters which should not be percent decoded.
+
+    >>> _percent_decode(u'abc%20def')
+    u'abc def'
 
     Args:
-       text (unicode): The text with percent-encoded UTF-8 in it.
+       text (unicode): The ASCII text with percent-encoding present.
 
     Returns:
-       unicode: The encoded version of *text*.
+       unicode: The percent-decoded version of *text*, with UTF-8
+         decoding applied.
     """
     try:
-        quotedBytes = text.encode("ascii")
+        quoted_bytes = text.encode("ascii")
     except UnicodeEncodeError:
         return text
-    unquotedBytes = urlunquote(quotedBytes)
+
+    bits = quoted_bytes.split(b'%')
+    if len(bits) == 1:
+        return text
+
+    res = [bits[0]]
+    append = res.append
+
+    for item in bits[1:]:
+        try:
+            append(_decode_map[item[:2]])
+            append(item[2:])
+        except KeyError:
+            append(b'%')
+            append(item)
+
+    unquoted_bytes = b''.join(res)
+
     try:
-        return unquotedBytes.decode("utf-8")
+        return unquoted_bytes.decode("utf-8")
     except UnicodeDecodeError:
         return text
 
@@ -819,7 +874,8 @@ class URL(object):
         return bool(self.scheme and self.host)
 
     def replace(self, scheme=_UNSET, host=_UNSET, path=_UNSET, query=_UNSET,
-                fragment=_UNSET, port=_UNSET, rooted=_UNSET, userinfo=_UNSET):
+                fragment=_UNSET, port=_UNSET, rooted=_UNSET, userinfo=_UNSET,
+                family=_UNSET, uses_netloc=_UNSET):
         """:class:`URL` objects are immutable, which means that attributes
         are designed to be set only once, at construction. Instead of
         modifying an existing URL, one simply creates a copy with the
@@ -861,6 +917,8 @@ class URL(object):
             port=_optional(port, self.port),
             rooted=_optional(rooted, self.rooted),
             userinfo=_optional(userinfo, self.userinfo),
+            family=_optional(family, self.family),
+            uses_netloc=_optional(uses_netloc, self.uses_netloc)
         )
 
     @classmethod
@@ -1095,7 +1153,7 @@ class URL(object):
             URL: A new instance with its path segments, query parameters, and
             hostname decoded for display purposes.
         """
-        new_userinfo = u':'.join([_percent_decode(p) for p in
+        new_userinfo = u':'.join([_decode_userinfo_part(p) for p in
                                   self.userinfo.split(':', 1)])
         try:
             asciiHost = self.host.encode("ascii")
@@ -1109,13 +1167,13 @@ class URL(object):
                 textHost = self.host
         return self.replace(userinfo=new_userinfo,
                             host=textHost,
-                            path=[_percent_decode(segment)
+                            path=[_decode_path_part(segment)
                                   for segment in self.path],
-                            query=[tuple(_percent_decode(x)
+                            query=[tuple(_decode_query_part(x)
                                          if x is not None else None
                                          for x in (k, v))
                                    for k, v in self.query],
-                            fragment=_percent_decode(self.fragment))
+                            fragment=_decode_fragment_part(self.fragment))
 
     def to_text(self, with_password=False):
         """Render this URL to its textual representation.
