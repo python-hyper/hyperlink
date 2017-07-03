@@ -159,8 +159,10 @@ _QUERY_SAFE = _UNRESERVED_CHARS | _FRAGMENT_SAFE - set(u'&=+')
 _QUERY_DELIMS = _ALL_DELIMS - _QUERY_SAFE
 
 
-def _make_decode_map(delims):
+def _make_decode_map(delims, allow_percent=False):
     ret = dict(_HEX_CHAR_MAP)
+    if not allow_percent:
+        delims = list(delims) + [u'%']
     for delim in delims:
         _hexord = hex(ord(delim))[2:].zfill(2).encode('ascii')
         try:
@@ -185,11 +187,14 @@ def _make_quote_map(safe_chars):
 
 
 _USERINFO_PART_QUOTE_MAP = _make_quote_map(_USERINFO_SAFE)
+_USERINFO_DECODE_MAP = _make_decode_map(_USERINFO_DELIMS)
 _PATH_PART_QUOTE_MAP = _make_quote_map(_PATH_SAFE)
 _PATH_DECODE_MAP = _make_decode_map(_PATH_DELIMS)
 _SCHEMELESS_PATH_PART_QUOTE_MAP = _make_quote_map(_SCHEMELESS_PATH_SAFE)
 _QUERY_PART_QUOTE_MAP = _make_quote_map(_QUERY_SAFE)
+_QUERY_DECODE_MAP = _make_decode_map(_QUERY_DELIMS)
 _FRAGMENT_QUOTE_MAP = _make_quote_map(_FRAGMENT_SAFE)
+_FRAGMENT_DECODE_MAP = _make_decode_map(_FRAGMENT_DELIMS)
 
 _ROOT_PATHS = frozenset(((), (u'',)))
 
@@ -426,8 +431,20 @@ def _textcheck(name, value, delims=frozenset(), nullable=False):
     return value
 
 
+def _decode_userinfo_part(text):
+    return _percent_decode(text, _decode_map=_USERINFO_DECODE_MAP)
+
+
 def _decode_path_part(text):
     return _percent_decode(text, _decode_map=_PATH_DECODE_MAP)
+
+
+def _decode_query_part(text):
+    return _percent_decode(text, _decode_map=_QUERY_DECODE_MAP)
+
+
+def _decode_fragment_part(text):
+    return _percent_decode(text, _decode_map=_FRAGMENT_DECODE_MAP)
 
 
 def _percent_decode(text, _decode_map=_HEX_CHAR_MAP):
@@ -1143,7 +1160,7 @@ class URL(object):
             URL: A new instance with its path segments, query parameters, and
             hostname decoded for display purposes.
         """
-        new_userinfo = u':'.join([_percent_decode(p) for p in
+        new_userinfo = u':'.join([_decode_userinfo_part(p) for p in
                                   self.userinfo.split(':', 1)])
         try:
             asciiHost = self.host.encode("ascii")
@@ -1159,11 +1176,11 @@ class URL(object):
                             host=textHost,
                             path=[_decode_path_part(segment)
                                   for segment in self.path],
-                            query=[tuple(_percent_decode(x)
+                            query=[tuple(_decode_query_part(x)
                                          if x is not None else None
                                          for x in (k, v))
                                    for k, v in self.query],
-                            fragment=_percent_decode(self.fragment))
+                            fragment=_decode_fragment_part(self.fragment))
 
     def to_text(self, with_password=False):
         """Render this URL to its textual representation.
