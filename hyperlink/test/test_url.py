@@ -115,6 +115,27 @@ ROUNDTRIP_TESTS = (
      '20Linux%20precise-5.7.1.iso&tr=udp://tracker.openbittorrent.com:80&'
      'tr=udp://tracker.publicbt.com:80&tr=udp://tracker.istole.it:6969&'
      'tr=udp://tracker.ccc.de:80&tr=udp://open.demonii.com:1337'),
+
+    # percent-encoded delimiters in percent-encodable fields
+
+    'https://%3A@example.com/',  # colon in username
+    'https://%40@example.com/',  # at sign in username
+    'https://%2f@example.com/',  # slash in username
+    'https://a:%3a@example.com/',  # colon in password
+    'https://a:%40@example.com/',  # at sign in password
+    'https://a:%2f@example.com/',  # slash in password
+    'https://a:%3f@example.com/',  # question mark in password
+    'https://example.com/%2F/',  # slash in path
+    'https://example.com/%3F/',  # question mark in path
+    'https://example.com/%23/',  # hash in path
+    'https://example.com/?%23=b',  # hash in query param name
+    'https://example.com/?%3D=b',  # equals in query param name
+    'https://example.com/?%26=b',  # ampersand in query param name
+    'https://example.com/?a=%23',  # hash in query param value
+    'https://example.com/?a=%26',  # ampersand in query param value
+    'https://example.com/?a=%3D',  # equals in query param value
+    # double-encoded percent sign in all percent-encodable positions:
+    "http://(%2525):(%2525)@example.com/(%2525)/?(%2525)=(%2525)#(%2525)",
 )
 
 
@@ -231,15 +252,18 @@ class TestURL(HyperlinkTestCase):
         L{URL.to_text} should invert L{URL.from_text}.
         """
         for test in ROUNDTRIP_TESTS:
-            result = URL.from_text(test).to_text()
+            result = URL.from_text(test).to_text(with_password=True)
             self.assertEqual(test, result)
 
-    def test_roundtrip_iri(self):
+    def test_roundtrip_double_iri(self):
         for test in ROUNDTRIP_TESTS:
             url = URL.from_text(test)
             iri = url.to_iri()
-            assert iri == url.to_iri()
-            assert iri.to_text() == url.to_iri().to_text()
+            double_iri = iri.to_iri()
+            assert iri == double_iri
+            iri_text = iri.to_text(with_password=True)
+            double_iri_text = double_iri.to_text(with_password=True)
+            assert iri_text == double_iri_text
         return
 
     def test_equality(self):
