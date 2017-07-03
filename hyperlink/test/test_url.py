@@ -941,6 +941,13 @@ class TestURL(HyperlinkTestCase):
         url2 = url.replace(scheme='mailto')
         self.assertEquals(url2.to_text(), 'mailto:/path/to/heck')
 
+        url_text = 'unregisteredscheme:///a/b/c'
+        url = URL.from_text(url_text)
+        no_netloc_url = url.replace(uses_netloc=False)
+        self.assertEquals(no_netloc_url.to_text(), 'unregisteredscheme:/a/b/c')
+        netloc_url = url.replace(uses_netloc=True)
+        self.assertEquals(netloc_url.to_text(), url_text)
+
         return
 
     def test_wrong_constructor(self):
