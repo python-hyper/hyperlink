@@ -157,7 +157,7 @@ def _make_decode_map(delims, allow_percent=False):
     if not allow_percent:
         delims = set(delims) | set([u'%'])
     for delim in delims:
-        _hexord = hex(ord(delim))[2:].zfill(2).encode('ascii').upper()
+        _hexord = '{0:02X}'.format(ord(delim)).encode('ascii')
         _hexord_lower = _hexord.lower()
         ret.pop(_hexord)
         if _hexord != _hexord_lower:
