@@ -17,8 +17,8 @@ As seen here, the API revolves around the lightweight and immutable
 
 import re
 import string
-
 import socket
+from unicodedata import normalize
 try:
     from socket import inet_pton
 except ImportError:
@@ -51,13 +51,6 @@ except ImportError:
             return ctypes.string_at(addr.ipv6_addr, 16)
         raise socket.error('unknown address family')
 
-
-try:
-    from urllib import unquote as urlunquote
-except ImportError:
-    from urllib.parse import unquote_to_bytes as urlunquote
-
-from unicodedata import normalize
 
 unicode = type(u'')
 try:
@@ -162,14 +155,13 @@ _QUERY_DELIMS = _ALL_DELIMS - _QUERY_SAFE
 def _make_decode_map(delims, allow_percent=False):
     ret = dict(_HEX_CHAR_MAP)
     if not allow_percent:
-        delims = list(delims) + [u'%']
+        delims = set(delims) | set([u'%'])
     for delim in delims:
-        _hexord = hex(ord(delim))[2:].zfill(2).encode('ascii')
-        try:
-            ret.pop(_hexord.lower())
-            ret.pop(_hexord.upper())
-        except KeyError:
-            print('not present:', delim)  # TODO: pass
+        _hexord = hex(ord(delim))[2:].zfill(2).encode('ascii').upper()
+        _hexord_lower = _hexord.lower()
+        ret.pop(_hexord)
+        if _hexord != _hexord_lower:
+            ret.pop(_hexord_lower)
     return ret
 
 
@@ -189,8 +181,8 @@ def _make_quote_map(safe_chars):
 _USERINFO_PART_QUOTE_MAP = _make_quote_map(_USERINFO_SAFE)
 _USERINFO_DECODE_MAP = _make_decode_map(_USERINFO_DELIMS)
 _PATH_PART_QUOTE_MAP = _make_quote_map(_PATH_SAFE)
-_PATH_DECODE_MAP = _make_decode_map(_PATH_DELIMS)
 _SCHEMELESS_PATH_PART_QUOTE_MAP = _make_quote_map(_SCHEMELESS_PATH_SAFE)
+_PATH_DECODE_MAP = _make_decode_map(_PATH_DELIMS)
 _QUERY_PART_QUOTE_MAP = _make_quote_map(_QUERY_SAFE)
 _QUERY_DECODE_MAP = _make_decode_map(_QUERY_DELIMS)
 _FRAGMENT_QUOTE_MAP = _make_quote_map(_FRAGMENT_SAFE)
@@ -448,21 +440,30 @@ def _decode_fragment_part(text):
 
 
 def _percent_decode(text, _decode_map=_HEX_CHAR_MAP):
-    """
-    Replace percent-encoded characters with their UTF-8 equivalents.
+    """Convert percent-encoded text characters to their normal,
+    human-readable equivalents.
+
+    All characters in the input text must be valid ASCII. All special
+    characters underlying the values in the percent-encoding must be
+    valid UTF-8.
+
+    Only called by field-tailored variants, e.g.,
+    :func:`_decode_path_part`, as every percent-encodable part of the
+    URL has characters which should not be percent decoded.
 
     Args:
-       text (unicode): The text with percent-encoded UTF-8 in it.
+       text (unicode): The ASCII text with percent-encoding present.
 
     Returns:
-       unicode: The encoded version of *text*.
+       unicode: The percent-decoded version of *text*, with UTF-8
+         decoding applied.
+
     """
     try:
         quotedBytes = text.encode("ascii")
     except UnicodeEncodeError:
         return text
     unquotedBytes = _unquote_to_bytes(quotedBytes, _decode_map=_decode_map)
-    # unquotedBytes = urlunquote(quotedBytes)
     try:
         return unquotedBytes.decode("utf-8")
     except UnicodeDecodeError:
