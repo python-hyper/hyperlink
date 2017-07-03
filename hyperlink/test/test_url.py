@@ -136,6 +136,8 @@ ROUNDTRIP_TESTS = (
     'https://example.com/?a=%3D',  # equals in query param value
     # double-encoded percent sign in all percent-encodable positions:
     "http://(%2525):(%2525)@example.com/(%2525)/?(%2525)=(%2525)#(%2525)",
+    # colon in first part of schemeless relative url
+    'first_seg_rel_path__colon%3Anotok/second_seg__colon%3Aok',
 )
 
 
@@ -261,6 +263,7 @@ class TestURL(HyperlinkTestCase):
             iri = url.to_iri()
             double_iri = iri.to_iri()
             assert iri == double_iri
+
             iri_text = iri.to_text(with_password=True)
             double_iri_text = double_iri.to_text(with_password=True)
             assert iri_text == double_iri_text
@@ -277,7 +280,7 @@ class TestURL(HyperlinkTestCase):
         self.assertNotEqual(
             urlpath,
             URL.from_text('ftp://www.anotherinvaliddomain.com/'
-                         'foo/bar/baz/?zot=21&zut')
+                          'foo/bar/baz/?zot=21&zut')
         )
 
     def test_fragmentEquality(self):
