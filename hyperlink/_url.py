@@ -451,36 +451,22 @@ def _percent_decode(text, _decode_map=_HEX_CHAR_MAP):
     :func:`_decode_path_part`, as every percent-encodable part of the
     URL has characters which should not be percent decoded.
 
+    >>> _percent_decode(u'abc%20def')
+    u'abc def'
+
     Args:
        text (unicode): The ASCII text with percent-encoding present.
 
     Returns:
        unicode: The percent-decoded version of *text*, with UTF-8
          decoding applied.
-
     """
     try:
-        quotedBytes = text.encode("ascii")
+        quoted_bytes = text.encode("ascii")
     except UnicodeEncodeError:
         return text
-    unquotedBytes = _unquote_to_bytes(quotedBytes, _decode_map=_decode_map)
-    try:
-        return unquotedBytes.decode("utf-8")
-    except UnicodeDecodeError:
-        return text
 
-
-def _unquote_to_bytes(text, _decode_map=_HEX_CHAR_MAP):
-    """unquote_to_bytes('abc%20def') -> b'abc def'."""
-    # Note: strings are encoded as UTF-8. This is only an issue if it contains
-    # unescaped non-ASCII characters, which URIs should not.
-    if not text:
-        # Is it a string-like object?
-        text.split
-        return b''
-    if isinstance(text, unicode):
-        text = text.encode('utf-8')
-    bits = text.split(b'%')
+    bits = quoted_bytes.split(b'%')
     if len(bits) == 1:
         return text
 
@@ -494,7 +480,13 @@ def _unquote_to_bytes(text, _decode_map=_HEX_CHAR_MAP):
         except KeyError:
             append(b'%')
             append(item)
-    return b''.join(res)
+
+    unquoted_bytes = b''.join(res)
+
+    try:
+        return unquoted_bytes.decode("utf-8")
+    except UnicodeDecodeError:
+        return text
 
 
 def _resolve_dot_segments(path):
