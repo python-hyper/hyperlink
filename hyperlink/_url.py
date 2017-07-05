@@ -531,15 +531,14 @@ def parse_host(host):
 
     >>> parse_host('googlewebsite.com') == (None, 'googlewebsite.com')
     True
-    >>> parse_host('[::1]') == (socket.AF_INET6, '::1')
+    >>> parse_host('::1') == (socket.AF_INET6, '::1')
     True
     >>> parse_host('192.168.1.1') == (socket.AF_INET, '192.168.1.1')
     True
     """
     if not host:
         return None, u''
-    if u':' in host and u'[' == host[0] and u']' == host[-1]:
-        host = host[1:-1]
+    if u':' in host:
         try:
             inet_pton(socket.AF_INET6, host)
         except socket.error as se:
@@ -617,7 +616,7 @@ class URL(object):
     """
 
     def __init__(self, scheme=None, host=None, path=(), query=(), fragment=u'',
-                 port=None, rooted=None, userinfo=u'', family=None, uses_netloc=None):
+                 port=None, rooted=None, userinfo=u'', uses_netloc=None):
         if host is not None and scheme is None:
             scheme = u'http'  # TODO: why
         if port is None:
@@ -645,7 +644,7 @@ class URL(object):
                                  ' "-", and "." allowed. Did you meant to call'
                                  ' %s.from_text()?'
                                  % (self._scheme, self.__class__.__name__))
-        self._host = _textcheck("host", host, '/?#@')
+        family, self._host = parse_host(_textcheck('host', host, '/?#@'))
         if isinstance(path, unicode):
             raise TypeError("expected iterable of text for path, not: %r"
                             % (path,))
@@ -660,10 +659,9 @@ class URL(object):
         self._port = _typecheck("port", port, int, NoneType)
         self._rooted = _typecheck("rooted", rooted, bool)
         self._userinfo = _textcheck("userinfo", userinfo, '/?#@')
-        self._family = _typecheck("family", family,
-                                  type(socket.AF_INET), NoneType)
-        if ':' in self._host and self._family != socket.AF_INET6:
-            raise ValueError('invalid ":" present in host: %r' % self._host)
+
+        # if ':' in self._host and self._family != socket.AF_INET6:
+        #     raise ValueError('invalid ":" present in host: %r' % self._host)
 
         uses_netloc = scheme_uses_netloc(self._scheme, uses_netloc)
         self._uses_netloc = _typecheck("uses_netloc",
@@ -811,8 +809,9 @@ class URL(object):
         with_password = kw.pop('includeSecrets', with_password)
         if kw:
             raise TypeError('got unexpected keyword arguments: %r' % kw.keys())
-        if self.family == socket.AF_INET6:
-            hostport = ['[' + self.host + ']']
+        host = self.host
+        if ':' in host:
+            hostport = ['[' + host + ']']
         else:
             hostport = [self.host]
         if self.port != SCHEME_PORT_MAP.get(self.scheme):
@@ -830,7 +829,7 @@ class URL(object):
         if not isinstance(other, self.__class__):
             return NotImplemented
         for attr in ['scheme', 'userinfo', 'host', 'query',
-                     'fragment', 'port', 'family', 'uses_netloc']:
+                     'fragment', 'port', 'uses_netloc']:
             if getattr(self, attr) != getattr(other, attr):
                 return False
         if self.path == other.path or (self.path in _ROOT_PATHS
@@ -846,7 +845,7 @@ class URL(object):
     def __hash__(self):
         return hash((self.__class__, self.scheme, self.userinfo, self.host,
                      self.path, self.query, self.fragment, self.port,
-                     self.rooted, self.family, self.uses_netloc))
+                     self.rooted, self.uses_netloc))
 
     @property
     def absolute(self):
@@ -907,7 +906,6 @@ class URL(object):
             port=_optional(port, self.port),
             rooted=_optional(rooted, self.rooted),
             userinfo=_optional(userinfo, self.userinfo),
-            family=_optional(family, self.family),
             uses_netloc=_optional(uses_netloc, self.uses_netloc)
         )
 
@@ -970,7 +968,9 @@ class URL(object):
                             raise URLParseError('port must not be empty')
                         raise URLParseError('expected integer for port, not %r'
                                             % port_str)
-        family, host = parse_host(host)
+        # _, host = parse_host(host)
+        if host:
+            host = host.lstrip('[').rstrip(']')
 
         scheme = gs['scheme'] or u''
         fragment = gs['fragment'] or u''
@@ -992,7 +992,7 @@ class URL(object):
         else:
             query = ()
         return cls(scheme, host, path, query, fragment, port,
-                   rooted, userinfo, family, uses_netloc)
+                   rooted, userinfo, uses_netloc)
 
     def child(self, *segments):
         """Make a new :class:`URL` where the given path segments are a child
