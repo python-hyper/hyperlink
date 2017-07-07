@@ -601,9 +601,6 @@ class URL(object):
        rooted (bool): Whether or not the path begins with a slash.
        userinfo (unicode): The username or colon-separated
           username:password pair.
-       family: A socket module constant used when the host is an
-          IP constant to differentiate IPv4 and domain names, as
-          well as validate IPv6.
        uses_netloc (bool): Indicates whether two slashes appear
           between the scheme and the host (``http://eg.com`` vs
           ``mailto:e@g.com``). Set automatically based on scheme.
@@ -644,7 +641,7 @@ class URL(object):
                                  ' "-", and "." allowed. Did you meant to call'
                                  ' %s.from_text()?'
                                  % (self._scheme, self.__class__.__name__))
-        family, self._host = parse_host(_textcheck('host', host, '/?#@'))
+        _, self._host = parse_host(_textcheck('host', host, '/?#@'))
         if isinstance(path, unicode):
             raise TypeError("expected iterable of text for path, not: %r"
                             % (path,))
@@ -659,9 +656,6 @@ class URL(object):
         self._port = _typecheck("port", port, int, NoneType)
         self._rooted = _typecheck("rooted", rooted, bool)
         self._userinfo = _textcheck("userinfo", userinfo, '/?#@')
-
-        # if ':' in self._host and self._family != socket.AF_INET6:
-        #     raise ValueError('invalid ":" present in host: %r' % self._host)
 
         uses_netloc = scheme_uses_netloc(self._scheme, uses_netloc)
         self._uses_netloc = _typecheck("uses_netloc",
@@ -766,15 +760,6 @@ class URL(object):
         return self._userinfo
 
     @property
-    def family(self):
-        """Set to a socket constant (:data:`socket.AF_INET` or
-        :data:`socket.AF_INET6`) when the :attr:`~hyperlink.URL.host`
-        is an IP address. Set to ``None`` if the host is a domain name or
-        not set.
-        """
-        return self._family
-
-    @property
     def uses_netloc(self):
         """
         """
@@ -864,7 +849,7 @@ class URL(object):
 
     def replace(self, scheme=_UNSET, host=_UNSET, path=_UNSET, query=_UNSET,
                 fragment=_UNSET, port=_UNSET, rooted=_UNSET, userinfo=_UNSET,
-                family=_UNSET, uses_netloc=_UNSET):
+                uses_netloc=_UNSET):
         """:class:`URL` objects are immutable, which means that attributes
         are designed to be set only once, at construction. Instead of
         modifying an existing URL, one simply creates a copy with the
@@ -885,9 +870,6 @@ class URL(object):
            rooted (bool): Whether or not the path begins with a slash.
            userinfo (unicode): The username or colon-separated
               username:password pair.
-           family: A socket module constant used when the host is an
-              IP constant to differentiate IPv4 and domain names, as
-              well as validate IPv6.
            uses_netloc (bool): Indicates whether two slashes appear
               between the scheme and the host (``http://eg.com`` vs
               ``mailto:e@g.com``)
