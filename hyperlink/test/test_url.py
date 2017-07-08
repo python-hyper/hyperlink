@@ -10,7 +10,8 @@ import socket
 from .common import HyperlinkTestCase
 from .. import URL, URLParseError
 # automatically import the py27 windows implementation when appropriate
-from .._url import inet_pton, SCHEME_PORT_MAP
+from .. import _url
+from .._url import inet_pton, SCHEME_PORT_MAP, parse_host
 
 unicode = type(u'')
 

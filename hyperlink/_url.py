@@ -122,11 +122,30 @@ _UNRESERVED_CHARS = frozenset('~-._0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ'
 
 # URL parsing regex (based on RFC 3986 Appendix B, with modifications)
 _URL_RE = re.compile(r'^((?P<scheme>[^:/?#]+):)?'
-                     r'((?P<_netloc_sep>//)(?P<authority>[^/?#]*))?'
+                     r'((?P<_netloc_sep>//)'
+                     r'(?P<authority>'
+                     r'(?P<userinfo>[^@/?#]*@)?'
+                     r'(?P<host>(\[[^\[]/?#]*\])|([^:/?#[\]]*))?'
+                     r':?(?P<port>\d+)?'
+                     r'))?'
                      r'(?P<path>[^?#]*)'
                      r'(\?(?P<query>[^#]*))?'
                      r'(#(?P<fragment>.*))?')
 _SCHEME_RE = re.compile(r'^[a-zA-Z0-9+-.]*$')
+
+
+_URL_RE_PATT = (r'^((?P<scheme>[^:/?#]+):)?'
+                r'((?P<_netloc_sep>//)'
+                r'(?P<authority>'
+                r'(?P<userinfo>[^@/?#]*@)?'
+                r'(?P<host>(?P<new_host>\[[^[\]/?#]*\])|(?P<old_host>[^:/?#[\]]*))?'
+                r':?(?P<port>\d+)?'
+                r'))?'  # close authority group
+                r'(?P<path>[^?#]*)'
+                r'(\?(?P<query>[^#]*))?'
+                r'(#(?P<fragment>.*))?')
+_URL_RE = re.compile(_URL_RE_PATT)
+# ^((?P<scheme>[^:/?#]+):)?((?P<_netloc_sep>//)(?P<authority>(?P<userinfo>[^@/?#]*@)?(?P<host>(?P<new_host>\[[^\[]/?#]*\])|(?P<old_host>[^\[]:/?#]*))?:?(?P<port>\d+)?))?(?P<path>[^?#]*)(\?(?P<query>[^#]*))?(#(?P<fragment>.*))?
 
 
 _HEX_CHAR_MAP = dict([((a + b).encode('ascii'),
@@ -641,6 +660,7 @@ class URL(object):
                                  ' "-", and "." allowed. Did you meant to call'
                                  ' %s.from_text()?'
                                  % (self._scheme, self.__class__.__name__))
+
         _, self._host = parse_host(_textcheck('host', host, '/?#@'))
         if isinstance(path, unicode):
             raise TypeError("expected iterable of text for path, not: %r"
@@ -952,7 +972,6 @@ class URL(object):
                                             % port_str)
         if host:
             host = host.lstrip('[').rstrip(']')
-
         scheme = gs['scheme'] or u''
         fragment = gs['fragment'] or u''
         uses_netloc = bool(gs['_netloc_sep'])
