@@ -856,7 +856,6 @@ class TestURL(HyperlinkTestCase):
         url = URL.from_text(t)
         assert url.host == '2001:0db8:85a3:0000:0000:8a2e:0370:7334'
         assert url.port == 80
-        # assert url.family == socket.AF_INET6
         assert SCHEME_PORT_MAP[url.scheme] != url.port
 
     def test_invalid_ipv6(self):
@@ -870,16 +869,6 @@ class TestURL(HyperlinkTestCase):
             self.assertRaises(socket.error, inet_pton,
                               socket.AF_INET6, ip)
             self.assertRaises(URLParseError, URL.from_text, url_text)
-
-    # def test_ip_family_detection(self):
-    #     u = URL.from_text('http://giggle.com')
-    #     self.assertEqual(u.family, None)
-    #
-    #     u = URL.from_text('http://127.0.0.1/a/b/?c=d')
-    #     self.assertEqual(u.family, socket.AF_INET)
-    #
-    #     u = URL.from_text('http://[::1]/a/b/?c=d')
-    #     self.assertEqual(u.family, socket.AF_INET6)
 
     def test_invalid_port(self):
         self.assertRaises(URLParseError, URL.from_text, 'ftp://portmouth:smash')

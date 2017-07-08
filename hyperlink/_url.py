@@ -950,7 +950,6 @@ class URL(object):
                             raise URLParseError('port must not be empty')
                         raise URLParseError('expected integer for port, not %r'
                                             % port_str)
-        # _, host = parse_host(host)
         if host:
             host = host.lstrip('[').rstrip(']')
 
