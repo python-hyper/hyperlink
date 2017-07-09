@@ -120,31 +120,22 @@ _unspecified = _UNSET = make_sentinel('_UNSET')
 _UNRESERVED_CHARS = frozenset('~-._0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ'
                               'abcdefghijklmnopqrstuvwxyz')
 
+
 # URL parsing regex (based on RFC 3986 Appendix B, with modifications)
 _URL_RE = re.compile(r'^((?P<scheme>[^:/?#]+):)?'
                      r'((?P<_netloc_sep>//)'
-                     r'(?P<authority>'
-                     r'(?P<userinfo>[^@/?#]*@)?'
-                     r'(?P<host>(\[[^\[]/?#]*\])|([^:/?#[\]]*))?'
-                     r':?(?P<port>\d+)?'
-                     r'))?'
+                     r'(?P<authority>[^/?#]*))?'
                      r'(?P<path>[^?#]*)'
                      r'(\?(?P<query>[^#]*))?'
-                     r'(#(?P<fragment>.*))?')
+                     r'(#(?P<fragment>.*))?$')
 _SCHEME_RE = re.compile(r'^[a-zA-Z0-9+-.]*$')
+_AUTHORITY_RE = re.compile(r'^(?:(?P<userinfo>[^@/?#]*)@)?'
+                           r'(?P<host>'
+                           r'(?:\[(?P<ipv6_host>[^[\]/?#]*)\])'
+                           r'|(?P<plain_host>[^:/?#[\]]*)'
+                           r'|(?P<bad_host>.*?))?'
+                           r'(?::(?P<port>\d*))?$')
 
-
-_URL_RE_PATT = (r'^((?P<scheme>[^:/?#]+):)?'
-                r'((?P<_netloc_sep>//)'
-                r'(?P<authority>'
-                r'(?P<userinfo>[^@/?#]*@)?'
-                r'(?P<host>(?P<new_host>\[[^[\]/?#]*\])|(?P<old_host>[^:/?#[\]]*))?'
-                r':?(?P<port>\d+)?'
-                r'))?'  # close authority group
-                r'(?P<path>[^?#]*)'
-                r'(\?(?P<query>[^#]*))?'
-                r'(#(?P<fragment>.*))?')
-_URL_RE = re.compile(_URL_RE_PATT)
 # ^((?P<scheme>[^:/?#]+):)?((?P<_netloc_sep>//)(?P<authority>(?P<userinfo>[^@/?#]*@)?(?P<host>(?P<new_host>\[[^\[]/?#]*\])|(?P<old_host>[^\[]:/?#]*))?:?(?P<port>\d+)?))?(?P<path>[^?#]*)(\?(?P<query>[^#]*))?(#(?P<fragment>.*))?
 
 
@@ -948,30 +939,28 @@ class URL(object):
         except AttributeError:
             raise URLParseError('could not parse url: %r' % text)
 
-        au_text = gs['authority']
-        userinfo, hostinfo = u'', au_text
+        au_text = gs['authority'] or u''
+        au_m = _AUTHORITY_RE.match(au_text)
+        try:
+            au_gs = au_m.groupdict()
+        except AttributeError:
+            raise URLParseError('invalid authority %r in url: %r'
+                                % (au_text, text))
+        if au_gs['bad_host']:
+            raise URLParseError('invalid host %r in url: %r')
 
-        if au_text:
-            userinfo, sep, hostinfo = au_text.rpartition('@')
+        userinfo = au_gs['userinfo'] or u''
 
-        host, port = None, None
-        if hostinfo:
-            host, sep, port_str = hostinfo.rpartition(u':')
-            if not sep:
-                host = port_str
-            else:
-                if u']' in port_str:
-                    host = hostinfo  # wrong split, was an ipv6
-                else:
-                    try:
-                        port = int(port_str)
-                    except ValueError:
-                        if not port_str:  # TODO: excessive?
-                            raise URLParseError('port must not be empty')
-                        raise URLParseError('expected integer for port, not %r'
-                                            % port_str)
-        if host:
-            host = host.lstrip('[').rstrip(']')
+        host = au_gs['ipv6_host'] or au_gs['plain_host']
+        port = au_gs['port']
+        if port is not None:
+            try:
+                port = int(port)
+            except ValueError:
+                if not port:  # TODO: excessive?
+                    raise URLParseError('port must not be empty')
+                raise URLParseError('expected integer for port, not %r' % port)
+
         scheme = gs['scheme'] or u''
         fragment = gs['fragment'] or u''
         uses_netloc = bool(gs['_netloc_sep'])
@@ -985,7 +974,7 @@ class URL(object):
                 rooted = False
         else:
             path = ()
-            rooted = bool(hostinfo)
+            rooted = bool(au_text)
         if gs['query']:
             query = ((qe.split(u"=", 1) if u'=' in qe else (qe, None))
                      for qe in gs['query'].split(u"&"))
