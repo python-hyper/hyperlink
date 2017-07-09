@@ -859,6 +859,29 @@ class TestURL(HyperlinkTestCase):
         assert url.port == 80
         assert SCHEME_PORT_MAP[url.scheme] != url.port
 
+    def test_basic(self):
+        text = 'https://user:pass@example.com/path/to/here?k=v#nice'
+        url = URL.from_text(text)
+        assert url.scheme == 'https'
+        assert url.userinfo == 'user:pass'
+        assert url.host == 'example.com'
+        assert url.path == ('path', 'to', 'here')
+        assert url.fragment == 'nice'
+
+        text = 'https://user:pass@127.0.0.1/path/to/here?k=v#nice'
+        url = URL.from_text(text)
+        assert url.scheme == 'https'
+        assert url.userinfo == 'user:pass'
+        assert url.host == '127.0.0.1'
+        assert url.path == ('path', 'to', 'here')
+
+        text = 'https://user:pass@[::1]/path/to/here?k=v#nice'
+        url = URL.from_text(text)
+        assert url.scheme == 'https'
+        assert url.userinfo == 'user:pass'
+        assert url.host == '::1'
+        assert url.path == ('path', 'to', 'here')
+
     def test_invalid_ipv6(self):
         invalid_ipv6_ips = ['2001::0234:C1ab::A0:aabc:003F',
                             '2001::1::3F',
