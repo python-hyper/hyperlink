@@ -671,6 +671,7 @@ class URL(object):
         uses_netloc = scheme_uses_netloc(self._scheme, uses_netloc)
         self._uses_netloc = _typecheck("uses_netloc",
                                        uses_netloc, bool, NoneType)
+
         return
 
     @property
@@ -958,7 +959,7 @@ class URL(object):
                 port = int(port)
             except ValueError:
                 if not port:  # TODO: excessive?
-                    raise URLParseError('port must not be empty')
+                    raise URLParseError('port must not be empty: %r' % au_text)
                 raise URLParseError('expected integer for port, not %r' % port)
 
         scheme = gs['scheme'] or u''
