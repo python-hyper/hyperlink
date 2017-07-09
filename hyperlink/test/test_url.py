@@ -1082,8 +1082,13 @@ class TestURL(HyperlinkTestCase):
         self.assertRaises(TypeError, URL.from_text, object())
 
     def test_from_text_bad_authority(self):
+        # bad ipv6 parentheses
         self.assertRaises(URLParseError, URL.from_text, 'http://[::1/')
         self.assertRaises(URLParseError, URL.from_text, 'http://::1]/')
         self.assertRaises(URLParseError, URL.from_text, 'http://[[::1]/')
         self.assertRaises(URLParseError, URL.from_text, 'http://[::1]]/')
+
+        # empty port
+        self.assertRaises(URLParseError, URL.from_text, 'http://127.0.0.1:')
+        # extra port colon (makes for an invalid host)
         self.assertRaises(URLParseError, URL.from_text, 'http://127.0.0.1::80')
