@@ -1090,5 +1090,7 @@ class TestURL(HyperlinkTestCase):
 
         # empty port
         self.assertRaises(URLParseError, URL.from_text, 'http://127.0.0.1:')
+        # non-integer port
+        self.assertRaises(URLParseError, URL.from_text, 'http://127.0.0.1:hi')
         # extra port colon (makes for an invalid host)
         self.assertRaises(URLParseError, URL.from_text, 'http://127.0.0.1::80')

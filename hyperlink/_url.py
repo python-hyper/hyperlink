@@ -134,7 +134,7 @@ _AUTHORITY_RE = re.compile(r'^(?:(?P<userinfo>[^@/?#]*)@)?'
                            r'(?:\[(?P<ipv6_host>[^[\]/?#]*)\])'
                            r'|(?P<plain_host>[^:/?#[\]]*)'
                            r'|(?P<bad_host>.*?))?'
-                           r'(?::(?P<port>\d*))?$')
+                           r'(?::(?P<port>.*))?$')
 
 # ^((?P<scheme>[^:/?#]+):)?((?P<_netloc_sep>//)(?P<authority>(?P<userinfo>[^@/?#]*@)?(?P<host>(?P<new_host>\[[^\[]/?#]*\])|(?P<old_host>[^\[]:/?#]*))?:?(?P<port>\d+)?))?(?P<path>[^?#]*)(\?(?P<query>[^#]*))?(#(?P<fragment>.*))?
 
