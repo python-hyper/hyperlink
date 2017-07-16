@@ -882,6 +882,9 @@ class TestURL(HyperlinkTestCase):
         assert url.host == '::1'
         assert url.path == ('path', 'to', 'here')
 
+    def test_invalid_url(self):
+        self.assertRaises(URLParseError, URL.from_text, '#\n\n')
+
     def test_invalid_ipv6(self):
         invalid_ipv6_ips = ['2001::0234:C1ab::A0:aabc:003F',
                             '2001::1::3F',
