@@ -196,7 +196,8 @@ _QUERY_DECODE_MAP = _make_decode_map(_QUERY_DELIMS)
 _FRAGMENT_QUOTE_MAP = _make_quote_map(_FRAGMENT_SAFE)
 _FRAGMENT_DECODE_MAP = _make_decode_map(_FRAGMENT_DELIMS)
 _UNRESERVED_DECODE_MAP = dict([(k, v) for k, v in _HEX_CHAR_MAP.items()
-                               if v in _UNRESERVED_CHARS])
+                               if v.decode('ascii', 'replace')
+                               in _UNRESERVED_CHARS])
 
 _ROOT_PATHS = frozenset(((), (u'',)))
 
