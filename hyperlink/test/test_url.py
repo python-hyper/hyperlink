@@ -1088,7 +1088,7 @@ class TestURL(HyperlinkTestCase):
         self.assertRaises(TypeError, URL.from_text, object())
 
     def test_from_text_bad_authority(self):
-        # bad ipv6 parentheses
+        # bad ipv6 brackets
         self.assertRaises(URLParseError, URL.from_text, 'http://[::1/')
         self.assertRaises(URLParseError, URL.from_text, 'http://::1]/')
         self.assertRaises(URLParseError, URL.from_text, 'http://[[::1]/')
@@ -1100,3 +1100,22 @@ class TestURL(HyperlinkTestCase):
         self.assertRaises(URLParseError, URL.from_text, 'http://127.0.0.1:hi')
         # extra port colon (makes for an invalid host)
         self.assertRaises(URLParseError, URL.from_text, 'http://127.0.0.1::80')
+
+    def test_normalize(self):
+        url = URL.from_text('HTTP://Example.com/A%61/./../A%61?B%62=C%63#D%64')
+        assert url.get('Bb') == []
+        assert url.get('B%62') == ['C%63']
+        assert len(url.path) == 4
+
+        norm_url = url.normalize()
+
+        assert norm_url.scheme == 'http'
+        assert norm_url.host == 'example.com'
+        assert norm_url.path == ('Aa',)
+        assert norm_url.get('Bb') == ['Cc']
+        assert norm_url.fragment == 'Dd'
+        assert norm_url.to_text() == 'http://example.com/Aa?Bb=Cc#Dd'
+
+        noop_norm_url = url.normalize(scheme=False, host=False,
+                                      path=False, query=False, fragment=False)
+        assert noop_norm_url == url
