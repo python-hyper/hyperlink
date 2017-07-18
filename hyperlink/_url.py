@@ -1005,8 +1005,11 @@ class URL(object):
         if host:
             kw['host'] = self.host.lower()
         if path:
-            kw['path'] = [_decode_unreserved(p) for p in
-                          _resolve_dot_segments(self.path)]
+            if self.path:
+                kw['path'] = [_decode_unreserved(p) for p in
+                              _resolve_dot_segments(self.path)]
+            else:
+                kw['path'] = (u'',)
         if query:
             kw['query'] = [(_decode_unreserved(k), _decode_unreserved(v))
                            for k, v in self.query]

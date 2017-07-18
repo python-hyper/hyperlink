@@ -1107,6 +1107,7 @@ class TestURL(HyperlinkTestCase):
         assert url.get('B%62') == ['C%63']
         assert len(url.path) == 4
 
+        # test that most expected normalizations happen
         norm_url = url.normalize()
 
         assert norm_url.scheme == 'http'
@@ -1116,6 +1117,12 @@ class TestURL(HyperlinkTestCase):
         assert norm_url.fragment == 'Dd'
         assert norm_url.to_text() == 'http://example.com/Aa?Bb=Cc#Dd'
 
+        # test that flags work
         noop_norm_url = url.normalize(scheme=False, host=False,
                                       path=False, query=False, fragment=False)
         assert noop_norm_url == url
+
+        # test that empty paths get at least one slash
+        slashless_url = URL.from_text('http://example.io?k=v')
+        slashful_url = slashless_url.normalize()
+        assert slashful_url.to_text() == 'http://example.io/?k=v'
