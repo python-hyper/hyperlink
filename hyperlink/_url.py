@@ -195,6 +195,8 @@ _QUERY_PART_QUOTE_MAP = _make_quote_map(_QUERY_SAFE)
 _QUERY_DECODE_MAP = _make_decode_map(_QUERY_DELIMS)
 _FRAGMENT_QUOTE_MAP = _make_quote_map(_FRAGMENT_SAFE)
 _FRAGMENT_DECODE_MAP = _make_decode_map(_FRAGMENT_DELIMS)
+_UNRESERVED_DECODE_MAP = dict([(k, v) for k, v in _HEX_CHAR_MAP.items()
+                               if v in _UNRESERVED_CHARS])
 
 _ROOT_PATHS = frozenset(((), (u'',)))
 
@@ -429,6 +431,10 @@ def _textcheck(name, value, delims=frozenset(), nullable=False):
         raise ValueError('one or more reserved delimiters %s present in %s: %r'
                          % (''.join(delims), name, value))
     return value
+
+
+def _decode_unreserved(text):
+    return _percent_decode(text, _decode_map=_UNRESERVED_DECODE_MAP)
 
 
 def _decode_userinfo_part(text):
@@ -981,6 +987,32 @@ class URL(object):
             query = ()
         return cls(scheme, host, path, query, fragment, port,
                    rooted, userinfo, uses_netloc)
+
+    def normalize(self, scheme=True, host=True, path=True, query=True,
+                  fragment=True):
+        """Resolve any "." and ".." references in the path, as well as
+        normalize scheme and host casing. Also decode unreserved
+        characters per RFC 3986 2.3.
+
+        More information can be found in `Section 6.2.2 of RFC 3986`_.
+
+        .. _Section 6.2.2 of RFC 3986: https://tools.ietf.org/html/rfc3986#section-6.2.2
+        """
+        # TODO: userinfo?
+        kw = {}
+        if scheme:
+            kw['scheme'] = self.scheme.lower()
+        if host:
+            kw['host'] = self.host.lower()
+        if path:
+            kw['path'] = [_decode_unreserved(p) for p in
+                          _resolve_dot_segments(self.path)]
+        if query:
+            kw['query'] = [(_decode_unreserved(k), _decode_unreserved(v))
+                           for k, v in self.query]
+        if fragment:
+            kw['fragment'] = _decode_unreserved(self.fragment)
+        return self.replace(**kw)
 
     def child(self, *segments):
         """Make a new :class:`URL` where the given path segments are a child
