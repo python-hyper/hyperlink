@@ -10,7 +10,8 @@ import socket
 from .common import HyperlinkTestCase
 from .. import URL, URLParseError
 # automatically import the py27 windows implementation when appropriate
-from .._url import inet_pton, SCHEME_PORT_MAP
+from .. import _url
+from .._url import inet_pton, SCHEME_PORT_MAP, parse_host
 
 unicode = type(u'')
 
@@ -856,8 +857,36 @@ class TestURL(HyperlinkTestCase):
         url = URL.from_text(t)
         assert url.host == '2001:0db8:85a3:0000:0000:8a2e:0370:7334'
         assert url.port == 80
-        assert url.family == socket.AF_INET6
         assert SCHEME_PORT_MAP[url.scheme] != url.port
+
+    def test_basic(self):
+        text = 'https://user:pass@example.com/path/to/here?k=v#nice'
+        url = URL.from_text(text)
+        assert url.scheme == 'https'
+        assert url.userinfo == 'user:pass'
+        assert url.host == 'example.com'
+        assert url.path == ('path', 'to', 'here')
+        assert url.fragment == 'nice'
+
+        text = 'https://user:pass@127.0.0.1/path/to/here?k=v#nice'
+        url = URL.from_text(text)
+        assert url.scheme == 'https'
+        assert url.userinfo == 'user:pass'
+        assert url.host == '127.0.0.1'
+        assert url.path == ('path', 'to', 'here')
+
+        text = 'https://user:pass@[::1]/path/to/here?k=v#nice'
+        url = URL.from_text(text)
+        assert url.scheme == 'https'
+        assert url.userinfo == 'user:pass'
+        assert url.host == '::1'
+        assert url.path == ('path', 'to', 'here')
+
+    def test_invalid_url(self):
+        self.assertRaises(URLParseError, URL.from_text, '#\n\n')
+
+    def test_invalid_authority_url(self):
+        self.assertRaises(URLParseError, URL.from_text, 'http://abc:\n\n/#')
 
     def test_invalid_ipv6(self):
         invalid_ipv6_ips = ['2001::0234:C1ab::A0:aabc:003F',
@@ -870,16 +899,6 @@ class TestURL(HyperlinkTestCase):
             self.assertRaises(socket.error, inet_pton,
                               socket.AF_INET6, ip)
             self.assertRaises(URLParseError, URL.from_text, url_text)
-
-    def test_ip_family_detection(self):
-        u = URL.from_text('http://giggle.com')
-        self.assertEqual(u.family, None)
-
-        u = URL.from_text('http://127.0.0.1/a/b/?c=d')
-        self.assertEqual(u.family, socket.AF_INET)
-
-        u = URL.from_text('http://[::1]/a/b/?c=d')
-        self.assertEqual(u.family, socket.AF_INET6)
 
     def test_invalid_port(self):
         self.assertRaises(URLParseError, URL.from_text, 'ftp://portmouth:smash')
@@ -1067,3 +1086,17 @@ class TestURL(HyperlinkTestCase):
         assert URL.from_text(u'#ok').fragment == u'ok'  # sanity
         self.assertRaises(TypeError, URL.from_text, b'bytes://x.y.z')
         self.assertRaises(TypeError, URL.from_text, object())
+
+    def test_from_text_bad_authority(self):
+        # bad ipv6 parentheses
+        self.assertRaises(URLParseError, URL.from_text, 'http://[::1/')
+        self.assertRaises(URLParseError, URL.from_text, 'http://::1]/')
+        self.assertRaises(URLParseError, URL.from_text, 'http://[[::1]/')
+        self.assertRaises(URLParseError, URL.from_text, 'http://[::1]]/')
+
+        # empty port
+        self.assertRaises(URLParseError, URL.from_text, 'http://127.0.0.1:')
+        # non-integer port
+        self.assertRaises(URLParseError, URL.from_text, 'http://127.0.0.1:hi')
+        # extra port colon (makes for an invalid host)
+        self.assertRaises(URLParseError, URL.from_text, 'http://127.0.0.1::80')
