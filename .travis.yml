@@ -18,6 +18,8 @@ matrix:
       env: TOXENV=py36
     - python: "pypy"
       env: TOXENV=pypy
+    - python: "2.7"
+      env: TOXENV=packaging
 
 
 install:
