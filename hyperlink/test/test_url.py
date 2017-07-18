@@ -1123,6 +1123,6 @@ class TestURL(HyperlinkTestCase):
         assert noop_norm_url == url
 
         # test that empty paths get at least one slash
-        slashless_url = URL.from_text('http://example.io?k=v')
+        slashless_url = URL.from_text('http://example.io')
         slashful_url = slashless_url.normalize()
-        assert slashful_url.to_text() == 'http://example.io/?k=v'
+        assert slashful_url.to_text() == 'http://example.io/'
