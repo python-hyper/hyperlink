@@ -1000,6 +1000,7 @@ class URL(object):
         .. _Section 6.2.2 of RFC 3986: https://tools.ietf.org/html/rfc3986#section-6.2.2
         """
         # TODO: userinfo?
+        # TODO: uppercase percent (3986 2.1)
         kw = {}
         if scheme:
             kw['scheme'] = self.scheme.lower()
