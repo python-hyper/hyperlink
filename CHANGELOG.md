@@ -4,6 +4,22 @@
 
 * *None so far*
 
+## 17.3.0
+
+*(July 18, 2017)*
+
+Fixed a couple major decoding issues and simplified the URL API.
+
+* limit types accepted by `URL.from_text()` to just text (str on py3,
+  unicode on py2), see #20
+* fix percent decoding issues surrounding multiple calls to
+  `URL.to_iri()` (see #16)
+* remove the `socket`-inspired `family` argument from `URL`'s APIs. It
+  was never consistently implemented and leaked slightly more problems
+  than it solved.
+* Improve authority parsing (see #26)
+* include LICENSE, README, docs, and other resources in the package
+
 ## 17.2.1
 
 *(June 18, 2017)*
