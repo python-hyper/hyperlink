@@ -1126,3 +1126,8 @@ class TestURL(HyperlinkTestCase):
         slashless_url = URL.from_text('http://example.io')
         slashful_url = slashless_url.normalize()
         assert slashful_url.to_text() == 'http://example.io/'
+
+        # test case normalization for percent encoding
+        delimited_url = URL.from_text('/a%2fb/cd%3f?k%3d=v%23#test')
+        norm_delimited_url = delimited_url.normalize()
+        assert norm_delimited_url.to_text() == '/a%2Fb/cd%3F?k%3D=v%23#test'
