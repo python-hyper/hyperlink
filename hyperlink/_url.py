@@ -434,33 +434,45 @@ def _textcheck(name, value, delims=frozenset(), nullable=False):
     return value
 
 
-def _decode_unreserved(text):
-    return _percent_decode(text, _decode_map=_UNRESERVED_DECODE_MAP)
+def _decode_unreserved(text, normalize_case=False):
+    return _percent_decode(text, normalize_case=normalize_case,
+                           _decode_map=_UNRESERVED_DECODE_MAP)
 
 
-def _decode_userinfo_part(text):
-    return _percent_decode(text, _decode_map=_USERINFO_DECODE_MAP)
+def _decode_userinfo_part(text, normalize_case=False):
+    return _percent_decode(text, normalize_case=normalize_case,
+                           _decode_map=_USERINFO_DECODE_MAP)
 
 
-def _decode_path_part(text):
-    return _percent_decode(text, _decode_map=_PATH_DECODE_MAP)
+def _decode_path_part(text, normalize_case=False):
+    """
+    >>> _decode_path_part(u'%61%77%2f%7a')
+    u'aw%2fz'
+    >>> _decode_path_part(u'%61%77%2f%7a', normalize_case=True)
+    u'aw%2Fz'
+    """
+    return _percent_decode(text, normalize_case=normalize_case,
+                           _decode_map=_PATH_DECODE_MAP)
 
 
-def _decode_query_part(text):
-    return _percent_decode(text, _decode_map=_QUERY_DECODE_MAP)
+def _decode_query_part(text, normalize_case=False):
+    return _percent_decode(text, normalize_case=normalize_case,
+                           _decode_map=_QUERY_DECODE_MAP)
 
 
-def _decode_fragment_part(text):
-    return _percent_decode(text, _decode_map=_FRAGMENT_DECODE_MAP)
+def _decode_fragment_part(text, normalize_case=False):
+    return _percent_decode(text, normalize_case=normalize_case,
+                           _decode_map=_FRAGMENT_DECODE_MAP)
 
 
-def _percent_decode(text, _decode_map=_HEX_CHAR_MAP):
+def _percent_decode(text, normalize_case=False, _decode_map=_HEX_CHAR_MAP):
     """Convert percent-encoded text characters to their normal,
     human-readable equivalents.
 
     All characters in the input text must be valid ASCII. All special
     characters underlying the values in the percent-encoding must be
-    valid UTF-8.
+    valid UTF-8. If a non-UTF8-valid string is passed, the original
+    text is returned with no changes applied.
 
     Only called by field-tailored variants, e.g.,
     :func:`_decode_path_part`, as every percent-encodable part of the
@@ -471,10 +483,14 @@ def _percent_decode(text, _decode_map=_HEX_CHAR_MAP):
 
     Args:
        text (unicode): The ASCII text with percent-encoding present.
+       normalize_case (bool): Whether undecoded percent segments, such
+          as encoded delimiters, should be uppercased, per RFC 3986
+          Section 2.1. See :func:`_decode_path_part` for an example.
 
     Returns:
        unicode: The percent-decoded version of *text*, with UTF-8
          decoding applied.
+
     """
     try:
         quoted_bytes = text.encode("ascii")
@@ -488,13 +504,26 @@ def _percent_decode(text, _decode_map=_HEX_CHAR_MAP):
     res = [bits[0]]
     append = res.append
 
-    for item in bits[1:]:
-        try:
-            append(_decode_map[item[:2]])
-            append(item[2:])
-        except KeyError:
-            append(b'%')
-            append(item)
+    if not normalize_case:
+        for item in bits[1:]:
+            try:
+                append(_decode_map[item[:2]])
+                append(item[2:])
+            except KeyError:
+                append(b'%')
+                append(item)
+    else:
+        for item in bits[1:]:
+            try:
+                append(_decode_map[item[:2]])
+                append(item[2:])
+            except KeyError:
+                append(b'%')
+                if item[:2] in _HEX_CHAR_MAP:
+                    append(item[:2].upper())
+                    append(item[2:])
+                else:
+                    append(item)
 
     unquoted_bytes = b''.join(res)
 
@@ -991,16 +1020,34 @@ class URL(object):
 
     def normalize(self, scheme=True, host=True, path=True, query=True,
                   fragment=True):
-        """Resolve any "." and ".." references in the path, as well as
-        normalize scheme and host casing. Also decode unreserved
-        characters per RFC 3986 2.3.
+        """Return a new URL object with several standard normalizations
+        applied:
 
-        More information can be found in `Section 6.2.2 of RFC 3986`_.
+        * Decode unreserved characters (`RFC 3986 2.3`_)
+        * Uppercase remaining percent-encoded octets (`RFC 3986 2.1`_)
+        * Convert scheme and host casing to lowercase (`RFC 3986 3.2.2`_)
+        * Resolve any "." and ".." references in the path (`RFC 3986 6.2.2`_)
+        * Ensure an ending slash on URLs with an empty path (`RFC 3986 6.2.3`_)
 
-        .. _Section 6.2.2 of RFC 3986: https://tools.ietf.org/html/rfc3986#section-6.2.2
+        All are applied by default, but normalizations can be disabled
+        per-part by passing `False` for that part's corresponding
+        name.
+
+        Args:
+           scheme (bool): Convert the scheme to lowercase
+           host (bool): Convert the host to lowercase
+           path (bool): Normalize the path (see above for details)
+           query (bool): Normalize the query string
+           fragment (bool): Normalize the fragment
+
+        .. _RFC 3986 3.2.2: https://tools.ietf.org/html/rfc3986#section-3.2.2
+        .. _RFC 3986 2.3: https://tools.ietf.org/html/rfc3986#section-2.3
+        .. _RFC 3986 2.1: https://tools.ietf.org/html/rfc3986#section-2.1
+        .. _RFC 3986 6.2.2: https://tools.ietf.org/html/rfc3986#section-6.2.2
+        .. _RFC 3986 6.2.3: https://tools.ietf.org/html/rfc3986#section-6.2.3
+
         """
         # TODO: userinfo?
-        # TODO: uppercase percent (3986 2.1)
         kw = {}
         if scheme:
             kw['scheme'] = self.scheme.lower()
@@ -1008,15 +1055,17 @@ class URL(object):
             kw['host'] = self.host.lower()
         if path:
             if self.path:
-                kw['path'] = [_decode_unreserved(p) for p in
-                              _resolve_dot_segments(self.path)]
+                kw['path'] = [_decode_unreserved(p, normalize_case=True)
+                              for p in _resolve_dot_segments(self.path)]
             else:
                 kw['path'] = (u'',)
         if query:
-            kw['query'] = [(_decode_unreserved(k), _decode_unreserved(v))
+            kw['query'] = [(_decode_unreserved(k, normalize_case=True),
+                            _decode_unreserved(v, normalize_case=True))
                            for k, v in self.query]
         if fragment:
-            kw['fragment'] = _decode_unreserved(self.fragment)
+            kw['fragment'] = _decode_unreserved(self.fragment,
+                                                normalize_case=True)
         return self.replace(**kw)
 
     def child(self, *segments):
