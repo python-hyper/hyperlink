@@ -1026,7 +1026,7 @@ class URL(object):
         * Decode unreserved characters (`RFC 3986 2.3`_)
         * Uppercase remaining percent-encoded octets (`RFC 3986 2.1`_)
         * Convert scheme and host casing to lowercase (`RFC 3986 3.2.2`_)
-        * Resolve any "." and ".." references in the path (`RFC 3986 6.2.2`_)
+        * Resolve any "." and ".." references in the path (`RFC 3986 6.2.2.3`_)
         * Ensure an ending slash on URLs with an empty path (`RFC 3986 6.2.3`_)
 
         All are applied by default, but normalizations can be disabled
@@ -1047,7 +1047,7 @@ class URL(object):
         .. _RFC 3986 3.2.2: https://tools.ietf.org/html/rfc3986#section-3.2.2
         .. _RFC 3986 2.3: https://tools.ietf.org/html/rfc3986#section-2.3
         .. _RFC 3986 2.1: https://tools.ietf.org/html/rfc3986#section-2.1
-        .. _RFC 3986 6.2.2: https://tools.ietf.org/html/rfc3986#section-6.2.2
+        .. _RFC 3986 6.2.2.3: https://tools.ietf.org/html/rfc3986#section-6.2.2.3
         .. _RFC 3986 6.2.3: https://tools.ietf.org/html/rfc3986#section-6.2.3
 
         """
