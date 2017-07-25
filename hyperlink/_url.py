@@ -1040,6 +1040,10 @@ class URL(object):
            query (bool): Normalize the query string
            fragment (bool): Normalize the fragment
 
+        >>> url = URL.from_text(u'Http://example.COM/a/../b/./c%2f?%61')
+        >>> print(url.normalize().to_text())
+        http://example.com/b/c%2F?a
+
         .. _RFC 3986 3.2.2: https://tools.ietf.org/html/rfc3986#section-3.2.2
         .. _RFC 3986 2.3: https://tools.ietf.org/html/rfc3986#section-2.3
         .. _RFC 3986 2.1: https://tools.ietf.org/html/rfc3986#section-2.1
@@ -1061,8 +1065,8 @@ class URL(object):
                 kw['path'] = (u'',)
         if query:
             kw['query'] = [(_decode_unreserved(k, normalize_case=True),
-                            _decode_unreserved(v, normalize_case=True))
-                           for k, v in self.query]
+                            _decode_unreserved(v, normalize_case=True)
+                            if v else v) for k, v in self.query]
         if fragment:
             kw['fragment'] = _decode_unreserved(self.fragment,
                                                 normalize_case=True)
