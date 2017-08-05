@@ -388,9 +388,14 @@ class TestURL(HyperlinkTestCase):
         res = 'http://hatnote.com/a/c/d/'
         self.assertEqual(u.click('').to_text(), res)
 
-
         # test click default arg is same as empty string above
         self.assertEqual(u.click().to_text(), res)
+
+        # test click on a URL instance
+        u = URL.fromText('http://localhost/foo/?abc=def')
+        u2 = URL.from_text('bar')
+        u3 = u.click(u2)
+        self.assertEqual(u3.to_text(), 'http://localhost/foo/bar')
 
     def test_clickRFC3986(self):
         """
