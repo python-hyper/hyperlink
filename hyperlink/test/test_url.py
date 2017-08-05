@@ -1131,3 +1131,6 @@ class TestURL(HyperlinkTestCase):
         delimited_url = URL.from_text('/a%2fb/cd%3f?k%3d=v%23#test')
         norm_delimited_url = delimited_url.normalize()
         assert norm_delimited_url.to_text() == '/a%2Fb/cd%3F?k%3D=v%23#test'
+
+        # test invalid percent encoding during normalize
+        assert URL(path=('', '%te%sts')).normalize().to_text() == '/%te%sts'
