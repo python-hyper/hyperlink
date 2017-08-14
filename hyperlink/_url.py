@@ -1139,9 +1139,15 @@ class URL(object):
 
         .. _RFC 3986 section 5: https://tools.ietf.org/html/rfc3986#section-5
         """
-        _textcheck("relative URL", href)
         if href:
-            clicked = URL.from_text(href)
+            if isinstance(href, URL):
+                clicked = href
+            else:
+                # TODO: This error message is not completely accurate,
+                # as URL objects are now also valid, but Twisted's
+                # test suite (wrongly) relies on this exact message.
+                _textcheck('relative URL', href)
+                clicked = URL.from_text(href)
             if clicked.absolute:
                 return clicked
         else:
