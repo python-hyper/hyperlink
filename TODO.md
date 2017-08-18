@@ -6,13 +6,18 @@
 * Get coverage up
 * Switch off ctypes/socket for IP validation
 * rebase method for path (prepends to path)
+* switch default percent encoding to upper case (a la RFC 3986 2.1)
 
 ## normalize method
 
 * unquote all unreserved characters (RFC 3986 2.3)
 * lowercase scheme
-* lowercase host
+* lowercase host (including lowercase ipv6 addresses)
 * resolve path parts (RFC 3986 6.2.2)
+* percent encoding (RFC 3986 2.1) to uppercase (add a
+  `normalize_case=False` to `_percent_decode`, with appropriate upward
+  propagation)
+
 
 ## Complete
 
