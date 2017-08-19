@@ -24,6 +24,7 @@ it into other URLs and text.
 .. automethod:: hyperlink.URL.to_uri
 .. automethod:: hyperlink.URL.to_iri
 .. automethod:: hyperlink.URL.replace
+.. automethod:: hyperlink.URL.normalize
 
 Navigation
 ----------
