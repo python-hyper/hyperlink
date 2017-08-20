@@ -7,7 +7,7 @@
 *(August 19, 2017)*
 
 * Add `URL.normalize()` method, which applies five normalizations from
-  RFC 3986 (sections 2.3, 2.1, 3.2.2, 6.2.2.3, 6.2.3). See the odcs
+  RFC 3986 (sections 2.3, 2.1, 3.2.2, 6.2.2.3, 6.2.3). See [the docs](http://hyperlink.readthedocs.io/en/latest/api.html#hyperlink.URL.normalize)
   for more details.
 * Enable `URL.click()` to accept a URL object as a target.
 
