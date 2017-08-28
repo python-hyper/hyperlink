@@ -39,7 +39,7 @@ Then, URLs are just an import away::
 
   from hyperlink import URL
 
-  url = URL.from_text('http://github.com/mahmoud/hyperlink?utm_souce=readthedocs')
+  url = URL.from_text('http://github.com/python-hyper/hyperlink?utm_souce=readthedocs')
 
   better_url = url.replace(scheme='https')
   user_url = better_url.click('..')
@@ -57,8 +57,8 @@ Gaps
 
 Found something missing in hyperlink? `Pull Requests`_ and `Issues`_ weclome!
 
-.. _Pull Requests: https://github.com/mahmoud/python-hyper/pulls
-.. _Issues: https://github.com/mahmoud/python-hyper/issues
+.. _Pull Requests: https://github.com/python-hyper/hyperlink/pulls
+.. _Issues: https://github.com/python-hyper/hyperlink/issues
 
 Section listing
 ---------------
