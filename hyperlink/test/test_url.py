@@ -542,6 +542,8 @@ class TestURL(HyperlinkTestCase):
         u = URL.from_text('https://example.com/?argument=3&argument=4&operator=%3D')
         iri = u.to_iri()
         self.assertEqual(iri.get('operator'), ['='])
+        # assert that the equals is not unnecessarily escaped
+        self.assertEqual(iri.to_uri().get('operator'), ['='])
 
     def test_empty(self):
         """
