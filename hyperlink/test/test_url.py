@@ -330,6 +330,13 @@ class TestURL(HyperlinkTestCase):
         self.assertTrue(childURL.rooted)
         self.assertEqual("http://www.foo.com/c", childURL.to_text())
 
+    def test_emptyChild(self):
+        """
+        L{URL.child} without any new segments returns the original L{URL}.
+        """
+        url = URL(host=u"www.foo.com")
+        self.assertEqual(url.child(), url)
+
     def test_sibling(self):
         """
         L{URL.sibling} of a L{URL} replaces the last path segment, but does not
