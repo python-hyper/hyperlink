@@ -1093,6 +1093,9 @@ class URL(object):
            URL: A copy of the current URL with the extra path segments.
 
         """
+        if not segments:
+            return self
+
         segments = [_textcheck('path segment', s) for s in segments]
         new_segs = _encode_path_parts(segments, joined=False, maximal=False)
         new_path = self.path[:-1 if (self.path and self.path[-1] == u'')
