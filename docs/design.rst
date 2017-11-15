@@ -38,11 +38,11 @@ Still, Hyperlink's distinction between URIs and IRIs is pragmatic, and
 only limited to output. Input can contain *any mix* of percent
 encoding and Unicode, without issue:
 
-   >>> url = URL.from_text('http://example.com/caf%C3%A9/au láit')
+   >>> url = URL.from_text("http://example.com/caf%C3%A9 au lait/s'il vous plaît!")
    >>> print(url.to_iri().to_text())
-   http://example.com/café/au láit
+   http://example.com/café au lait/s'il vous plaît!
    >>> print(url.to_uri().to_text())
-   http://example.com/caf%C3%A9/au%20l%C3%A1it
+   http://example.com/caf%C3%A9%20au%20lait/s'il%20vous%20pla%C3%AEt!
 
 Note that even when a URI and IRI point to the same resource, they
 will often be different URLs:
