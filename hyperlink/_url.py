@@ -19,6 +19,11 @@ import re
 import string
 import socket
 from unicodedata import normalize
+
+try:
+    from collections.abc import Mapping
+except ImportError:  # Python 2
+    from collections import Mapping
 try:
     from socket import inet_pton
 except ImportError:
@@ -434,6 +439,19 @@ def _textcheck(name, value, delims=frozenset(), nullable=False):
     return value
 
 
+def iter_pairs(iterable):
+    """
+    Iterate over the (key, value) pairs in ``iterable``.
+
+    This handles dictionaries sensibly, and falls back to assuming the
+    iterable yields (key, value) pairs. This behaviour is similar to
+    what Python's ``dict()`` constructor does.
+    """
+    if isinstance(iterable, Mapping):
+        iterable = iterable.items()
+    return iter(iterable)
+
+
 def _decode_unreserved(text, normalize_case=False):
     return _percent_decode(text, normalize_case=normalize_case,
                            _decode_map=_UNRESERVED_DECODE_MAP)
@@ -639,8 +657,8 @@ class URL(object):
           for more info.
        path (tuple): A tuple of strings representing the
           slash-separated parts of the path.
-       query (tuple): The query parameters, as a tuple of
-          key-value pairs.
+       query (tuple): The query parameters, as a dictionary or
+          as an iterable of key-value pairs.
        fragment (unicode): The fragment part of the URL.
        rooted (bool): Whether or not the path begins with a slash.
        userinfo (unicode): The username or colon-separated
@@ -695,8 +713,7 @@ class URL(object):
         self._query = tuple(
             (_textcheck("query parameter name", k, '&=#'),
              _textcheck("query parameter value", v, '&#', nullable=True))
-            for (k, v) in query
-        )
+            for k, v in iter_pairs(query))
         self._fragment = _textcheck("fragment", fragment)
         self._port = _typecheck("port", port, int, NoneType)
         self._rooted = _typecheck("rooted", rooted, bool)
@@ -912,6 +929,8 @@ class URL(object):
               slash-separated parts of the path.
            query (tuple): The query parameters, as a tuple of
               key-value pairs.
+           query (tuple): The query parameters, as a dictionary or
+              as an iterable of key-value pairs.
            fragment (unicode): The fragment part of the URL.
            rooted (bool): Whether or not the path begins with a slash.
            userinfo (unicode): The username or colon-separated
