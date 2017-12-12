@@ -742,10 +742,14 @@ class TestURL(HyperlinkTestCase):
     def test_queryIterable(self):
         """
         When a L{URL} is created with a C{query} argument, the C{query}
-        argument is converted into an N-tuple of 2-tuples.
+        argument is converted into an N-tuple of 2-tuples, sensibly
+        handling dictionaries.
         """
+        expected = (('alpha', 'beta'),)
         url = URL(query=[['alpha', 'beta']])
-        self.assertEqual(url.query, (('alpha', 'beta'),))
+        self.assertEqual(url.query, expected)
+        url = URL(query={'alpha': 'beta'})
+        self.assertEqual(url.query, expected)
 
     def test_pathIterable(self):
         """
