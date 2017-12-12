@@ -16,9 +16,15 @@ As seen here, the API revolves around the lightweight and immutable
 """
 
 import re
+import sys
 import string
 import socket
 from unicodedata import normalize
+
+try:
+    from collections.abc import Mapping
+except ImportError:  # Python 2
+    from collections import Mapping
 try:
     from socket import inet_pton
 except ImportError:
@@ -52,6 +58,7 @@ except ImportError:
         raise socket.error('unknown address family')
 
 
+PY2 = (sys.version_info[0] == 2)
 unicode = type(u'')
 try:
     unichr
@@ -425,13 +432,26 @@ def _textcheck(name, value, delims=frozenset(), nullable=False):
         if nullable and value is None:
             return value  # used by query string values
         else:
-            str_name = "unicode" if bytes is str else "str"
+            str_name = "unicode" if PY2 else "str"
             exp = str_name + ' or NoneType' if nullable else str_name
             raise TypeError('expected %s for %s, got %r' % (exp, name, value))
     if delims and set(value) & set(delims):  # TODO: test caching into regexes
         raise ValueError('one or more reserved delimiters %s present in %s: %r'
                          % (''.join(delims), name, value))
     return value
+
+
+def iter_pairs(iterable):
+    """
+    Iterate over the (key, value) pairs in ``iterable``.
+
+    This handles dictionaries sensibly, and falls back to assuming the
+    iterable yields (key, value) pairs. This behaviour is similar to
+    what Python's ``dict()`` constructor does.
+    """
+    if isinstance(iterable, Mapping):
+        iterable = iterable.items()
+    return iter(iterable)
 
 
 def _decode_unreserved(text, normalize_case=False):
@@ -639,8 +659,8 @@ class URL(object):
           for more info.
        path (tuple): A tuple of strings representing the
           slash-separated parts of the path.
-       query (tuple): The query parameters, as a tuple of
-          key-value pairs.
+       query (tuple): The query parameters, as a dictionary or
+          as an iterable of key-value pairs.
        fragment (unicode): The fragment part of the URL.
        rooted (bool): Whether or not the path begins with a slash.
        userinfo (unicode): The username or colon-separated
@@ -695,8 +715,7 @@ class URL(object):
         self._query = tuple(
             (_textcheck("query parameter name", k, '&=#'),
              _textcheck("query parameter value", v, '&#', nullable=True))
-            for (k, v) in query
-        )
+            for k, v in iter_pairs(query))
         self._fragment = _textcheck("fragment", fragment)
         self._port = _typecheck("port", port, int, NoneType)
         self._rooted = _typecheck("rooted", rooted, bool)
@@ -912,6 +931,8 @@ class URL(object):
               slash-separated parts of the path.
            query (tuple): The query parameters, as a tuple of
               key-value pairs.
+           query (tuple): The query parameters, as a dictionary or
+              as an iterable of key-value pairs.
            fragment (unicode): The fragment part of the URL.
            rooted (bool): Whether or not the path begins with a slash.
            userinfo (unicode): The username or colon-separated

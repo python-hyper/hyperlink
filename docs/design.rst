@@ -92,6 +92,14 @@ by the query parameters, sometimes called "query arguments" or "GET
 parameters". Regardless of what you call them, they are encoded in
 the query string portion of the URL, and they are very powerful.
 
+In the simplest case, these query parameters can be provided as a
+dictionary:
+
+   >>> url = URL.from_text('http://example.com/')
+   >>> url = url.replace(query={'a': 'b', 'c': 'd'})
+   >>> url.to_text()
+   u'http://example.com/?a=b&c=d'
+
 Query parameters are actually a type of "multidict", where a given key
 can have multiple values. This is why the :meth:`~URL.get()` method
 returns a list of strings. Keys can also have no value, which is

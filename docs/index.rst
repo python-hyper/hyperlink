@@ -10,7 +10,7 @@ hyperlink
 URLs. Based on `RFC 3986`_ and `RFC 3987`_, the Hyperlink URL balances
 simplicity and correctness for both :ref:`URIs and IRIs <uris_and_iris>`.
 
-Hyperlink is tested against Python 2.7, 3.4, 3.5, and PyPy.
+Hyperlink is tested against Python 2.7, 3.4, 3.5, 3.6, and PyPy.
 
 For an introduction to the hyperlink library, its background, and URLs
 in general, see `this talk from PyConWeb 2017`_ (and `the accompanying
