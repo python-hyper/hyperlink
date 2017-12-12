@@ -2,6 +2,8 @@
 
 ## dev (not yet released)
 
+* Also accept dictionaries as ‘query=’ arguments (see #50)
+
 ## 17.3.1
 
 *(August 19, 2017)*
