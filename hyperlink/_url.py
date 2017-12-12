@@ -16,6 +16,7 @@ As seen here, the API revolves around the lightweight and immutable
 """
 
 import re
+import sys
 import string
 import socket
 from unicodedata import normalize
@@ -57,6 +58,7 @@ except ImportError:
         raise socket.error('unknown address family')
 
 
+PY2 = (sys.version_info[0] == 2)
 unicode = type(u'')
 try:
     unichr
@@ -430,7 +432,7 @@ def _textcheck(name, value, delims=frozenset(), nullable=False):
         if nullable and value is None:
             return value  # used by query string values
         else:
-            str_name = "unicode" if bytes is str else "str"
+            str_name = "unicode" if PY2 else "str"
             exp = str_name + ' or NoneType' if nullable else str_name
             raise TypeError('expected %s for %s, got %r' % (exp, name, value))
     if delims and set(value) & set(delims):  # TODO: test caching into regexes
