@@ -1449,3 +1449,78 @@ class URL(object):
         """
         return self.replace(query=((k, v) for (k, v) in self.query
                                    if k != name))
+
+
+class DecodedURL(object):
+    _percent_encoded_attrs = ('userinfo', 'user', 'path', 'query', 'fragment')
+
+    def __init__(self, url):
+        self._url = url
+
+    @property
+    def path(self):
+        return tuple([_percent_decode(p) for p in self._url.path])
+
+    def replace(self, scheme=_UNSET, host=_UNSET, path=_UNSET, query=_UNSET,
+                fragment=_UNSET, port=_UNSET, rooted=_UNSET, userinfo=_UNSET,
+                uses_netloc=_UNSET):
+        if path is not _UNSET:
+            path = _encode_path_parts(path, maximal=False, joined=False)
+        if query is not _UNSET:
+            query = tuple([_encode_query_part(x, maximal=False)
+                           for x in ([k] if v is None else [k, v])
+                           for (k, v) in query])
+        if userinfo is not _UNSET:
+            userinfo = _encode_userinfo_part(userinfo, maximal=False)
+        new_url = self._url.replace(scheme=scheme,
+                                    host=host,
+                                    path=path,
+                                    query=query,
+                                    fragment=fragment,
+                                    port=port,
+                                    rooted=rooted,
+                                    userinfo=userinfo,
+                                    uses_netloc=uses_netloc)
+        return type(self)(url=new_url)
+
+    def __getattr__(self, name):
+        _url = self._url   # object.__getattribute__(self, '_url')
+        try:
+            val = getattr(_url, name)
+        except AttributeError:
+            raise
+        if callable(val):
+            pass  # preprocess arguments
+        elif name in self._percent_encoded_attrs:
+            return _percent_decode(val)
+        return val
+
+
+"""
+* Decode
+  * Percent
+    * userinfo
+    * user
+    * path
+    * query
+    * fragment
+* Wrap in decoder
+  * .get()
+* Wrap in encoder
+  * replace
+  * child (split and encode?)
+  * sibling
+  * add()
+  * set()
+  * get()
+  * remove()
+* Passthrough
+  * __eq__ / __ne__ / __hash__
+  * absolute()
+* Return new DecodedURL with new ._url (the other kind of passthrough)
+  * normalize()
+  * click()
+  * to_uri()
+  * to_iri()
+
+"""
