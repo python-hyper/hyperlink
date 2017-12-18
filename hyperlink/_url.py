@@ -1468,6 +1468,11 @@ class DecodedURL(object):
                       for x in (k, v))
                 for k, v in self._url.query]
 
+    @property
+    def userinfo(self):
+        return u':'.join([_percent_decode(p) for p in
+                          self._url.userinfo.split(':', 1)])
+
     def replace(self, scheme=_UNSET, host=_UNSET, path=_UNSET, query=_UNSET,
                 fragment=_UNSET, port=_UNSET, rooted=_UNSET, userinfo=_UNSET,
                 uses_netloc=_UNSET):
@@ -1480,7 +1485,7 @@ class DecodedURL(object):
                      for k, v in iter_pairs(query)]
         if userinfo is not _UNSET:
             userinfo = u':'.join([_encode_userinfo_part(p) for p in
-                                  self.userinfo.split(':', 1)])
+                                  userinfo.split(':', 1)])
         new_url = self._url.replace(scheme=scheme,
                                     host=host,
                                     path=path,
