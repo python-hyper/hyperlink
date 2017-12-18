@@ -1461,17 +1461,26 @@ class DecodedURL(object):
     def path(self):
         return tuple([_percent_decode(p) for p in self._url.path])
 
+    @property
+    def query(self):
+        return [tuple(_percent_decode(x)
+                      if x is not None else None
+                      for x in (k, v))
+                for k, v in self._url.query]
+
     def replace(self, scheme=_UNSET, host=_UNSET, path=_UNSET, query=_UNSET,
                 fragment=_UNSET, port=_UNSET, rooted=_UNSET, userinfo=_UNSET,
                 uses_netloc=_UNSET):
         if path is not _UNSET:
             path = _encode_path_parts(path, maximal=False, joined=False)
         if query is not _UNSET:
-            query = tuple([_encode_query_part(x, maximal=False)
-                           for x in ([k] if v is None else [k, v])
-                           for (k, v) in query])
+            query = [[_encode_query_part(x)
+                      if x is not None else None
+                      for x in (k, v)]
+                     for k, v in iter_pairs(query)]
         if userinfo is not _UNSET:
-            userinfo = _encode_userinfo_part(userinfo, maximal=False)
+            userinfo = u':'.join([_encode_userinfo_part(p) for p in
+                                  self.userinfo.split(':', 1)])
         new_url = self._url.replace(scheme=scheme,
                                     host=host,
                                     path=path,
