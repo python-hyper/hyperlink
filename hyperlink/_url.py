@@ -485,7 +485,8 @@ def _decode_fragment_part(text, normalize_case=False):
                            _decode_map=_FRAGMENT_DECODE_MAP)
 
 
-def _percent_decode(text, normalize_case=False, _decode_map=_HEX_CHAR_MAP):
+def _percent_decode(text, normalize_case=False, subencoding='utf-8',
+                    raise_subencoding_exc=False, _decode_map=_HEX_CHAR_MAP):
     """Convert percent-encoded text characters to their normal,
     human-readable equivalents.
 
@@ -547,9 +548,13 @@ def _percent_decode(text, normalize_case=False, _decode_map=_HEX_CHAR_MAP):
 
     unquoted_bytes = b''.join(res)
 
+    if subencoding is False:
+        return unquoted_bytes
     try:
-        return unquoted_bytes.decode("utf-8")
+        return unquoted_bytes.decode(subencoding)
     except UnicodeDecodeError:
+        if raise_subencoding_exc:
+            raise
         return text
 
 
@@ -1459,19 +1464,20 @@ class DecodedURL(object):
 
     @property
     def path(self):
-        return tuple([_percent_decode(p) for p in self._url.path])
+        return tuple([_percent_decode(p, raise_subencoding_exc=True)
+                      for p in self._url.path])
 
     @property
     def query(self):
-        return [tuple(_percent_decode(x)
+        return [tuple(_percent_decode(x, raise_subencoding_exc=True)
                       if x is not None else None
                       for x in (k, v))
                 for k, v in self._url.query]
 
     @property
     def userinfo(self):
-        return u':'.join([_percent_decode(p) for p in
-                          self._url.userinfo.split(':', 1)])
+        return u':'.join([_percent_decode(p, raise_subencoding_exc=True)
+                          for p in self._url.userinfo.split(':', 1)])
 
     def replace(self, scheme=_UNSET, host=_UNSET, path=_UNSET, query=_UNSET,
                 fragment=_UNSET, port=_UNSET, rooted=_UNSET, userinfo=_UNSET,
