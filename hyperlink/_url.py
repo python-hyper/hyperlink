@@ -1466,6 +1466,29 @@ class DecodedURL(object):
         return cls(_url)
 
     @property
+    def host(self):
+        host = self._url.host
+        try:
+            host_bytes = host.encode("ascii")
+        except UnicodeEncodeError:
+            host_text = host
+        else:
+            try:
+                host_text = host_bytes.decode("idna")
+            except ValueError:
+                # only reached on "narrow" (UCS-2) Python builds <3.4, see #7
+                # NOTE: not going to raise here, because there's no
+                # ambiguity in the IDNA, and the host is still
+                # technically usable
+                host_text = host
+
+        return host_text
+
+    @property
+    def port(self):
+        return self._url.port
+
+    @property
     def path(self):
         return tuple([_percent_decode(p, raise_subencoding_exc=True)
                       for p in self._url.path])
@@ -1545,6 +1568,7 @@ raise exceptions, or at least cachedproperties.
 * Return new DecodedURL with new ._url (the other kind of passthrough)
   * normalize()
   * click()
+* Strict passthrough (doesn't return a DecodedURL)
   * to_uri()
   * to_iri()
 
