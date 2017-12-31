@@ -1644,6 +1644,27 @@ class DecodedURL(object):
                      self.path, self.query, self.fragment, self.port,
                      self.rooted, self.uses_netloc))
 
+    # # Begin Twisted Compat Code
+    asURI = to_uri
+    asIRI = to_iri
+
+    @classmethod
+    def fromText(cls, s):
+        return cls.from_text(s)
+
+    def asText(self, includeSecrets=False):
+        return self.to_text(with_password=includeSecrets)
+
+    def __dir__(self):
+        try:
+            ret = object.__dir__(self)
+        except AttributeError:
+            # object.__dir__ == AttributeError  # pdw for py2
+            ret = dir(self.__class__) + list(self.__dict__.keys())
+        ret = sorted(set(ret) - set(['fromText', 'asURI', 'asIRI', 'asText']))
+        return ret
+
+    # # End Twisted Compat Code
 
 
 

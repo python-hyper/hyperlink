@@ -109,3 +109,12 @@ def test_replace_roundtrip():
                          uses_netloc=durl.uses_netloc)
 
     assert durl == durl2
+
+
+def test_twisted_compat():
+    durl = DecodedURL.from_text(TOTAL_URL)
+
+    assert durl == DecodedURL.fromText(TOTAL_URL)
+    assert 'to_text' in dir(durl)
+    assert 'asText' not in dir(durl)
+    assert durl.to_text() == durl.asText()
