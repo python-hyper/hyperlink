@@ -1457,10 +1457,13 @@ class URL(object):
 
 
 class DecodedURL(object):
-    _percent_encoded_attrs = ('userinfo', 'user', 'path', 'query', 'fragment')
-
     def __init__(self, url):
         self._url = url
+
+    @classmethod
+    def from_text(cls, text):
+        _url = URL.from_text(text)
+        return cls(_url)
 
     @property
     def path(self):
@@ -1478,6 +1481,10 @@ class DecodedURL(object):
     def userinfo(self):
         return u':'.join([_percent_decode(p, raise_subencoding_exc=True)
                           for p in self._url.userinfo.split(':', 1)])
+
+    @property
+    def fragment(self):
+        return _percent_decode(self._url.fragment, raise_subencoding_exc=True)
 
     def replace(self, scheme=_UNSET, host=_UNSET, path=_UNSET, query=_UNSET,
                 fragment=_UNSET, port=_UNSET, rooted=_UNSET, userinfo=_UNSET,
@@ -1503,20 +1510,18 @@ class DecodedURL(object):
                                     uses_netloc=uses_netloc)
         return type(self)(url=new_url)
 
-    def __getattr__(self, name):
-        _url = self._url   # object.__getattribute__(self, '_url')
-        try:
-            val = getattr(_url, name)
-        except AttributeError:
-            raise
-        if callable(val):
-            pass  # preprocess arguments
-        elif name in self._percent_encoded_attrs:
-            return _percent_decode(val)
-        return val
+    def get(self, name):
+        # TODO: another reason to do this in the __init__
+        decoded_query = [(_percent_decode(k, raise_subencoding_exc=True),
+                          _percent_decode(v, raise_subencoding_exc=True)
+                          if v is not None else v)
+                         for (k, v) in self._url.query]
+        return [v for (k, v) in decoded_query if name == k]
 
 
-"""
+"""Probably turn the properties into normal attributes now that they
+raise exceptions, or at least cachedproperties.
+
 * Decode
   * Percent
     * userinfo
