@@ -1343,6 +1343,21 @@ class URL(object):
         """
         return '%s.from_text(%r)' % (self.__class__.__name__, self.to_text())
 
+    def _to_bytes(self):
+        """
+        Allows for direct usage of URL objects with libraries like
+        requests, which automatically stringify URL parameters. See
+        issue #49. Note that some libraries may not handle IRIs well.
+        """
+        return self.to_text().encode('utf8')
+
+    if PY2:
+        __str__ = _to_bytes
+        __unicode__ = to_text
+    else:
+        __bytes__ = _to_bytes
+        __str__ = to_text
+
     # # Begin Twisted Compat Code
     asURI = to_uri
     asIRI = to_iri
