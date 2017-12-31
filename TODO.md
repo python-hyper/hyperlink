@@ -7,6 +7,7 @@
 * Switch off ctypes/socket for IP validation
 * rebase method for path (prepends to path)
 * switch default percent encoding to upper case (a la RFC 3986 2.1)
+* sibling() should be maximal=False like child()
 
 ## normalize method
 

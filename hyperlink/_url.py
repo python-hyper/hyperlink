@@ -1506,8 +1506,16 @@ class DecodedURL(object):
 
     @property
     def userinfo(self):
-        return u':'.join([_percent_decode(p, raise_subencoding_exc=True)
-                          for p in self._url.userinfo.split(':', 1)])
+        return tuple([_percent_decode(p, raise_subencoding_exc=True)
+                      for p in self._url.userinfo.split(':', 1)])
+
+    @property
+    def user(self):
+        return self.userinfo[0]
+
+    @property
+    def password(self):
+        return self.userinfo[1]
 
     @property
     def fragment(self):
@@ -1545,6 +1553,39 @@ class DecodedURL(object):
                          for (k, v) in self._url.query]
         return [v for (k, v) in decoded_query if name == k]
 
+    def child(self, *segments):
+        if not segments:
+            return self
+        return type(self)(self._url.child(*segments))
+
+    def sibling(self, segment):
+        return type(self)(self._url.sibling(segment))
+
+    def click(self, href=u''):
+        return type(self)(self._url.click(href=href))
+
+    def normalize(self, *a, **kw):
+        return type(self)(self._url.normalize(*a, **kw))
+
+    def to_uri(self, *a, **kw):
+        return self._url.to_uri(*a, **kw)
+
+    def to_iri(self, *a, **kw):
+        return self._url.to_iri(*a, **kw)
+
+    def to_text(self, *a, **kw):
+        return self._url.to_text(*a, **kw)
+
+    def __repr__(self):
+        cn = self.__class__.__name__
+        return '%s(url=%r)' % (cn, self._url)
+
+    def __str__(self):
+        # TODO: the underlying URL's __str__ needs to change to make
+        # this work as the URL
+        return str(self._url)
+
+
 
 """Probably turn the properties into normal attributes now that they
 raise exceptions, or at least cachedproperties.
@@ -1560,8 +1601,6 @@ raise exceptions, or at least cachedproperties.
   * .get()
 * Wrap in encoder
   * replace
-  * child (split and encode?)
-  * sibling
   * add()
   * set()
   * get()
@@ -1570,6 +1609,8 @@ raise exceptions, or at least cachedproperties.
   * __eq__ / __ne__ / __hash__
   * absolute()
 * Return new DecodedURL with new ._url (the other kind of passthrough)
+  * child (split and encode?)
+  * sibling
   * normalize()
   * click()
 * Strict passthrough (doesn't return a DecodedURL)
