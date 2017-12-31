@@ -48,6 +48,9 @@ def test_passthroughs():
 
     assert durl.to_text(with_password=True) == TOTAL_URL
 
+    assert durl.absolute
+    assert durl.rooted
+
 
 def test_repr():
     durl = DecodedURL.from_text(TOTAL_URL)

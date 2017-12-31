@@ -1479,6 +1479,34 @@ class DecodedURL(object):
         _url = URL.from_text(text)
         return cls(_url)
 
+    def to_text(self, *a, **kw):
+        return self._url.to_text(*a, **kw)
+
+    def to_uri(self, *a, **kw):
+        return self._url.to_uri(*a, **kw)
+
+    def to_iri(self, *a, **kw):
+        return self._url.to_iri(*a, **kw)
+
+    def click(self, href=u''):
+        return type(self)(self._url.click(href=href))
+
+    def sibling(self, segment):
+        return type(self)(self._url.sibling(_encode_reserved(segment)))
+
+    def child(self, *segments):
+        if not segments:
+            return self
+        new_segs = [_encode_reserved(s) for s in segments]
+        return type(self)(self._url.child(*new_segs))
+
+    def normalize(self, *a, **kw):
+        return type(self)(self._url.normalize(*a, **kw))
+
+    @property
+    def absolute(self):
+        return self._url.absolute
+
     @property
     def scheme(self):
         return self._url.scheme
@@ -1507,6 +1535,10 @@ class DecodedURL(object):
         return self._url.port
 
     @property
+    def rooted(self):
+        return self._url.rooted
+
+    @property
     def path(self):
         return tuple([_percent_decode(p, raise_subencoding_exc=True)
                       for p in self._url.path])
@@ -1517,6 +1549,10 @@ class DecodedURL(object):
                       if x is not None else None
                       for x in (k, v))
                 for k, v in self._url.query]
+
+    @property
+    def fragment(self):
+        return _percent_decode(self._url.fragment, raise_subencoding_exc=True)
 
     @property
     def userinfo(self):
@@ -1530,10 +1566,6 @@ class DecodedURL(object):
     @property
     def password(self):
         return self.userinfo[1]
-
-    @property
-    def fragment(self):
-        return _percent_decode(self._url.fragment, raise_subencoding_exc=True)
 
     def replace(self, scheme=_UNSET, host=_UNSET, path=_UNSET, query=_UNSET,
                 fragment=_UNSET, port=_UNSET, rooted=_UNSET, userinfo=_UNSET,
@@ -1578,30 +1610,6 @@ class DecodedURL(object):
     def remove(self, name):
         return self.replace(query=((k, v) for (k, v) in self.query
                                    if k != name))
-
-    def child(self, *segments):
-        if not segments:
-            return self
-        new_segs = [_encode_reserved(s) for s in segments]
-        return type(self)(self._url.child(*new_segs))
-
-    def sibling(self, segment):
-        return type(self)(self._url.sibling(_encode_reserved(segment)))
-
-    def click(self, href=u''):
-        return type(self)(self._url.click(href=href))
-
-    def normalize(self, *a, **kw):
-        return type(self)(self._url.normalize(*a, **kw))
-
-    def to_uri(self, *a, **kw):
-        return self._url.to_uri(*a, **kw)
-
-    def to_iri(self, *a, **kw):
-        return self._url.to_iri(*a, **kw)
-
-    def to_text(self, *a, **kw):
-        return self._url.to_text(*a, **kw)
 
     def __repr__(self):
         cn = self.__class__.__name__
