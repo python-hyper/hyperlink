@@ -67,3 +67,8 @@ def test_query_manipulation():
     assert durl.get(' ') == ['spa%ed']
     durl = durl.remove(' ')
     assert durl.get(' ') == []
+
+    durl = DecodedURL.from_text('/?%61rg=b&arg=c')
+    assert durl.get('arg') == ['b', 'c']
+
+    assert durl.set('arg', 'd').get('arg') == ['d']

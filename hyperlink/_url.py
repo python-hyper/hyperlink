@@ -1569,9 +1569,11 @@ class DecodedURL(object):
         return type(self)(url=new_url)
 
     def set(self, name, value=None):
-        new_url = self._url.set(_encode_reserved(name), _encode_reserved(value)
-                                if value is not None else value)
-        return type(self)(url=new_url)
+        query = self.query
+        q = [(k, v) for (k, v) in query if k != name]
+        idx = next((i for (i, (k, v)) in enumerate(query) if k == name), -1)
+        q[idx:idx] = [(_encode_reserved(name), _encode_reserved(value))]
+        return self.replace(query=q)
 
     def remove(self, name):
         return self.replace(query=((k, v) for (k, v) in self.query
