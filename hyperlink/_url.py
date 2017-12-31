@@ -1466,6 +1466,10 @@ class DecodedURL(object):
         return cls(_url)
 
     @property
+    def scheme(self):
+        return self._url.scheme
+
+    @property
     def host(self):
         host = self._url.host
         try:
