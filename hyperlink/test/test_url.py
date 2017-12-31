@@ -1159,7 +1159,7 @@ class TestURL(HyperlinkTestCase):
         text = u'http://example.com/á/y%20a%20y/?b=%25'
         url = URL.from_text(text)
         assert unicode(url) == text
-        assert bytes(url) == text.encode('utf8')
+        assert bytes(url) == b'http://example.com/%C3%A1/y%20a%20y/?b=%25'
 
         if PY2:
             assert isinstance(str(url), bytes)
