@@ -202,11 +202,25 @@ _QUERY_PART_QUOTE_MAP = _make_quote_map(_QUERY_SAFE)
 _QUERY_DECODE_MAP = _make_decode_map(_QUERY_DELIMS)
 _FRAGMENT_QUOTE_MAP = _make_quote_map(_FRAGMENT_SAFE)
 _FRAGMENT_DECODE_MAP = _make_decode_map(_FRAGMENT_DELIMS)
+_UNRESERVED_QUOTE_MAP = _make_quote_map(_UNRESERVED_CHARS)
 _UNRESERVED_DECODE_MAP = dict([(k, v) for k, v in _HEX_CHAR_MAP.items()
                                if v.decode('ascii', 'replace')
                                in _UNRESERVED_CHARS])
 
 _ROOT_PATHS = frozenset(((), (u'',)))
+
+
+def _encode_reserved(text, maximal=True):
+    """A very comprehensive percent encoding for encoding all
+    delimeters. Used for arguments to DecodedURL, where a % means a
+    percent sign, and not the character used by URLs for escaping
+    bytes.
+    """
+    if maximal:
+        bytestr = normalize('NFC', text).encode('utf8')
+        return u''.join([_UNRESERVED_QUOTE_MAP[b] for b in bytestr])
+    return u''.join([_UNRESERVED_QUOTE_MAP[t] if t in _UNRESERVED_CHARS
+                     else t for t in text])
 
 
 def _encode_path_part(text, maximal=True):
@@ -1556,10 +1570,11 @@ class DecodedURL(object):
     def child(self, *segments):
         if not segments:
             return self
-        return type(self)(self._url.child(*segments))
+        new_segs = [_encode_reserved(s) for s in segments]
+        return type(self)(self._url.child(*new_segs))
 
     def sibling(self, segment):
-        return type(self)(self._url.sibling(segment))
+        return type(self)(self._url.sibling(_encode_reserved(segment)))
 
     def click(self, href=u''):
         return type(self)(self._url.click(href=href))
@@ -1603,14 +1618,13 @@ raise exceptions, or at least cachedproperties.
   * replace
   * add()
   * set()
-  * get()
+  * child (split and encode?)
+  * sibling
   * remove()
 * Passthrough
   * __eq__ / __ne__ / __hash__
   * absolute()
 * Return new DecodedURL with new ._url (the other kind of passthrough)
-  * child (split and encode?)
-  * sibling
   * normalize()
   * click()
 * Strict passthrough (doesn't return a DecodedURL)

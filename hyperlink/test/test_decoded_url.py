@@ -25,14 +25,18 @@ def test_durl_basic():
     assert durl.fragment == 'frég'
     assert durl.get('zot') == ['23%']
 
+    assert durl.user == 'user'
+    assert durl.password == '\0\0\0\0'
+    assert durl.userinfo == ('user', '\0\0\0\0')
+
 
 def test_passthroughs():
     # just basic tests for the methods that more or less pass straight
     # through to the underlying URL
 
     durl = DecodedURL.from_text(TOTAL_URL)
-    assert durl.sibling('test').path[-1] == 'test'
-    assert durl.child('../test2').path[-1] == '../test2'
+    assert durl.sibling('te%t').path[-1] == 'te%t'
+    assert durl.child('../test2%').path[-1] == '../test2%'
     assert durl.click('/').path[-1] == ''
     assert durl.user == 'user'
 
