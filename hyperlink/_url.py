@@ -1476,6 +1476,21 @@ class URL(object):
 
 
 class DecodedURL(object):
+    """DecodedURL is a type meant to act as a higher-level interface to
+    the URL. It is the `unicode` to URL's `bytes`. `DecodedURL` has
+    almost exactly the same API as `URL`, but everything going in and
+    out is in its maximally decoded state. All percent decoding is
+    handled automatically.
+
+    Where applicable, a UTF-8 encoding is presumed. Be advised that
+    some interactions, can raise UnicodeEncodeErrors and
+    UnicodeDecodeErrors, just like when working with
+    bytestrings.
+
+    Examples of such interactions include handling query strings
+    encoding binary data, and paths containing segments with special
+    characters encoded with codecs other than UTF-8.
+    """
     def __init__(self, url):
         self._url = url
 
@@ -1579,6 +1594,12 @@ class DecodedURL(object):
     def replace(self, scheme=_UNSET, host=_UNSET, path=_UNSET, query=_UNSET,
                 fragment=_UNSET, port=_UNSET, rooted=_UNSET, userinfo=_UNSET,
                 uses_netloc=_UNSET):
+        """This replace differs a little from URL.replace. For instance, it
+        accepts userinfo as a tuple, not as a string. As with the rest
+        of the methods on DecodedURL, if you pass a reserved
+        character, it will be automatically encoded instead of an
+        error being raised.
+        """
         if path is not _UNSET:
             path = [_encode_reserved(p) for p in path]
         if query is not _UNSET:
@@ -1697,5 +1718,27 @@ raise exceptions, or at least cachedproperties.
 * Strict passthrough (doesn't return a DecodedURL)
   * to_uri()
   * to_iri()
+
+# Factoring
+
+Should DecodedURL be a subclass of URL? Inheritance isn't cool
+anymore, so obviously not right? But seriously, it could be:
+
+* Every single method of URL is wrapped with almost an identical API,
+  except for __init__
+* A DecodedURL is as much a URL as both `bytes` and `unicode` are
+  strings
+
+On the arguments against:
+
+* __init__ differs
+* No real benefit to calling super()
+* Only a few duplicate methods could be reused (Twisted compat,
+  .get(), a couple others)
+
+# Remaining design questions
+
+* Should _encode_reserved(maximal=False) be used instead?
+* If yes, should the underlying URL have .to_iri() applied to it?
 
 """
