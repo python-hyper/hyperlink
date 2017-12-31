@@ -48,6 +48,22 @@ def test_passthroughs():
 
     assert durl.to_text(with_password=True) == TOTAL_URL
 
+
 def test_repr():
     durl = DecodedURL.from_text(TOTAL_URL)
     assert repr(durl) == 'DecodedURL(url=' + repr(durl._url) + ')'
+
+
+def test_query_manipulation():
+    durl = DecodedURL.from_text(TOTAL_URL)
+
+    assert durl.get('zot') == ['23%']
+    durl = durl.add(' ', 'space')
+    assert durl.get(' ') == ['space']
+    durl = durl.set(' ', 'spa%ed')
+    assert durl.get(' ') == ['spa%ed']
+
+    durl = DecodedURL(url=durl.to_uri())
+    assert durl.get(' ') == ['spa%ed']
+    durl = durl.remove(' ')
+    assert durl.get(' ') == []

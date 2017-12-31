@@ -1561,11 +1561,21 @@ class DecodedURL(object):
 
     def get(self, name):
         # TODO: another reason to do this in the __init__
-        decoded_query = [(_percent_decode(k, raise_subencoding_exc=True),
-                          _percent_decode(v, raise_subencoding_exc=True)
-                          if v is not None else v)
-                         for (k, v) in self._url.query]
-        return [v for (k, v) in decoded_query if name == k]
+        return [v for (k, v) in self.query if name == k]
+
+    def add(self, name, value=None):
+        new_url = self._url.add(_encode_reserved(name), _encode_reserved(value)
+                                if value is not None else value)
+        return type(self)(url=new_url)
+
+    def set(self, name, value=None):
+        new_url = self._url.set(_encode_reserved(name), _encode_reserved(value)
+                                if value is not None else value)
+        return type(self)(url=new_url)
+
+    def remove(self, name):
+        return self.replace(query=((k, v) for (k, v) in self.query
+                                   if k != name))
 
     def child(self, *segments):
         if not segments:
