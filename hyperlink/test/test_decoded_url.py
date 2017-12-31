@@ -75,3 +75,21 @@ def test_query_manipulation():
     assert durl.get('arg') == ['b', 'c']
 
     assert durl.set('arg', 'd').get('arg') == ['d']
+
+
+def test_equivalences():
+    durl = DecodedURL.from_text(TOTAL_URL)
+    durl2 = DecodedURL.from_text(TOTAL_URL)
+    burl = DecodedURL.from_text(BASIC_URL)
+
+    assert durl == durl
+    assert durl == durl2
+    assert durl != burl
+    assert durl != None
+    assert durl != durl._url
+
+    durl_map = {}
+    durl_map[durl] = durl
+    durl_map[durl2] = durl2
+
+    assert len(durl_map) == 1

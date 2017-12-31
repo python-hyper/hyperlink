@@ -1545,10 +1545,10 @@ class DecodedURL(object):
 
     @property
     def query(self):
-        return [tuple(_percent_decode(x, raise_subencoding_exc=True)
-                      if x is not None else None
-                      for x in (k, v))
-                for k, v in self._url.query]
+        return tuple([tuple(_percent_decode(x, raise_subencoding_exc=True)
+                            if x is not None else None
+                            for x in (k, v))
+                      for k, v in self._url.query])
 
     @property
     def fragment(self):
@@ -1566,6 +1566,10 @@ class DecodedURL(object):
     @property
     def password(self):
         return self.userinfo[1]
+
+    @property
+    def uses_netloc(self):
+        return self._url.uses_netloc
 
     def replace(self, scheme=_UNSET, host=_UNSET, path=_UNSET, query=_UNSET,
                 fragment=_UNSET, port=_UNSET, rooted=_UNSET, userinfo=_UNSET,
@@ -1619,6 +1623,23 @@ class DecodedURL(object):
         # TODO: the underlying URL's __str__ needs to change to make
         # this work as the URL
         return str(self._url)
+
+    def __eq__(self, other):
+        if not isinstance(other, self.__class__):
+            return NotImplemented
+        return self.to_uri() == other.to_uri()
+
+    def __ne__(self, other):
+        if not isinstance(other, self.__class__):
+            return NotImplemented
+        return not self.__eq__(other)
+
+    def __hash__(self):
+        return hash((self.__class__, self.scheme, self.userinfo, self.host,
+                     self.path, self.query, self.fragment, self.port,
+                     self.rooted, self.uses_netloc))
+
+
 
 
 
