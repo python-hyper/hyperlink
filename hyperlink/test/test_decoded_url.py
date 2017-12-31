@@ -93,3 +93,19 @@ def test_equivalences():
     durl_map[durl2] = durl2
 
     assert len(durl_map) == 1
+
+
+def test_replace_roundtrip():
+    durl = DecodedURL.from_text(TOTAL_URL)
+
+    durl2 = durl.replace(scheme=durl.scheme,
+                         host=durl.host,
+                         path=durl.path,
+                         query=durl.query,
+                         fragment=durl.fragment,
+                         port=durl.port,
+                         rooted=durl.rooted,
+                         userinfo=durl.userinfo,
+                         uses_netloc=durl.uses_netloc)
+
+    assert durl == durl2

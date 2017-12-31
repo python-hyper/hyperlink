@@ -1059,7 +1059,7 @@ class URL(object):
                    rooted, userinfo, uses_netloc)
 
     def normalize(self, scheme=True, host=True, path=True, query=True,
-                  fragment=True):
+                  fragment=True, userinfo=True):
         """Return a new URL object with several standard normalizations
         applied:
 
@@ -1110,6 +1110,11 @@ class URL(object):
         if fragment:
             kw['fragment'] = _decode_unreserved(self.fragment,
                                                 normalize_case=True)
+        if userinfo:
+            kw['userinfo'] = u':'.join([_decode_unreserved(p,
+                                                           normalize_case=True)
+                                        for p in self.userinfo.split(':', 1)])
+
         return self.replace(**kw)
 
     def child(self, *segments):
@@ -1575,15 +1580,17 @@ class DecodedURL(object):
                 fragment=_UNSET, port=_UNSET, rooted=_UNSET, userinfo=_UNSET,
                 uses_netloc=_UNSET):
         if path is not _UNSET:
-            path = _encode_path_parts(path, maximal=False, joined=False)
+            path = [_encode_reserved(p) for p in path]
         if query is not _UNSET:
-            query = [[_encode_query_part(x)
+            query = [[_encode_reserved(x)
                       if x is not None else None
                       for x in (k, v)]
                      for k, v in iter_pairs(query)]
         if userinfo is not _UNSET:
-            userinfo = u':'.join([_encode_userinfo_part(p) for p in
-                                  userinfo.split(':', 1)])
+            if not len(userinfo) == 2:
+                raise ValueError('userinfo expected sequence of'
+                                 ' ["user", "password"], got %r' % userinfo)
+            userinfo = u':'.join([_encode_reserved(p) for p in userinfo])
         new_url = self._url.replace(scheme=scheme,
                                     host=host,
                                     path=path,
@@ -1600,15 +1607,13 @@ class DecodedURL(object):
         return [v for (k, v) in self.query if name == k]
 
     def add(self, name, value=None):
-        new_url = self._url.add(_encode_reserved(name), _encode_reserved(value)
-                                if value is not None else value)
-        return type(self)(url=new_url)
+        return self.replace(query=self.query + ((name, value),))
 
     def set(self, name, value=None):
         query = self.query
         q = [(k, v) for (k, v) in query if k != name]
         idx = next((i for (i, (k, v)) in enumerate(query) if k == name), -1)
-        q[idx:idx] = [(_encode_reserved(name), _encode_reserved(value))]
+        q[idx:idx] = [(name, value)]
         return self.replace(query=q)
 
     def remove(self, name):
@@ -1627,7 +1632,7 @@ class DecodedURL(object):
     def __eq__(self, other):
         if not isinstance(other, self.__class__):
             return NotImplemented
-        return self.to_uri() == other.to_uri()
+        return self.normalize().to_uri() == other.normalize().to_uri()
 
     def __ne__(self, other):
         if not isinstance(other, self.__class__):
