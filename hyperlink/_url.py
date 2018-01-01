@@ -155,9 +155,9 @@ _GEN_DELIMS = frozenset(u':/?#[]@')
 _SUB_DELIMS = frozenset(u"!$&'()*+,;=")
 _ALL_DELIMS = _GEN_DELIMS | _SUB_DELIMS
 
-_USERINFO_SAFE = _UNRESERVED_CHARS | _SUB_DELIMS
+_USERINFO_SAFE = _UNRESERVED_CHARS | _SUB_DELIMS | set(u'%')
 _USERINFO_DELIMS = _ALL_DELIMS - _USERINFO_SAFE
-_PATH_SAFE = _UNRESERVED_CHARS | _SUB_DELIMS | set(u':@%')
+_PATH_SAFE = _USERINFO_SAFE | set(u':@')
 _PATH_DELIMS = _ALL_DELIMS - _PATH_SAFE
 _SCHEMELESS_PATH_SAFE = _PATH_SAFE - set(':')
 _SCHEMELESS_PATH_DELIMS = _ALL_DELIMS - _SCHEMELESS_PATH_SAFE
@@ -762,6 +762,13 @@ class URL(object):
                                        uses_netloc, bool, NoneType)
 
         return
+
+    def get_decoded_url(self, lazy=False):
+        try:
+            return self._decoded_url
+        except AttributeError:
+            self._decoded_url = DecodedURL(self, lazy=lazy)
+        return self._decoded_url
 
     @property
     def scheme(self):
@@ -1484,6 +1491,9 @@ class URL(object):
                                    if k != name))
 
 
+EncodedURL = URL  # An alias better describing what the URL really is
+
+
 class DecodedURL(object):
     """DecodedURL is a type meant to act as a higher-level interface to
     the URL. It is the `unicode` to URL's `bytes`. `DecodedURL` has
@@ -1500,13 +1510,22 @@ class DecodedURL(object):
     encoding binary data, and paths containing segments with special
     characters encoded with codecs other than UTF-8.
     """
-    def __init__(self, url):
+    def __init__(self, url, lazy=False):
         self._url = url
+        if not lazy:
+            # cache the following, while triggering any decoding
+            # issues with decodable fields
+            self.host, self.userinfo, self.path, self.query, self.fragment
+        return
 
     @classmethod
     def from_text(cls, text):
         _url = URL.from_text(text)
         return cls(_url)
+
+    @property
+    def encoded_url(self):
+        return self._url
 
     def to_text(self, *a, **kw):
         return self._url.to_text(*a, **kw)
@@ -1554,24 +1573,50 @@ class DecodedURL(object):
 
     @property
     def path(self):
-        return tuple([_percent_decode(p, raise_subencoding_exc=True)
-                      for p in self._url.path])
+        try:
+            return self._path
+        except AttributeError:
+            pass
+        self._path = tuple([_percent_decode(_encode_path_part(p),
+                                            raise_subencoding_exc=True)
+                            for p in self._url.path])
+        return self._path
 
     @property
     def query(self):
-        return tuple([tuple(_percent_decode(x, raise_subencoding_exc=True)
-                            if x is not None else None
-                            for x in (k, v))
-                      for k, v in self._url.query])
+        try:
+            return self._query
+        except AttributeError:
+            pass
+        _q = [tuple(_percent_decode(_encode_query_part(x),
+                                    raise_subencoding_exc=True)
+                    if x is not None else None
+                    for x in (k, v))
+              for k, v in self._url.query]
+        self._query = tuple(_q)
+        return self._query
 
     @property
     def fragment(self):
-        return _percent_decode(self._url.fragment, raise_subencoding_exc=True)
+        try:
+            return self._fragment
+        except AttributeError:
+            pass
+        frag = self._url.fragment
+        self._fragment = _percent_decode(_encode_fragment_part(frag),
+                                         raise_subencoding_exc=True)
+        return self._fragment
 
     @property
     def userinfo(self):
-        return tuple([_percent_decode(p, raise_subencoding_exc=True)
-                      for p in self._url.userinfo.split(':', 1)])
+        try:
+            return self._userinfo
+        except AttributeError:
+            pass
+        self._userinfo = tuple([_percent_decode(_encode_userinfo_part(p),
+                                                raise_subencoding_exc=True)
+                                for p in self._url.userinfo.split(':', 1)])
+        return self._userinfo
 
     @property
     def user(self):
@@ -1579,7 +1624,10 @@ class DecodedURL(object):
 
     @property
     def password(self):
-        return self.userinfo[1]
+        try:
+            return self.userinfo[1]
+        except IndexError:
+            return None
 
     @property
     def uses_netloc(self):
@@ -1588,11 +1636,11 @@ class DecodedURL(object):
     def replace(self, scheme=_UNSET, host=_UNSET, path=_UNSET, query=_UNSET,
                 fragment=_UNSET, port=_UNSET, rooted=_UNSET, userinfo=_UNSET,
                 uses_netloc=_UNSET):
-        """This replace differs a little from URL.replace. For instance, it
-        accepts userinfo as a tuple, not as a string. As with the rest
-        of the methods on DecodedURL, if you pass a reserved
-        character, it will be automatically encoded instead of an
-        error being raised.
+        """While the signature is the same, this replace differs a little from
+        URL.replace. For instance, it accepts userinfo as a tuple, not
+        as a string. As with the rest of the methods on DecodedURL, if
+        you pass a reserved character, it will be automatically
+        encoded instead of an error being raised.
         """
         if path is not _UNSET:
             path = [_encode_reserved(p) for p in path]
@@ -1602,8 +1650,8 @@ class DecodedURL(object):
                       for x in (k, v)]
                      for k, v in iter_pairs(query)]
         if userinfo is not _UNSET:
-            if not len(userinfo) == 2:
-                raise ValueError('userinfo expected sequence of'
+            if len(userinfo) > 2:
+                raise ValueError('userinfo expected sequence of ["user"] or'
                                  ' ["user", "password"], got %r' % userinfo)
             userinfo = u':'.join([_encode_reserved(p) for p in userinfo])
         new_url = self._url.replace(scheme=scheme,
@@ -1618,7 +1666,6 @@ class DecodedURL(object):
         return type(self)(url=new_url)
 
     def get(self, name):
-        # TODO: another reason to do this in the __init__
         return [v for (k, v) in self.query if name == k]
 
     def add(self, name, value=None):
@@ -1641,7 +1688,7 @@ class DecodedURL(object):
 
     def __str__(self):
         # TODO: the underlying URL's __str__ needs to change to make
-        # this work as the URL
+        # this work as the URL, see #55
         return str(self._url)
 
     def __eq__(self, other):
@@ -1682,20 +1729,24 @@ class DecodedURL(object):
     # # End Twisted Compat Code
 
 
+def parse(url, decoded=True, lazy=False):
+    enc_url = EncodedURL.from_text(url)
+    if not decoded:
+        return enc_url
+    dec_url = DecodedURL(enc_url, lazy=lazy)
+    return dec_url
 
 
 """Probably turn the properties into normal attributes now that they
 raise exceptions, or at least cachedproperties.
 
 * Decode
-  * Percent
-    * userinfo
-    * user
-    * path
-    * query
-    * fragment
-* Wrap in decoder
-  * .get()
+  * host
+  * userinfo
+  * user
+  * path
+  * query
+  * fragment
 * Wrap in encoder
   * replace
   * add()
@@ -1729,10 +1780,17 @@ On the arguments against:
 * No real benefit to calling super()
 * Only a few duplicate methods could be reused (Twisted compat,
   .get(), a couple others)
+* Complicates the relationship, as every DecodedURL has an underlying
+  EncodedURL and every EncodedURL _may_ have a DecodedURL. Values
+  stored within each are actually different, so it's not just
+  different methods
 
 # Remaining design questions
 
 * Should _encode_reserved(maximal=False) be used instead?
 * If yes, should the underlying URL have .to_iri() applied to it?
+* Right now DecodedURL needs each part to encode then decode, because
+  percent_decode doesn't even try to percent decode if there are any
+  non-ascii characters in its argument.
 
 """
