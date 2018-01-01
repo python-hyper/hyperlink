@@ -1347,7 +1347,7 @@ class URL(object):
         """
         Allows for direct usage of URL objects with libraries like
         requests, which automatically stringify URL parameters. See
-        issue #49. Note that some libraries may not handle IRIs well.
+        issue #49.
         """
         return self.to_uri().to_text().encode('ascii')
 
