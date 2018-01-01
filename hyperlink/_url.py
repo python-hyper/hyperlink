@@ -572,6 +572,23 @@ def _percent_decode(text, normalize_case=False, subencoding='utf-8',
         return text
 
 
+def _decode_host(host):
+    try:
+        host_bytes = host.encode("ascii")
+    except UnicodeEncodeError:
+        host_text = host
+    else:
+        try:
+            host_text = host_bytes.decode("idna")
+        except ValueError:
+            # only reached on "narrow" (UCS-2) Python builds <3.4, see #7
+            # NOTE: not going to raise here, because there's no
+            # ambiguity in the IDNA, and the host is still
+            # technically usable
+            host_text = host
+    return host_text
+
+
 def _resolve_dot_segments(path):
     """Normalize the URL path by resolving segments of '.' and '..'. For
     more details, see `RFC 3986 section 5.2.4, Remove Dot Segments`_.
@@ -1279,18 +1296,10 @@ class URL(object):
         """
         new_userinfo = u':'.join([_decode_userinfo_part(p) for p in
                                   self.userinfo.split(':', 1)])
-        try:
-            asciiHost = self.host.encode("ascii")
-        except UnicodeEncodeError:
-            textHost = self.host
-        else:
-            try:
-                textHost = asciiHost.decode("idna")
-            except ValueError:
-                # only reached on "narrow" (UCS-2) Python builds <3.4, see #7
-                textHost = self.host
+        host_text = _decode_host(self.host)
+
         return self.replace(userinfo=new_userinfo,
-                            host=textHost,
+                            host=host_text,
                             path=[_decode_path_part(segment)
                                   for segment in self.path],
                             query=[tuple(_decode_query_part(x)
@@ -1533,22 +1542,7 @@ class DecodedURL(object):
 
     @property
     def host(self):
-        host = self._url.host
-        try:
-            host_bytes = host.encode("ascii")
-        except UnicodeEncodeError:
-            host_text = host
-        else:
-            try:
-                host_text = host_bytes.decode("idna")
-            except ValueError:
-                # only reached on "narrow" (UCS-2) Python builds <3.4, see #7
-                # NOTE: not going to raise here, because there's no
-                # ambiguity in the IDNA, and the host is still
-                # technically usable
-                host_text = host
-
-        return host_text
+        return _decode_host(self._url.host)
 
     @property
     def port(self):
