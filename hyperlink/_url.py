@@ -212,7 +212,7 @@ _ROOT_PATHS = frozenset(((), (u'',)))
 
 def _encode_reserved(text, maximal=True):
     """A very comprehensive percent encoding for encoding all
-    delimeters. Used for arguments to DecodedURL, where a % means a
+    delimiters. Used for arguments to DecodedURL, where a % means a
     percent sign, and not the character used by URLs for escaping
     bytes.
     """
