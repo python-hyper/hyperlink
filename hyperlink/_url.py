@@ -1519,9 +1519,9 @@ class DecodedURL(object):
         return
 
     @classmethod
-    def from_text(cls, text):
+    def from_text(cls, text, lazy=False):
         _url = URL.from_text(text)
-        return cls(_url)
+        return cls(_url, lazy=lazy)
 
     @property
     def encoded_url(self):
@@ -1623,13 +1623,6 @@ class DecodedURL(object):
         return self.userinfo[0]
 
     @property
-    def password(self):
-        try:
-            return self.userinfo[1]
-        except IndexError:
-            return None
-
-    @property
     def uses_netloc(self):
         return self._url.uses_netloc
 
@@ -1711,8 +1704,8 @@ class DecodedURL(object):
     asIRI = to_iri
 
     @classmethod
-    def fromText(cls, s):
-        return cls.from_text(s)
+    def fromText(cls, s, lazy=False):
+        return cls.from_text(s, lazy=lazy)
 
     def asText(self, includeSecrets=False):
         return self.to_text(with_password=includeSecrets)

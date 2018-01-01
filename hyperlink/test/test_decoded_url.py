@@ -26,7 +26,6 @@ def test_durl_basic():
     assert durl.get('zot') == ['23%']
 
     assert durl.user == 'user'
-    assert durl.password == '\0\0\0\0'
     assert durl.userinfo == ('user', '\0\0\0\0')
 
 
@@ -37,6 +36,8 @@ def test_passthroughs():
     durl = DecodedURL.from_text(TOTAL_URL)
     assert durl.sibling('te%t').path[-1] == 'te%t'
     assert durl.child('../test2%').path[-1] == '../test2%'
+    assert durl.child() == durl
+    assert durl.child() is durl
     assert durl.click('/').path[-1] == ''
     assert durl.user == 'user'
 
@@ -50,6 +51,11 @@ def test_passthroughs():
 
     assert durl.absolute
     assert durl.rooted
+
+    assert durl == durl.encoded_url.get_decoded_url()
+
+    durl2 = DecodedURL.from_text(TOTAL_URL, lazy=True)
+    assert durl2 == durl2.encoded_url.get_decoded_url(lazy=True)
 
 
 def test_repr():
