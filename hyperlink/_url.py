@@ -20,14 +20,20 @@ import sys
 import string
 import socket
 from unicodedata import normalize
-
+try:
+    from socket import inet_pton
+except ImportError:
+    inet_pton = None  # defined below
 try:
     from collections.abc import Mapping
 except ImportError:  # Python 2
     from collections import Mapping
-try:
-    from socket import inet_pton
-except ImportError:
+
+# Note: IDNAError is a subclass of UnicodeError
+from idna import encode as idna_encode, decode as idna_decode, IDNAError
+
+
+if inet_pton is None:
     # based on https://gist.github.com/nnemkin/4966028
     # this code only applies on Windows Python 2.7
     import ctypes
@@ -573,13 +579,15 @@ def _percent_decode(text, normalize_case=False, subencoding='utf-8',
 
 
 def _decode_host(host):
+    if not host:
+        return u''
     try:
         host_bytes = host.encode("ascii")
     except UnicodeEncodeError:
         host_text = host
     else:
         try:
-            host_text = host_bytes.decode("idna")
+            host_text = idna_decode(host_bytes, uts46=True)
         except ValueError:
             # only reached on "narrow" (UCS-2) Python builds <3.4, see #7
             # NOTE: not going to raise here, because there's no
@@ -1255,8 +1263,8 @@ class URL(object):
 
         For example::
 
-            >>> URL.from_text(u'https://→example.com/foo⇧bar/').to_uri()
-            URL.from_text(u'https://xn--example-dk9c.com/foo%E2%87%A7bar/')
+            >>> URL.from_text(u'https://ايران.com/foo⇧bar/').to_uri()
+            URL.from_text(u'https://xn--mgba3a4fra.com/foo%E2%87%A7bar/')
 
         Returns:
             URL: A new instance with its path segments, query parameters, and
@@ -1267,9 +1275,10 @@ class URL(object):
                                   self.userinfo.split(':', 1)])
         new_path = _encode_path_parts(self.path, has_scheme=bool(self.scheme),
                                       rooted=False, joined=False, maximal=True)
+        new_host = self.host if not self.host else idna_encode(self.host, uts46=True).decode("ascii")
         return self.replace(
             userinfo=new_userinfo,
-            host=self.host.encode("idna").decode("ascii"),
+            host=new_host,
             path=new_path,
             query=tuple([tuple(_encode_query_part(x, maximal=True)
                                if x is not None else None
@@ -1285,9 +1294,9 @@ class URL(object):
         Percent-encoded Unicode and IDNA-encoded hostnames are
         decoded, like so::
 
-            >>> url = URL.from_text(u'https://xn--example-dk9c.com/foo%E2%87%A7bar/')
+            >>> url = URL.from_text(u'https://xn--mgba3a4fra.example.com/foo%E2%87%A7bar/')
             >>> print(url.to_iri().to_text())
-            https://→example.com/foo⇧bar/
+            https://ايران.example.com/foo⇧bar/
 
         .. note::
 
@@ -1793,3 +1802,38 @@ def parse(url, decoded=True, lazy=False):
         return enc_url
     dec_url = DecodedURL(enc_url, lazy=lazy)
     return dec_url
+
+"""idna package notes:
+
+* If a segment of a host (i.e., something in url.host.split('.')) is
+already ascii, idna doesn't perform its usual checks. For instance,
+capital letters are not valid idna2008. The package automatically lowercases.
+
+You'll get something like:
+
+> idna.core.InvalidCodepoint: Codepoint U+004B at position 1 ... not allowed
+
+This check and some other functionality can be bypassed by passing
+uts46=True to encode/decode. This allows a more permission and
+convenient interface. So far it seems like the balanced approach.
+
+However, all of this is bypassed if the string segment contains no
+unicode characters.
+
+Example output:
+
+>>> idna.encode(u'mahmöud.io')
+'xn--mahmud-zxa.io'
+>>> idna.encode(u'Mahmöud.io')
+Traceback (most recent call last):
+  File "<stdin>", line 1, in <module>
+  File "/home/mahmoud/virtualenvs/hyperlink/local/lib/python2.7/site-packages/idna/core.py", line 355, in encode
+    result.append(alabel(label))
+  File "/home/mahmoud/virtualenvs/hyperlink/local/lib/python2.7/site-packages/idna/core.py", line 276, in alabel
+    check_label(label)
+  File "/home/mahmoud/virtualenvs/hyperlink/local/lib/python2.7/site-packages/idna/core.py", line 253, in check_label
+    raise InvalidCodepoint('Codepoint {0} at position {1} of {2} not allowed'.format(_unot(cp_value), pos+1, repr(label)))
+idna.core.InvalidCodepoint: Codepoint U+004D at position 1 of u'Mahm\xf6ud' not allowed
+>>> idna.encode(u'Mahmoud.io')
+'Mahmoud.io'
+"""

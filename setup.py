@@ -29,6 +29,7 @@ setup(name='hyperlink',
       zip_safe=False,
       license=__license__,
       platforms='any',
+      install_requires=['idna>=2.5,<2.7'],
       classifiers=[
           'Topic :: Utilities',
           'Intended Audience :: Developers',
