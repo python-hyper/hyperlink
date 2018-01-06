@@ -1520,35 +1520,59 @@ class DecodedURL(object):
 
     @classmethod
     def from_text(cls, text, lazy=False):
+        """\
+        Make a DecodedURL instance from any text string containing a URL.
+
+        Args:
+          text (unicode): Text containing the URL
+          lazy (bool): Whether to pre-decode all parts of the URL to
+              check for validity. Defaults to True.
+        """
         _url = URL.from_text(text)
         return cls(_url, lazy=lazy)
 
     @property
     def encoded_url(self):
+        """Access the underlying :class:`URL` object, which has any special
+        characters encoded.
+        """
         return self._url
 
     def to_text(self, *a, **kw):
+        "Passthrough to :meth:`~hyperlink.URL.to_text()`"
         return self._url.to_text(*a, **kw)
 
     def to_uri(self, *a, **kw):
+        "Passthrough to :meth:`~hyperlink.URL.to_uri()`"
         return self._url.to_uri(*a, **kw)
 
     def to_iri(self, *a, **kw):
+        "Passthrough to :meth:`~hyperlink.URL.to_iri()`"
         return self._url.to_iri(*a, **kw)
 
     def click(self, href=u''):
+        "Return a new DecodedURL wrapping the result of :meth:`~hyperlink.URL.click()`"
         return type(self)(self._url.click(href=href))
 
     def sibling(self, segment):
+        """Automatically encode any reserved characters in *segment* and
+        return a new DecodedURL wrapping the result of
+        :meth:`~hyperlink.URL.sibling()`
+        """
         return type(self)(self._url.sibling(_encode_reserved(segment)))
 
     def child(self, *segments):
+        """Automatically encode any reserved characters in *segments* and
+        return a new DecodedURL wrapping the result of
+        :meth:`~hyperlink.URL.child()`.
+        """
         if not segments:
             return self
         new_segs = [_encode_reserved(s) for s in segments]
         return type(self)(self._url.child(*new_segs))
 
     def normalize(self, *a, **kw):
+        "Return a new DecodedURL wrapping the result of :meth:`~hyperlink.URL.normalize()`"
         return type(self)(self._url.normalize(*a, **kw))
 
     @property
@@ -1629,7 +1653,7 @@ class DecodedURL(object):
     def replace(self, scheme=_UNSET, host=_UNSET, path=_UNSET, query=_UNSET,
                 fragment=_UNSET, port=_UNSET, rooted=_UNSET, userinfo=_UNSET,
                 uses_netloc=_UNSET):
-        """While the signature is the same, this replace differs a little from
+        """While the signature is the same, this `replace()` differs a little from
         URL.replace. For instance, it accepts userinfo as a tuple, not
         as a string. As with the rest of the methods on DecodedURL, if
         you pass a reserved character, it will be automatically
@@ -1659,12 +1683,15 @@ class DecodedURL(object):
         return type(self)(url=new_url)
 
     def get(self, name):
+        "Get the value of all query parameters whose name matches *name*"
         return [v for (k, v) in self.query if name == k]
 
     def add(self, name, value=None):
+        "Return a new DecodedURL with the query parameter *name* and *value* added."
         return self.replace(query=self.query + ((name, value),))
 
     def set(self, name, value=None):
+        "Return a new DecodedURL with query parameter *name* set to *value*"
         query = self.query
         q = [(k, v) for (k, v) in query if k != name]
         idx = next((i for (i, (k, v)) in enumerate(query) if k == name), -1)
@@ -1672,6 +1699,7 @@ class DecodedURL(object):
         return self.replace(query=q)
 
     def remove(self, name):
+        "Return a new DecodedURL with query parameter *name* removed."
         return self.replace(query=((k, v) for (k, v) in self.query
                                    if k != name))
 
