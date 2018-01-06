@@ -3,6 +3,7 @@
 from __future__ import unicode_literals
 
 from .. import DecodedURL
+from .._url import _percent_decode
 from .common import HyperlinkTestCase
 
 BASIC_URL = 'http://example.com/#'
@@ -133,3 +134,6 @@ class TestURL(HyperlinkTestCase):
         assert 'to_text' in dir(durl)
         assert 'asText' not in dir(durl)
         assert durl.to_text() == durl.asText()
+
+    def test_percent_decode_bytes(self):
+        assert _percent_decode('%00', subencoding=False) == b'\0'
