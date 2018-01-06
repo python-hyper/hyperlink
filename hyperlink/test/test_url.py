@@ -5,6 +5,7 @@
 
 from __future__ import unicode_literals
 
+import sys
 import socket
 
 from .common import HyperlinkTestCase
@@ -13,6 +14,8 @@ from .. import URL, URLParseError
 from .. import _url
 from .._url import inet_pton, SCHEME_PORT_MAP, parse_host
 
+
+PY2 = (sys.version_info[0] == 2)
 unicode = type(u'')
 
 
@@ -1150,3 +1153,17 @@ class TestURL(HyperlinkTestCase):
 
         # test invalid percent encoding during normalize
         assert URL(path=('', '%te%sts')).normalize().to_text() == '/%te%sts'
+
+    def test_str(self):
+        # see also issue #49
+        text = u'http://example.com/á/y%20a%20y/?b=%25'
+        url = URL.from_text(text)
+        assert unicode(url) == text
+        assert bytes(url) == b'http://example.com/%C3%A1/y%20a%20y/?b=%25'
+
+        if PY2:
+            assert isinstance(str(url), bytes)
+            assert isinstance(unicode(url), unicode)
+        else:
+            assert isinstance(str(url), unicode)
+            assert isinstance(bytes(url), bytes)
