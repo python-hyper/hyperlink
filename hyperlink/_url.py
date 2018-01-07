@@ -1517,13 +1517,17 @@ class DecodedURL(object):
     handled automatically.
 
     Where applicable, a UTF-8 encoding is presumed. Be advised that
-    some interactions, can raise UnicodeEncodeErrors and
-    UnicodeDecodeErrors, just like when working with
-    bytestrings.
+    some interactions, can raise :exc:`UnicodeEncodeErrors` and
+    :exc:`UnicodeDecodeErrors`, just like when working with
+    bytestrings. Examples of such interactions include handling query
+    strings encoding binary data, and paths containing segments with
+    special characters encoded with codecs other than UTF-8.
 
-    Examples of such interactions include handling query strings
-    encoding binary data, and paths containing segments with special
-    characters encoded with codecs other than UTF-8.
+    Args:
+       url (URL): A :class:`URL` object to wrap.
+       lazy (bool): Whether to pre-decode all parts of the URL to
+           check for validity. Defaults to True.
+
     """
     def __init__(self, url, lazy=False):
         self._url = url
@@ -1536,7 +1540,7 @@ class DecodedURL(object):
     @classmethod
     def from_text(cls, text, lazy=False):
         """\
-        Make a DecodedURL instance from any text string containing a URL.
+        Make a `DecodedURL` instance from any text string containing a URL.
 
         Args:
           text (unicode): Text containing the URL
@@ -1567,28 +1571,28 @@ class DecodedURL(object):
 
     def click(self, href=u''):
         "Return a new DecodedURL wrapping the result of :meth:`~hyperlink.URL.click()`"
-        return type(self)(self._url.click(href=href))
+        return self.__class__(self._url.click(href=href))
 
     def sibling(self, segment):
         """Automatically encode any reserved characters in *segment* and
-        return a new DecodedURL wrapping the result of
+        return a new `DecodedURL` wrapping the result of
         :meth:`~hyperlink.URL.sibling()`
         """
-        return type(self)(self._url.sibling(_encode_reserved(segment)))
+        return self.__class__(self._url.sibling(_encode_reserved(segment)))
 
     def child(self, *segments):
         """Automatically encode any reserved characters in *segments* and
-        return a new DecodedURL wrapping the result of
+        return a new `DecodedURL` wrapping the result of
         :meth:`~hyperlink.URL.child()`.
         """
         if not segments:
             return self
         new_segs = [_encode_reserved(s) for s in segments]
-        return type(self)(self._url.child(*new_segs))
+        return self.__class__(self._url.child(*new_segs))
 
     def normalize(self, *a, **kw):
-        "Return a new DecodedURL wrapping the result of :meth:`~hyperlink.URL.normalize()`"
-        return type(self)(self._url.normalize(*a, **kw))
+        "Return a new `DecodedURL` wrapping the result of :meth:`~hyperlink.URL.normalize()`"
+        return self.__class__(self._url.normalize(*a, **kw))
 
     @property
     def absolute(self):
@@ -1668,11 +1672,13 @@ class DecodedURL(object):
     def replace(self, scheme=_UNSET, host=_UNSET, path=_UNSET, query=_UNSET,
                 fragment=_UNSET, port=_UNSET, rooted=_UNSET, userinfo=_UNSET,
                 uses_netloc=_UNSET):
-        """While the signature is the same, this `replace()` differs a little from
-        URL.replace. For instance, it accepts userinfo as a tuple, not
-        as a string. As with the rest of the methods on DecodedURL, if
-        you pass a reserved character, it will be automatically
-        encoded instead of an error being raised.
+        """While the signature is the same, this `replace()` differs a little
+        from URL.replace. For instance, it accepts userinfo as a
+        tuple, not as a string, handling the case of having a username
+        containing a `:`. As with the rest of the methods on
+        DecodedURL, if you pass a reserved character, it will be
+        automatically encoded instead of an error being raised.
+
         """
         if path is not _UNSET:
             path = [_encode_reserved(p) for p in path]
@@ -1695,7 +1701,7 @@ class DecodedURL(object):
                                     rooted=rooted,
                                     userinfo=userinfo,
                                     uses_netloc=uses_netloc)
-        return type(self)(url=new_url)
+        return self.__class__(url=new_url)
 
     def get(self, name):
         "Get the value of all query parameters whose name matches *name*"
@@ -1766,67 +1772,24 @@ class DecodedURL(object):
 
 
 def parse(url, decoded=True, lazy=False):
+    """Automatically turn text into a structured URL object.
+
+    Args:
+
+       decoded (bool): Whether or not to return a :class:`DecodedURL`,
+          which automatically handles all
+          encoding/decoding/quoting/unquoting for all the various
+          accessors of parts of the URL, or an :class:`EncodedURL`,
+          which has the same API, but requires handling of special
+          characters for different parts of the URL.
+
+       lazy (bool): In the case of `decoded=True`, this controls
+          whether the URL is decoded immediately or as accessed. The
+          default, `lazy=False`, checks all encoded parts of the URL
+          for decodability.
+    """
     enc_url = EncodedURL.from_text(url)
     if not decoded:
         return enc_url
     dec_url = DecodedURL(enc_url, lazy=lazy)
     return dec_url
-
-
-"""Probably turn the properties into normal attributes now that they
-raise exceptions, or at least cachedproperties.
-
-* Decode
-  * host
-  * userinfo
-  * user
-  * path
-  * query
-  * fragment
-* Wrap in encoder
-  * replace
-  * add()
-  * set()
-  * child (split and encode?)
-  * sibling
-  * remove()
-* Passthrough
-  * __eq__ / __ne__ / __hash__
-  * absolute()
-* Return new DecodedURL with new ._url (the other kind of passthrough)
-  * normalize()
-  * click()
-* Strict passthrough (doesn't return a DecodedURL)
-  * to_uri()
-  * to_iri()
-
-# Factoring
-
-Should DecodedURL be a subclass of URL? Inheritance isn't cool
-anymore, so obviously not right? But seriously, it could be:
-
-* Every single method of URL is wrapped with almost an identical API,
-  except for __init__
-* A DecodedURL is as much a URL as both `bytes` and `unicode` are
-  strings
-
-On the arguments against:
-
-* __init__ differs
-* No real benefit to calling super()
-* Only a few duplicate methods could be reused (Twisted compat,
-  .get(), a couple others)
-* Complicates the relationship, as every DecodedURL has an underlying
-  EncodedURL and every EncodedURL _may_ have a DecodedURL. Values
-  stored within each are actually different, so it's not just
-  different methods
-
-# Remaining design questions
-
-* Should _encode_reserved(maximal=False) be used instead?
-* If yes, should the underlying URL have .to_iri() applied to it?
-* Right now DecodedURL needs each part to encode then decode, because
-  percent_decode doesn't even try to percent decode if there are any
-  non-ascii characters in its argument.
-
-"""
