@@ -155,9 +155,9 @@ _GEN_DELIMS = frozenset(u':/?#[]@')
 _SUB_DELIMS = frozenset(u"!$&'()*+,;=")
 _ALL_DELIMS = _GEN_DELIMS | _SUB_DELIMS
 
-_USERINFO_SAFE = _UNRESERVED_CHARS | _SUB_DELIMS
+_USERINFO_SAFE = _UNRESERVED_CHARS | _SUB_DELIMS | set(u'%')
 _USERINFO_DELIMS = _ALL_DELIMS - _USERINFO_SAFE
-_PATH_SAFE = _UNRESERVED_CHARS | _SUB_DELIMS | set(u':@%')
+_PATH_SAFE = _USERINFO_SAFE | set(u':@')
 _PATH_DELIMS = _ALL_DELIMS - _PATH_SAFE
 _SCHEMELESS_PATH_SAFE = _PATH_SAFE - set(':')
 _SCHEMELESS_PATH_DELIMS = _ALL_DELIMS - _SCHEMELESS_PATH_SAFE
@@ -202,11 +202,25 @@ _QUERY_PART_QUOTE_MAP = _make_quote_map(_QUERY_SAFE)
 _QUERY_DECODE_MAP = _make_decode_map(_QUERY_DELIMS)
 _FRAGMENT_QUOTE_MAP = _make_quote_map(_FRAGMENT_SAFE)
 _FRAGMENT_DECODE_MAP = _make_decode_map(_FRAGMENT_DELIMS)
+_UNRESERVED_QUOTE_MAP = _make_quote_map(_UNRESERVED_CHARS)
 _UNRESERVED_DECODE_MAP = dict([(k, v) for k, v in _HEX_CHAR_MAP.items()
                                if v.decode('ascii', 'replace')
                                in _UNRESERVED_CHARS])
 
 _ROOT_PATHS = frozenset(((), (u'',)))
+
+
+def _encode_reserved(text, maximal=True):
+    """A very comprehensive percent encoding for encoding all
+    delimiters. Used for arguments to DecodedURL, where a % means a
+    percent sign, and not the character used by URLs for escaping
+    bytes.
+    """
+    if maximal:
+        bytestr = normalize('NFC', text).encode('utf8')
+        return u''.join([_UNRESERVED_QUOTE_MAP[b] for b in bytestr])
+    return u''.join([_UNRESERVED_QUOTE_MAP[t] if t in _UNRESERVED_CHARS
+                     else t for t in text])
 
 
 def _encode_path_part(text, maximal=True):
@@ -485,7 +499,8 @@ def _decode_fragment_part(text, normalize_case=False):
                            _decode_map=_FRAGMENT_DECODE_MAP)
 
 
-def _percent_decode(text, normalize_case=False, _decode_map=_HEX_CHAR_MAP):
+def _percent_decode(text, normalize_case=False, subencoding='utf-8',
+                    raise_subencoding_exc=False, _decode_map=_HEX_CHAR_MAP):
     """Convert percent-encoded text characters to their normal,
     human-readable equivalents.
 
@@ -547,10 +562,31 @@ def _percent_decode(text, normalize_case=False, _decode_map=_HEX_CHAR_MAP):
 
     unquoted_bytes = b''.join(res)
 
+    if subencoding is False:
+        return unquoted_bytes
     try:
-        return unquoted_bytes.decode("utf-8")
+        return unquoted_bytes.decode(subencoding)
     except UnicodeDecodeError:
+        if raise_subencoding_exc:
+            raise
         return text
+
+
+def _decode_host(host):
+    try:
+        host_bytes = host.encode("ascii")
+    except UnicodeEncodeError:
+        host_text = host
+    else:
+        try:
+            host_text = host_bytes.decode("idna")
+        except ValueError:
+            # only reached on "narrow" (UCS-2) Python builds <3.4, see #7
+            # NOTE: not going to raise here, because there's no
+            # ambiguity in the IDNA, and the host is still
+            # technically usable
+            host_text = host
+    return host_text
 
 
 def _resolve_dot_segments(path):
@@ -726,6 +762,13 @@ class URL(object):
                                        uses_netloc, bool, NoneType)
 
         return
+
+    def get_decoded_url(self, lazy=False):
+        try:
+            return self._decoded_url
+        except AttributeError:
+            self._decoded_url = DecodedURL(self, lazy=lazy)
+        return self._decoded_url
 
     @property
     def scheme(self):
@@ -1040,7 +1083,7 @@ class URL(object):
                    rooted, userinfo, uses_netloc)
 
     def normalize(self, scheme=True, host=True, path=True, query=True,
-                  fragment=True):
+                  fragment=True, userinfo=True):
         """Return a new URL object with several standard normalizations
         applied:
 
@@ -1091,6 +1134,11 @@ class URL(object):
         if fragment:
             kw['fragment'] = _decode_unreserved(self.fragment,
                                                 normalize_case=True)
+        if userinfo:
+            kw['userinfo'] = u':'.join([_decode_unreserved(p,
+                                                           normalize_case=True)
+                                        for p in self.userinfo.split(':', 1)])
+
         return self.replace(**kw)
 
     def child(self, *segments):
@@ -1255,18 +1303,10 @@ class URL(object):
         """
         new_userinfo = u':'.join([_decode_userinfo_part(p) for p in
                                   self.userinfo.split(':', 1)])
-        try:
-            asciiHost = self.host.encode("ascii")
-        except UnicodeEncodeError:
-            textHost = self.host
-        else:
-            try:
-                textHost = asciiHost.decode("idna")
-            except ValueError:
-                # only reached on "narrow" (UCS-2) Python builds <3.4, see #7
-                textHost = self.host
+        host_text = _decode_host(self.host)
+
         return self.replace(userinfo=new_userinfo,
-                            host=textHost,
+                            host=host_text,
                             path=[_decode_path_part(segment)
                                   for segment in self.path],
                             query=[tuple(_decode_query_part(x)
@@ -1464,3 +1504,292 @@ class URL(object):
         """
         return self.replace(query=((k, v) for (k, v) in self.query
                                    if k != name))
+
+
+EncodedURL = URL  # An alias better describing what the URL really is
+
+
+class DecodedURL(object):
+    """DecodedURL is a type meant to act as a higher-level interface to
+    the URL. It is the `unicode` to URL's `bytes`. `DecodedURL` has
+    almost exactly the same API as `URL`, but everything going in and
+    out is in its maximally decoded state. All percent decoding is
+    handled automatically.
+
+    Where applicable, a UTF-8 encoding is presumed. Be advised that
+    some interactions can raise :exc:`UnicodeEncodeErrors` and
+    :exc:`UnicodeDecodeErrors`, just like when working with
+    bytestrings. Examples of such interactions include handling query
+    strings encoding binary data, and paths containing segments with
+    special characters encoded with codecs other than UTF-8.
+
+    Args:
+       url (URL): A :class:`URL` object to wrap.
+       lazy (bool): Whether to pre-decode all parts of the URL to
+           check for validity. Defaults to True.
+
+    """
+    def __init__(self, url, lazy=False):
+        self._url = url
+        if not lazy:
+            # cache the following, while triggering any decoding
+            # issues with decodable fields
+            self.host, self.userinfo, self.path, self.query, self.fragment
+        return
+
+    @classmethod
+    def from_text(cls, text, lazy=False):
+        """\
+        Make a `DecodedURL` instance from any text string containing a URL.
+
+        Args:
+          text (unicode): Text containing the URL
+          lazy (bool): Whether to pre-decode all parts of the URL to
+              check for validity. Defaults to True.
+        """
+        _url = URL.from_text(text)
+        return cls(_url, lazy=lazy)
+
+    @property
+    def encoded_url(self):
+        """Access the underlying :class:`URL` object, which has any special
+        characters encoded.
+        """
+        return self._url
+
+    def to_text(self, *a, **kw):
+        "Passthrough to :meth:`~hyperlink.URL.to_text()`"
+        return self._url.to_text(*a, **kw)
+
+    def to_uri(self, *a, **kw):
+        "Passthrough to :meth:`~hyperlink.URL.to_uri()`"
+        return self._url.to_uri(*a, **kw)
+
+    def to_iri(self, *a, **kw):
+        "Passthrough to :meth:`~hyperlink.URL.to_iri()`"
+        return self._url.to_iri(*a, **kw)
+
+    def click(self, href=u''):
+        "Return a new DecodedURL wrapping the result of :meth:`~hyperlink.URL.click()`"
+        return self.__class__(self._url.click(href=href))
+
+    def sibling(self, segment):
+        """Automatically encode any reserved characters in *segment* and
+        return a new `DecodedURL` wrapping the result of
+        :meth:`~hyperlink.URL.sibling()`
+        """
+        return self.__class__(self._url.sibling(_encode_reserved(segment)))
+
+    def child(self, *segments):
+        """Automatically encode any reserved characters in *segments* and
+        return a new `DecodedURL` wrapping the result of
+        :meth:`~hyperlink.URL.child()`.
+        """
+        if not segments:
+            return self
+        new_segs = [_encode_reserved(s) for s in segments]
+        return self.__class__(self._url.child(*new_segs))
+
+    def normalize(self, *a, **kw):
+        "Return a new `DecodedURL` wrapping the result of :meth:`~hyperlink.URL.normalize()`"
+        return self.__class__(self._url.normalize(*a, **kw))
+
+    @property
+    def absolute(self):
+        return self._url.absolute
+
+    @property
+    def scheme(self):
+        return self._url.scheme
+
+    @property
+    def host(self):
+        return _decode_host(self._url.host)
+
+    @property
+    def port(self):
+        return self._url.port
+
+    @property
+    def rooted(self):
+        return self._url.rooted
+
+    @property
+    def path(self):
+        try:
+            return self._path
+        except AttributeError:
+            pass
+        self._path = tuple([_percent_decode(_encode_path_part(p),
+                                            raise_subencoding_exc=True)
+                            for p in self._url.path])
+        return self._path
+
+    @property
+    def query(self):
+        try:
+            return self._query
+        except AttributeError:
+            pass
+        _q = [tuple(_percent_decode(_encode_query_part(x),
+                                    raise_subencoding_exc=True)
+                    if x is not None else None
+                    for x in (k, v))
+              for k, v in self._url.query]
+        self._query = tuple(_q)
+        return self._query
+
+    @property
+    def fragment(self):
+        try:
+            return self._fragment
+        except AttributeError:
+            pass
+        frag = self._url.fragment
+        self._fragment = _percent_decode(_encode_fragment_part(frag),
+                                         raise_subencoding_exc=True)
+        return self._fragment
+
+    @property
+    def userinfo(self):
+        try:
+            return self._userinfo
+        except AttributeError:
+            pass
+        self._userinfo = tuple([_percent_decode(_encode_userinfo_part(p),
+                                                raise_subencoding_exc=True)
+                                for p in self._url.userinfo.split(':', 1)])
+        return self._userinfo
+
+    @property
+    def user(self):
+        return self.userinfo[0]
+
+    @property
+    def uses_netloc(self):
+        return self._url.uses_netloc
+
+    def replace(self, scheme=_UNSET, host=_UNSET, path=_UNSET, query=_UNSET,
+                fragment=_UNSET, port=_UNSET, rooted=_UNSET, userinfo=_UNSET,
+                uses_netloc=_UNSET):
+        """While the signature is the same, this `replace()` differs a little
+        from URL.replace. For instance, it accepts userinfo as a
+        tuple, not as a string, handling the case of having a username
+        containing a `:`. As with the rest of the methods on
+        DecodedURL, if you pass a reserved character, it will be
+        automatically encoded instead of an error being raised.
+
+        """
+        if path is not _UNSET:
+            path = [_encode_reserved(p) for p in path]
+        if query is not _UNSET:
+            query = [[_encode_reserved(x)
+                      if x is not None else None
+                      for x in (k, v)]
+                     for k, v in iter_pairs(query)]
+        if userinfo is not _UNSET:
+            if len(userinfo) > 2:
+                raise ValueError('userinfo expected sequence of ["user"] or'
+                                 ' ["user", "password"], got %r' % userinfo)
+            userinfo = u':'.join([_encode_reserved(p) for p in userinfo])
+        new_url = self._url.replace(scheme=scheme,
+                                    host=host,
+                                    path=path,
+                                    query=query,
+                                    fragment=fragment,
+                                    port=port,
+                                    rooted=rooted,
+                                    userinfo=userinfo,
+                                    uses_netloc=uses_netloc)
+        return self.__class__(url=new_url)
+
+    def get(self, name):
+        "Get the value of all query parameters whose name matches *name*"
+        return [v for (k, v) in self.query if name == k]
+
+    def add(self, name, value=None):
+        "Return a new DecodedURL with the query parameter *name* and *value* added."
+        return self.replace(query=self.query + ((name, value),))
+
+    def set(self, name, value=None):
+        "Return a new DecodedURL with query parameter *name* set to *value*"
+        query = self.query
+        q = [(k, v) for (k, v) in query if k != name]
+        idx = next((i for (i, (k, v)) in enumerate(query) if k == name), -1)
+        q[idx:idx] = [(name, value)]
+        return self.replace(query=q)
+
+    def remove(self, name):
+        "Return a new DecodedURL with query parameter *name* removed."
+        return self.replace(query=((k, v) for (k, v) in self.query
+                                   if k != name))
+
+    def __repr__(self):
+        cn = self.__class__.__name__
+        return '%s(url=%r)' % (cn, self._url)
+
+    def __str__(self):
+        # TODO: the underlying URL's __str__ needs to change to make
+        # this work as the URL, see #55
+        return str(self._url)
+
+    def __eq__(self, other):
+        if not isinstance(other, self.__class__):
+            return NotImplemented
+        return self.normalize().to_uri() == other.normalize().to_uri()
+
+    def __ne__(self, other):
+        if not isinstance(other, self.__class__):
+            return NotImplemented
+        return not self.__eq__(other)
+
+    def __hash__(self):
+        return hash((self.__class__, self.scheme, self.userinfo, self.host,
+                     self.path, self.query, self.fragment, self.port,
+                     self.rooted, self.uses_netloc))
+
+    # # Begin Twisted Compat Code
+    asURI = to_uri
+    asIRI = to_iri
+
+    @classmethod
+    def fromText(cls, s, lazy=False):
+        return cls.from_text(s, lazy=lazy)
+
+    def asText(self, includeSecrets=False):
+        return self.to_text(with_password=includeSecrets)
+
+    def __dir__(self):
+        try:
+            ret = object.__dir__(self)
+        except AttributeError:
+            # object.__dir__ == AttributeError  # pdw for py2
+            ret = dir(self.__class__) + list(self.__dict__.keys())
+        ret = sorted(set(ret) - set(['fromText', 'asURI', 'asIRI', 'asText']))
+        return ret
+
+    # # End Twisted Compat Code
+
+
+def parse(url, decoded=True, lazy=False):
+    """Automatically turn text into a structured URL object.
+
+    Args:
+
+       decoded (bool): Whether or not to return a :class:`DecodedURL`,
+          which automatically handles all
+          encoding/decoding/quoting/unquoting for all the various
+          accessors of parts of the URL, or an :class:`EncodedURL`,
+          which has the same API, but requires handling of special
+          characters for different parts of the URL.
+
+       lazy (bool): In the case of `decoded=True`, this controls
+          whether the URL is decoded immediately or as accessed. The
+          default, `lazy=False`, checks all encoded parts of the URL
+          for decodability.
+    """
+    enc_url = EncodedURL.from_text(url)
+    if not decoded:
+        return enc_url
+    dec_url = DecodedURL(enc_url, lazy=lazy)
+    return dec_url
