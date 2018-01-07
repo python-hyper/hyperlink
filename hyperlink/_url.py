@@ -1517,7 +1517,7 @@ class DecodedURL(object):
     handled automatically.
 
     Where applicable, a UTF-8 encoding is presumed. Be advised that
-    some interactions, can raise :exc:`UnicodeEncodeErrors` and
+    some interactions can raise :exc:`UnicodeEncodeErrors` and
     :exc:`UnicodeDecodeErrors`, just like when working with
     bytestrings. Examples of such interactions include handling query
     strings encoding binary data, and paths containing segments with

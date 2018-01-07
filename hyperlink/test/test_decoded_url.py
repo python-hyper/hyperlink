@@ -60,8 +60,7 @@ class TestURL(HyperlinkTestCase):
         durl2 = DecodedURL.from_text(TOTAL_URL, lazy=True)
         assert durl2 == durl2.encoded_url.get_decoded_url(lazy=True)
 
-        # TODO change this to the actual value when str() changes get merged
-        assert '%20' in str(DecodedURL.from_text(BASIC_URL).child(' '))
+        assert str(DecodedURL.from_text(BASIC_URL).child(' ')) == 'http://example.com/%20'
 
         assert not (durl == 1)
         assert durl != 1
@@ -89,10 +88,11 @@ class TestURL(HyperlinkTestCase):
 
         assert durl.set('arg', 'd').get('arg') == ['d']
 
-    def test_equivalences(self):
+    def test_equality_and_hashability(self):
         durl = DecodedURL.from_text(TOTAL_URL)
         durl2 = DecodedURL.from_text(TOTAL_URL)
         burl = DecodedURL.from_text(BASIC_URL)
+        durl_uri = durl.to_uri()
 
         assert durl == durl
         assert durl == durl2
@@ -105,6 +105,14 @@ class TestURL(HyperlinkTestCase):
         durl_map[durl2] = durl2
 
         assert len(durl_map) == 1
+
+        durl_map[burl] = burl
+
+        assert len(durl_map) == 2
+
+        durl_map[durl_uri] = durl_uri
+
+        assert len(durl_map) == 3
 
     def test_replace_roundtrip(self):
         durl = DecodedURL.from_text(TOTAL_URL)
