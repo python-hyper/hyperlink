@@ -579,6 +579,50 @@ def _percent_decode(text, normalize_case=False, subencoding='utf-8',
 
 
 def _decode_host(host):
+    """Decode a host from ASCII-encodable text to IDNA-decoded text. If
+    the host text is not ASCII, it is returned unchanged, as it is
+    presumed that it is already IDNA-decoded.
+
+    Some technical details: _decode_host is built on top of the "idna"
+    package, which has some quirks:
+
+    Capital letters are not valid IDNA2008. The idna package will
+    raise an exception like this on capital letters:
+
+    > idna.core.InvalidCodepoint: Codepoint U+004B at position 1 ... not allowed
+
+    However, if a segment of a host (i.e., something in
+    url.host.split('.')) is already ASCII, idna doesn't perform its
+    usual checks. In fact, for capital letters it automatically
+    lowercases them.
+
+    This check and some other functionality can be bypassed by passing
+    uts46=True to idna.encode/decode. This allows a more permissive and
+    convenient interface. So far it seems like the balanced approach.
+
+    Example output (from idna==2.6):
+
+    >> idna.encode(u'mahmöud.io')
+    'xn--mahmud-zxa.io'
+    >> idna.encode(u'Mahmöud.io')
+    Traceback (most recent call last):
+      File "<stdin>", line 1, in <module>
+      File "/home/mahmoud/virtualenvs/hyperlink/local/lib/python2.7/site-packages/idna/core.py", line 355, in encode
+        result.append(alabel(label))
+      File "/home/mahmoud/virtualenvs/hyperlink/local/lib/python2.7/site-packages/idna/core.py", line 276, in alabel
+        check_label(label)
+      File "/home/mahmoud/virtualenvs/hyperlink/local/lib/python2.7/site-packages/idna/core.py", line 253, in check_label
+        raise InvalidCodepoint('Codepoint {0} at position {1} of {2} not allowed'.format(_unot(cp_value), pos+1, repr(label)))
+    idna.core.InvalidCodepoint: Codepoint U+004D at position 1 of u'Mahm\xf6ud' not allowed
+    >> idna.encode(u'Mahmoud.io')
+    'Mahmoud.io'
+
+    # Similar behavior for decodes below
+    >> idna.decode(u'Mahmoud.io')
+    u'mahmoud.io
+    >> idna.decode(u'Méhmoud.io', uts46=True)
+    u'm\xe9hmoud.io'
+    """
     if not host:
         return u''
     try:
@@ -1802,38 +1846,3 @@ def parse(url, decoded=True, lazy=False):
         return enc_url
     dec_url = DecodedURL(enc_url, lazy=lazy)
     return dec_url
-
-"""idna package notes:
-
-* If a segment of a host (i.e., something in url.host.split('.')) is
-already ascii, idna doesn't perform its usual checks. For instance,
-capital letters are not valid idna2008. The package automatically lowercases.
-
-You'll get something like:
-
-> idna.core.InvalidCodepoint: Codepoint U+004B at position 1 ... not allowed
-
-This check and some other functionality can be bypassed by passing
-uts46=True to encode/decode. This allows a more permission and
-convenient interface. So far it seems like the balanced approach.
-
-However, all of this is bypassed if the string segment contains no
-unicode characters.
-
-Example output:
-
->>> idna.encode(u'mahmöud.io')
-'xn--mahmud-zxa.io'
->>> idna.encode(u'Mahmöud.io')
-Traceback (most recent call last):
-  File "<stdin>", line 1, in <module>
-  File "/home/mahmoud/virtualenvs/hyperlink/local/lib/python2.7/site-packages/idna/core.py", line 355, in encode
-    result.append(alabel(label))
-  File "/home/mahmoud/virtualenvs/hyperlink/local/lib/python2.7/site-packages/idna/core.py", line 276, in alabel
-    check_label(label)
-  File "/home/mahmoud/virtualenvs/hyperlink/local/lib/python2.7/site-packages/idna/core.py", line 253, in check_label
-    raise InvalidCodepoint('Codepoint {0} at position {1} of {2} not allowed'.format(_unot(cp_value), pos+1, repr(label)))
-idna.core.InvalidCodepoint: Codepoint U+004D at position 1 of u'Mahm\xf6ud' not allowed
->>> idna.encode(u'Mahmoud.io')
-'Mahmoud.io'
-"""
