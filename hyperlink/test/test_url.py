@@ -1167,3 +1167,17 @@ class TestURL(HyperlinkTestCase):
         else:
             assert isinstance(str(url), unicode)
             assert isinstance(bytes(url), bytes)
+
+    def test_idna_corners(self):
+        text = u'http://abé.com/'
+        url = URL.from_text(text)
+        assert url.to_iri().host == u'abé.com'
+        assert url.to_uri().host == u'xn--ab-cja.com'
+
+        url = URL.from_text("http://ドメイン.テスト.co.jp#test")
+        assert url.to_iri().host == u'ドメイン.テスト.co.jp'
+        assert url.to_uri().host == u'xn--eckwd4c7c.xn--zckzah.co.jp'
+
+        assert url.to_uri().get_decoded_url().host == u'ドメイン.テスト.co.jp'
+
+        assert URL.from_text('http://Example.com').to_uri().get_decoded_url().host == 'example.com'
