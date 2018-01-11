@@ -523,18 +523,22 @@ def _percent_decode(text, normalize_case=False, subencoding='utf-8',
     u'abc def'
 
     Args:
-       text (unicode): The ASCII text with percent-encoding present.
+       text (unicode): Text with percent-encoding present.
        normalize_case (bool): Whether undecoded percent segments, such
           as encoded delimiters, should be uppercased, per RFC 3986
           Section 2.1. See :func:`_decode_path_part` for an example.
+       subencoding (unicode): The name of the encoding underlying the
+          percent-encoding. Pass `False` to get back bytes.
+       raise_subencoding_exc (bool): Whether an error in decoding the bytes
+          underlying the percent-decoding should be raised.
 
     Returns:
-       unicode: The percent-decoded version of *text*, with UTF-8
-         decoding applied.
+       unicode: The percent-decoded version of *text*, with decoding
+         applied, unless `subencoding=False` which returns bytes.
 
     """
     try:
-        quoted_bytes = text.encode("ascii")
+        quoted_bytes = text.encode(subencoding or 'utf-8')
     except UnicodeEncodeError:
         return text
 

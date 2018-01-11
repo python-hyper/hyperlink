@@ -145,3 +145,13 @@ class TestURL(HyperlinkTestCase):
 
     def test_percent_decode_bytes(self):
         assert _percent_decode('%00', subencoding=False) == b'\0'
+
+    def test_percent_decode_mixed(self):
+        assert _percent_decode('abcdé%C3%A9éfg') == 'abcdéééfg'
+
+        # still allow percent encoding in the case of an error
+        assert _percent_decode('abcdé%C3éfg') == 'abcdé%C3éfg'
+
+        # ...unless explicitly told otherwise
+        with self.assertRaises(UnicodeDecodeError):
+            _percent_decode('abcdé%C3éfg', raise_subencoding_exc=True)
