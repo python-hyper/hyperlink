@@ -1677,8 +1677,7 @@ class DecodedURL(object):
             return self._path
         except AttributeError:
             pass
-        self._path = tuple([_percent_decode(_encode_path_part(p),
-                                            raise_subencoding_exc=True)
+        self._path = tuple([_percent_decode(p, raise_subencoding_exc=True)
                             for p in self._url.path])
         return self._path
 
@@ -1688,8 +1687,7 @@ class DecodedURL(object):
             return self._query
         except AttributeError:
             pass
-        _q = [tuple(_percent_decode(_encode_query_part(x),
-                                    raise_subencoding_exc=True)
+        _q = [tuple(_percent_decode(x, raise_subencoding_exc=True)
                     if x is not None else None
                     for x in (k, v))
               for k, v in self._url.query]
@@ -1703,8 +1701,7 @@ class DecodedURL(object):
         except AttributeError:
             pass
         frag = self._url.fragment
-        self._fragment = _percent_decode(_encode_fragment_part(frag),
-                                         raise_subencoding_exc=True)
+        self._fragment = _percent_decode(frag, raise_subencoding_exc=True)
         return self._fragment
 
     @property
@@ -1713,8 +1710,7 @@ class DecodedURL(object):
             return self._userinfo
         except AttributeError:
             pass
-        self._userinfo = tuple([_percent_decode(_encode_userinfo_part(p),
-                                                raise_subencoding_exc=True)
+        self._userinfo = tuple([_percent_decode(p, raise_subencoding_exc=True)
                                 for p in self._url.userinfo.split(':', 1)])
         return self._userinfo
 
