@@ -2,6 +2,15 @@
 import re
 import socket
 
+
+class URLParseError(ValueError):
+    """Exception inheriting from :exc:`ValueError`, raised when failing to
+    parse a URL. Mostly raised on invalid ports and IPv6 addresses.
+    """
+    pass
+
+# TODO: fewer capturing groups
+
 # RFC 3986 Section 2.3, Unreserved URI Characters
 #   https://tools.ietf.org/html/rfc3986#section-2.3
 _UNRESERVED_CHARS = frozenset('~-._0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ'
@@ -16,7 +25,7 @@ _ALL_DELIMS = _GEN_DELIMS | _SUB_DELIMS
 
 # The following is based on Ian Cordasco's rfc3986 package
 
-IPv4_PATT = '([0-9]{1,3}.){3}[0-9]{1,3}'
+IPv4_PATT = '([0-9]{1,3}\.){3}[0-9]{1,3}'
 IPv4_RE = re.compile(IPv4_PATT)
 # Hexadecimal characters used in each piece of an IPv6 address
 HEXDIG_PATT = '[0-9A-Fa-f]{1,4}'
@@ -64,7 +73,7 @@ IPv_FUTURE_PATT = ('v[0-9A-Fa-f]+.[%s]+'
 ZONE_ID_PATT = '(?:[' + UNRESERVED_CHAR_PATT + ']|' + PERCENT_ENCODED_PATT + ')+'
 IPv6_ADDRZ_PATT = IPv6_PATT + '%25' + ZONE_ID_PATT
 
-IP_LITERAL_PATT = ('\[(%s|(?:%s)|%s)\]'
+IP_LITERAL_PATT = ('(%s|(?:%s)|%s)'
                    % (IPv6_PATT, IPv6_ADDRZ_PATT, IPv_FUTURE_PATT))
 
 
@@ -72,25 +81,42 @@ _IP_LITERAL_RE = re.compile(IP_LITERAL_PATT)
 
 
 def parse_host(host):
+    """Parse the host into a tuple of ``(family, host)``, where family
+    is the appropriate :mod:`socket` module constant when the host is
+    an IP address. Family is ``None`` when the host is not an IP.
+
+    Will raise :class:`URLParseError` on invalid IPv6 constants.
+
+    Returns:
+      tuple: family (socket constant or None), host (string)
+
+    >>> parse_host('googlewebsite.com') == (None, 'googlewebsite.com')
+    True
+    >>> parse_host('::1') == (socket.AF_INET6, '::1')
+    True
+    >>> parse_host('192.168.1.1') == (socket.AF_INET, '192.168.1.1')
+    True
+    """
+    if not host:
+        return None, u''
     if u':' in host:
-        try:
-            _IP_LITERAL_RE.match(host)
-            # TODO: pull out lowest 32-bits in case of ipv4-in-ipv6
-            # pattern match and inet_pton them
-            ipv4_match = IPv4_RE.search(host)
-            if ipv4_match:
-                try:
-                    socket.inet_pton(socket.AF_INET, ipv4_match.group(0))
-                except socket.error as se:
-                    raise ValueError('invalid IPv6 host with IPv4: %r (%r)' % (host, se))
-        except socket.error as se:
-            # TODO: URLParseError
-            raise ValueError('invalid IPv6 host: %r (%r)' % (host, se))
-        else:
-            return socket.AF_INET6, host
+        ipv6_match = _IP_LITERAL_RE.match(host)
+        if ipv6_match is None:
+            raise URLParseError(u'invalid IPv6 host: %r' % host)
+        if host.startswith('2001'):
+            import pdb;pdb.set_trace()
+        ipv4_match = IPv4_RE.search(host)
+        if ipv4_match:
+            try:
+                socket.inet_pton(socket.AF_INET, ipv4_match.group(0))
+            except socket.error as se: # socket.error _is_ OSError on Py3
+                raise URLParseError(u'invalid IPv6 host with IPv4: %r' % host)
+        return socket.AF_INET6, host
     try:
         socket.inet_pton(socket.AF_INET, host)
     except (socket.error, UnicodeEncodeError):
+        # inet_pton raises socket.error on py2, OSError on py3
+        # UnicodeEncodeError is only reached on non-ASCII unicode hosts
         family = None  # not an IP
     else:
         family = socket.AF_INET

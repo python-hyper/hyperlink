@@ -32,6 +32,7 @@ except ImportError:  # Python 2
 # Note: IDNAError is a subclass of UnicodeError
 from idna import encode as idna_encode, decode as idna_decode, IDNAError
 
+from ._url_codecs import parse_host, URLParseError
 
 if inet_pton is None:
     # based on https://gist.github.com/nnemkin/4966028
@@ -419,13 +420,6 @@ def scheme_uses_netloc(scheme, default=None):
     return default
 
 
-class URLParseError(ValueError):
-    """Exception inheriting from :exc:`ValueError`, raised when failing to
-    parse a URL. Mostly raised on invalid ports and IPv6 addresses.
-    """
-    pass
-
-
 def _optional(argument, default):
     if argument is _UNSET:
         return default
@@ -523,18 +517,22 @@ def _percent_decode(text, normalize_case=False, subencoding='utf-8',
     u'abc def'
 
     Args:
-       text (unicode): The ASCII text with percent-encoding present.
+       text (unicode): Text with percent-encoding present.
        normalize_case (bool): Whether undecoded percent segments, such
           as encoded delimiters, should be uppercased, per RFC 3986
           Section 2.1. See :func:`_decode_path_part` for an example.
+       subencoding (unicode): The name of the encoding underlying the
+          percent-encoding. Pass `False` to get back bytes.
+       raise_subencoding_exc (bool): Whether an error in decoding the bytes
+          underlying the percent-decoding should be raised.
 
     Returns:
-       unicode: The percent-decoded version of *text*, with UTF-8
-         decoding applied.
+       unicode: The percent-decoded version of *text*, with decoding
+         applied, unless `subencoding=False` which returns bytes.
 
     """
     try:
-        quoted_bytes = text.encode("ascii")
+        quoted_bytes = text.encode(subencoding or 'utf-8')
     except UnicodeEncodeError:
         return text
 
@@ -669,44 +667,6 @@ def _resolve_dot_segments(path):
         segs.append(u'')
 
     return segs
-
-
-def parse_host(host):
-    """Parse the host into a tuple of ``(family, host)``, where family
-    is the appropriate :mod:`socket` module constant when the host is
-    an IP address. Family is ``None`` when the host is not an IP.
-
-    Will raise :class:`URLParseError` on invalid IPv6 constants.
-
-    Returns:
-      tuple: family (socket constant or None), host (string)
-
-    >>> parse_host('googlewebsite.com') == (None, 'googlewebsite.com')
-    True
-    >>> parse_host('::1') == (socket.AF_INET6, '::1')
-    True
-    >>> parse_host('192.168.1.1') == (socket.AF_INET, '192.168.1.1')
-    True
-    """
-    if not host:
-        return None, u''
-    if u':' in host:
-        try:
-            inet_pton(socket.AF_INET6, host)
-        except socket.error as se:
-            raise URLParseError('invalid IPv6 host: %r (%r)' % (host, se))
-        except UnicodeEncodeError:
-            pass  # TODO: this can't be a real host right?
-        else:
-            family = socket.AF_INET6
-            return family, host
-    try:
-        inet_pton(socket.AF_INET, host)
-    except (socket.error, UnicodeEncodeError):
-        family = None  # not an IP
-    else:
-        family = socket.AF_INET
-    return family, host
 
 
 class URL(object):
@@ -1673,8 +1633,7 @@ class DecodedURL(object):
             return self._path
         except AttributeError:
             pass
-        self._path = tuple([_percent_decode(_encode_path_part(p),
-                                            raise_subencoding_exc=True)
+        self._path = tuple([_percent_decode(p, raise_subencoding_exc=True)
                             for p in self._url.path])
         return self._path
 
@@ -1684,8 +1643,7 @@ class DecodedURL(object):
             return self._query
         except AttributeError:
             pass
-        _q = [tuple(_percent_decode(_encode_query_part(x),
-                                    raise_subencoding_exc=True)
+        _q = [tuple(_percent_decode(x, raise_subencoding_exc=True)
                     if x is not None else None
                     for x in (k, v))
               for k, v in self._url.query]
@@ -1699,8 +1657,7 @@ class DecodedURL(object):
         except AttributeError:
             pass
         frag = self._url.fragment
-        self._fragment = _percent_decode(_encode_fragment_part(frag),
-                                         raise_subencoding_exc=True)
+        self._fragment = _percent_decode(frag, raise_subencoding_exc=True)
         return self._fragment
 
     @property
@@ -1709,8 +1666,7 @@ class DecodedURL(object):
             return self._userinfo
         except AttributeError:
             pass
-        self._userinfo = tuple([_percent_decode(_encode_userinfo_part(p),
-                                                raise_subencoding_exc=True)
+        self._userinfo = tuple([_percent_decode(p, raise_subencoding_exc=True)
                                 for p in self._url.userinfo.split(':', 1)])
         return self._userinfo
 
