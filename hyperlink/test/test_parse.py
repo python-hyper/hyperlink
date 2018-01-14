@@ -12,7 +12,7 @@ UNDECODABLE_FRAG_URL = TOTAL_URL + '%C3'
 # invalid utf8
 
 
-class TestURL(HyperlinkTestCase):
+class TestParse(HyperlinkTestCase):
     def test_parse(self):
         purl = parse(TOTAL_URL)
         assert isinstance(purl, DecodedURL)

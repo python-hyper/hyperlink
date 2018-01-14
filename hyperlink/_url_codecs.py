@@ -25,15 +25,17 @@ _ALL_DELIMS = _GEN_DELIMS | _SUB_DELIMS
 
 # The following is based on Ian Cordasco's rfc3986 package
 
+# TODO: This pattern isn't perfect, so we double check with inet_pton
+# below, this will have to change for windows
 IPv4_PATT = '([0-9]{1,3}\.){3}[0-9]{1,3}'
 IPv4_RE = re.compile(IPv4_PATT)
 # Hexadecimal characters used in each piece of an IPv6 address
 HEXDIG_PATT = '[0-9A-Fa-f]{1,4}'
 # Least-significant 32 bits of an IPv6 address
-LS32_RE = '(%(hex)s:%(hex)s|%(ipv4)s)' % {'hex': HEXDIG_PATT, 'ipv4': IPv4_PATT}
+LS32_PATT = '(%(hex)s:%(hex)s|%(ipv4)s)' % {'hex': HEXDIG_PATT, 'ipv4': IPv4_PATT}
 # Substitutions into the following patterns for IPv6 patterns defined
 # http://tools.ietf.org/html/rfc3986#page-20
-_subs = {'hex': HEXDIG_PATT, 'ls32': LS32_RE}
+_subs = {'hex': HEXDIG_PATT, 'ls32': LS32_PATT}
 
 # Below: h16 = hexdig, see: https://tools.ietf.org/html/rfc5234 for details
 # about ABNF (Augmented Backus-Naur Form) use in the comments
@@ -73,7 +75,7 @@ IPv_FUTURE_PATT = ('v[0-9A-Fa-f]+.[%s]+'
 ZONE_ID_PATT = '(?:[' + UNRESERVED_CHAR_PATT + ']|' + PERCENT_ENCODED_PATT + ')+'
 IPv6_ADDRZ_PATT = IPv6_PATT + '%25' + ZONE_ID_PATT
 
-IP_LITERAL_PATT = ('(%s|(?:%s)|%s)'
+IP_LITERAL_PATT = ('^(%s|(?:%s)|%s)\Z'
                    % (IPv6_PATT, IPv6_ADDRZ_PATT, IPv_FUTURE_PATT))
 
 
@@ -103,13 +105,11 @@ def parse_host(host):
         ipv6_match = _IP_LITERAL_RE.match(host)
         if ipv6_match is None:
             raise URLParseError(u'invalid IPv6 host: %r' % host)
-        if host.startswith('2001'):
-            import pdb;pdb.set_trace()
         ipv4_match = IPv4_RE.search(host)
         if ipv4_match:
             try:
                 socket.inet_pton(socket.AF_INET, ipv4_match.group(0))
-            except socket.error as se: # socket.error _is_ OSError on Py3
+            except socket.error:  # NB: socket.error _is_ OSError on Py3
                 raise URLParseError(u'invalid IPv6 host with IPv4: %r' % host)
         return socket.AF_INET6, host
     try:
