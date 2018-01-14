@@ -23,13 +23,15 @@ _SUB_DELIMS = frozenset(u"!$&'()*+,;=")
 _ALL_DELIMS = _GEN_DELIMS | _SUB_DELIMS
 
 
-# The following is based on Ian Cordasco's rfc3986 package
 
-# TODO: This pattern isn't perfect, so we double check with inet_aton
-# below, this will have to change for windows
-IPv4_PATT = '([0-9]{1,3}\.){3}[0-9]{1,3}'
+
+IPv4_PATT = ("(?:(?:[0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\.){3}"
+             "(?:[0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])")
 IPv4_PART_RE = re.compile(IPv4_PATT)
 IPv4_RE = re.compile('^' + IPv4_PATT + '\Z')
+
+# The following is based on Ian Cordasco's rfc3986 package
+
 # Hexadecimal characters used in each piece of an IPv6 address
 HEXDIG_PATT = '[0-9A-Fa-f]{1,4}'
 # Least-significant 32 bits of an IPv6 address
@@ -106,24 +108,13 @@ def parse_host(host):
         ipv6_match = _IP_LITERAL_RE.match(host)
         if ipv6_match is None:
             raise URLParseError(u'invalid IPv6 host: %r' % host)
-        ipv4_match = IPv4_PART_RE.search(host)
-        if ipv4_match:
-            try:
-                socket.inet_aton(ipv4_match.group(0))
-            except socket.error:  # NB: socket.error _is_ OSError on Py3
+        if '.' in host:
+            ipv4_match = IPv4_PART_RE.search(host)
+            if not ipv4_match:
                 raise URLParseError(u'invalid IPv6 host with IPv4: %r' % host)
         return socket.AF_INET6, host
-    # This is necessary because inet_aton takes non-quad inputs see
-    # the man page for inet
     family = None
     ipv4_match = IPv4_RE.search(host)
     if ipv4_match:
-        try:
-            socket.inet_aton(host)
-        except (socket.error, UnicodeEncodeError):
-            # inet_aton raises socket.error on py2, OSError on py3
-            # UnicodeEncodeError is only reached on non-ASCII unicode hosts
-            pass  # regular domain/host name, needs resolution
-        else:
-            family = socket.AF_INET
+        family = socket.AF_INET
     return family, host
