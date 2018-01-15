@@ -8,11 +8,11 @@ from __future__ import unicode_literals
 import sys
 import socket
 
-from .common import HyperlinkTestCase
+from .common import HyperlinkTestCase, inet_pton
 from .. import URL, URLParseError
 # automatically import the py27 windows implementation when appropriate
 from .. import _url
-from .._url import inet_pton, SCHEME_PORT_MAP, parse_host
+from .._url import SCHEME_PORT_MAP
 
 
 PY2 = (sys.version_info[0] == 2)
