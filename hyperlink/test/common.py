@@ -2,6 +2,7 @@
 
 from unittest import TestCase
 
+import socket
 try:
     from socket import inet_pton
 except ImportError:  # pragma: no cover
