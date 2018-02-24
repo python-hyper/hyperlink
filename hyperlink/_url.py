@@ -510,10 +510,11 @@ def _percent_decode(text, normalize_case=False, subencoding='utf-8',
     """Convert percent-encoded text characters to their normal,
     human-readable equivalents.
 
-    All characters in the input text must be valid ASCII. All special
-    characters underlying the values in the percent-encoding must be
-    valid UTF-8. If a non-UTF8-valid string is passed, the original
-    text is returned with no changes applied.
+    All characters in the input text must be encodable by
+    *subencoding*. All special characters underlying the values in the
+    percent-encoding must be decodable as *subencoding*. If a
+    non-*subencoding*-valid string is passed, the original text is
+    returned with no changes applied.
 
     Only called by field-tailored variants, e.g.,
     :func:`_decode_path_part`, as every percent-encodable part of the
@@ -528,17 +529,17 @@ def _percent_decode(text, normalize_case=False, subencoding='utf-8',
           as encoded delimiters, should be uppercased, per RFC 3986
           Section 2.1. See :func:`_decode_path_part` for an example.
        subencoding (unicode): The name of the encoding underlying the
-          percent-encoding. Pass `False` to get back bytes.
+          percent-encoding. Pass `False` to get back raw bytes.
        raise_subencoding_exc (bool): Whether an error in decoding the bytes
           underlying the percent-decoding should be raised.
 
     Returns:
-       unicode: The percent-decoded version of *text*, with decoding
-         applied, unless `subencoding=False` which returns bytes.
+       unicode: The percent-decoded version of *text*, decoded by
+         *subencoding*, unless `subencoding=False` which returns bytes.
 
     """
     try:
-        quoted_bytes = text.encode(subencoding or 'utf-8')
+        quoted_bytes = text.encode('utf-8' if subencoding is False else subencoding)
     except UnicodeEncodeError:
         return text
 
