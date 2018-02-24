@@ -145,3 +145,21 @@ class TestURL(HyperlinkTestCase):
 
     def test_percent_decode_bytes(self):
         assert _percent_decode('%00', subencoding=False) == b'\0'
+
+    def test_percent_decode_mixed(self):
+        # See https://github.com/python-hyper/hyperlink/pull/59 for a
+        # nice discussion of the possibilities
+        assert _percent_decode('abcdé%C3%A9éfg') == 'abcdéééfg'
+
+        # still allow percent encoding in the case of an error
+        assert _percent_decode('abcdé%C3éfg') == 'abcdé%C3éfg'
+
+        # ...unless explicitly told otherwise
+        with self.assertRaises(UnicodeDecodeError):
+            _percent_decode('abcdé%C3éfg', raise_subencoding_exc=True)
+
+        # check that getting raw bytes works ok
+        assert _percent_decode('a%00b', subencoding=False) == b'a\x00b'
+
+        # when not encodable as subencoding
+        assert _percent_decode('é%25é', subencoding='ascii') == 'é%25é'

@@ -510,10 +510,11 @@ def _percent_decode(text, normalize_case=False, subencoding='utf-8',
     """Convert percent-encoded text characters to their normal,
     human-readable equivalents.
 
-    All characters in the input text must be valid ASCII. All special
-    characters underlying the values in the percent-encoding must be
-    valid UTF-8. If a non-UTF8-valid string is passed, the original
-    text is returned with no changes applied.
+    All characters in the input text must be encodable by
+    *subencoding*. All special characters underlying the values in the
+    percent-encoding must be decodable as *subencoding*. If a
+    non-*subencoding*-valid string is passed, the original text is
+    returned with no changes applied.
 
     Only called by field-tailored variants, e.g.,
     :func:`_decode_path_part`, as every percent-encodable part of the
@@ -523,18 +524,22 @@ def _percent_decode(text, normalize_case=False, subencoding='utf-8',
     u'abc def'
 
     Args:
-       text (unicode): The ASCII text with percent-encoding present.
+       text (unicode): Text with percent-encoding present.
        normalize_case (bool): Whether undecoded percent segments, such
           as encoded delimiters, should be uppercased, per RFC 3986
           Section 2.1. See :func:`_decode_path_part` for an example.
+       subencoding (unicode): The name of the encoding underlying the
+          percent-encoding. Pass `False` to get back raw bytes.
+       raise_subencoding_exc (bool): Whether an error in decoding the bytes
+          underlying the percent-decoding should be raised.
 
     Returns:
-       unicode: The percent-decoded version of *text*, with UTF-8
-         decoding applied.
+       unicode: The percent-decoded version of *text*, decoded by
+         *subencoding*, unless `subencoding=False` which returns bytes.
 
     """
     try:
-        quoted_bytes = text.encode("ascii")
+        quoted_bytes = text.encode('utf-8' if subencoding is False else subencoding)
     except UnicodeEncodeError:
         return text
 
@@ -1673,8 +1678,7 @@ class DecodedURL(object):
             return self._path
         except AttributeError:
             pass
-        self._path = tuple([_percent_decode(_encode_path_part(p),
-                                            raise_subencoding_exc=True)
+        self._path = tuple([_percent_decode(p, raise_subencoding_exc=True)
                             for p in self._url.path])
         return self._path
 
@@ -1684,8 +1688,7 @@ class DecodedURL(object):
             return self._query
         except AttributeError:
             pass
-        _q = [tuple(_percent_decode(_encode_query_part(x),
-                                    raise_subencoding_exc=True)
+        _q = [tuple(_percent_decode(x, raise_subencoding_exc=True)
                     if x is not None else None
                     for x in (k, v))
               for k, v in self._url.query]
@@ -1699,8 +1702,7 @@ class DecodedURL(object):
         except AttributeError:
             pass
         frag = self._url.fragment
-        self._fragment = _percent_decode(_encode_fragment_part(frag),
-                                         raise_subencoding_exc=True)
+        self._fragment = _percent_decode(frag, raise_subencoding_exc=True)
         return self._fragment
 
     @property
@@ -1709,8 +1711,7 @@ class DecodedURL(object):
             return self._userinfo
         except AttributeError:
             pass
-        self._userinfo = tuple([_percent_decode(_encode_userinfo_part(p),
-                                                raise_subencoding_exc=True)
+        self._userinfo = tuple([_percent_decode(p, raise_subencoding_exc=True)
                                 for p in self._url.userinfo.split(':', 1)])
         return self._userinfo
 
