@@ -1146,7 +1146,7 @@ class URL(object):
                    rooted, userinfo, uses_netloc)
 
     def normalize(self, scheme=True, host=True, path=True, query=True,
-                  fragment=True, userinfo=True, encode_stray_percents=True):
+                  fragment=True, userinfo=True, percents=True):
         """Return a new URL object with several standard normalizations
         applied:
 
@@ -1169,7 +1169,7 @@ class URL(object):
            query (bool): Normalize the query string
            fragment (bool): Normalize the fragment
            userinfo (bool): Normalize the userinfo
-           encode_stray_percents (bool): Encode isolated percent signs
+           percents (bool): Encode isolated percent signs
               for any percent-encoded fields which are being
               normalized (defaults to True).
 
@@ -1192,7 +1192,7 @@ class URL(object):
             kw['host'] = self.host.lower()
         def _dec_unres(target):
             return _decode_unreserved(target, normalize_case=True,
-                                      encode_stray_percents=encode_stray_percents)
+                                      encode_stray_percents=percents)
         if path:
             if self.path:
                 kw['path'] = [_dec_unres(p) for p in _resolve_dot_segments(self.path)]
