@@ -1156,7 +1156,7 @@ class URL(object):
         * Resolve any "." and ".." references in the path (`RFC 3986 6.2.2.3`_)
         * Ensure an ending slash on URLs with an empty path (`RFC 3986 6.2.3`_)
         * Encode any stray percent signs (`%`) in percent-encoded
-          fields (path, query, fragment, userinfo)
+          fields (path, query, fragment, userinfo) (`RFC 3986 2.4`_)
 
         All are applied by default, but normalizations can be disabled
         per-part by passing `False` for that part's corresponding
@@ -1168,6 +1168,7 @@ class URL(object):
            path (bool): Normalize the path (see above for details)
            query (bool): Normalize the query string
            fragment (bool): Normalize the fragment
+           userinfo (bool): Normalize the userinfo
            encode_stray_percents (bool): Encode isolated percent signs
               for any percent-encoded fields which are being
               normalized (defaults to True).
@@ -1181,9 +1182,9 @@ class URL(object):
         .. _RFC 3986 2.1: https://tools.ietf.org/html/rfc3986#section-2.1
         .. _RFC 3986 6.2.2.3: https://tools.ietf.org/html/rfc3986#section-6.2.2.3
         .. _RFC 3986 6.2.3: https://tools.ietf.org/html/rfc3986#section-6.2.3
+        .. _RFC 3986 2.4: https://tools.ietf.org/html/rfc3986#section-2.4
 
         """
-        # TODO: userinfo?
         kw = {}
         if scheme:
             kw['scheme'] = self.scheme.lower()
