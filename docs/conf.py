@@ -61,11 +61,11 @@ master_doc = 'index'
 
 # General information about the project.
 project = u'hyperlink'
-copyright = u'2017, Mahmoud Hashemi'
+copyright = u'2018, Mahmoud Hashemi'
 author = u'Mahmoud Hashemi'
 
-version = '17.3'
-release = '17.3.1'
+version = '18.0'
+release = '18.0.0'
 
 if os.name != 'nt':
     today_fmt = '%B %d, %Y'
