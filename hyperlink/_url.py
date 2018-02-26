@@ -474,17 +474,19 @@ def iter_pairs(iterable):
     return iter(iterable)
 
 
-def _decode_unreserved(text, normalize_case=False):
+def _decode_unreserved(text, normalize_case=False, encode_stray_percents=False):
     return _percent_decode(text, normalize_case=normalize_case,
+                           encode_stray_percents=encode_stray_percents,
                            _decode_map=_UNRESERVED_DECODE_MAP)
 
 
-def _decode_userinfo_part(text, normalize_case=False):
+def _decode_userinfo_part(text, normalize_case=False, encode_stray_percents=False):
     return _percent_decode(text, normalize_case=normalize_case,
+                           encode_stray_percents=encode_stray_percents,
                            _decode_map=_USERINFO_DECODE_MAP)
 
 
-def _decode_path_part(text, normalize_case=False):
+def _decode_path_part(text, normalize_case=False, encode_stray_percents=False):
     """
     >>> _decode_path_part(u'%61%77%2f%7a')
     u'aw%2fz'
@@ -492,21 +494,25 @@ def _decode_path_part(text, normalize_case=False):
     u'aw%2Fz'
     """
     return _percent_decode(text, normalize_case=normalize_case,
+                           encode_stray_percents=encode_stray_percents,
                            _decode_map=_PATH_DECODE_MAP)
 
 
-def _decode_query_part(text, normalize_case=False):
+def _decode_query_part(text, normalize_case=False, encode_stray_percents=False):
     return _percent_decode(text, normalize_case=normalize_case,
+                           encode_stray_percents=encode_stray_percents,
                            _decode_map=_QUERY_DECODE_MAP)
 
 
-def _decode_fragment_part(text, normalize_case=False):
+def _decode_fragment_part(text, normalize_case=False, encode_stray_percents=False):
     return _percent_decode(text, normalize_case=normalize_case,
+                           encode_stray_percents=encode_stray_percents,
                            _decode_map=_FRAGMENT_DECODE_MAP)
 
 
 def _percent_decode(text, normalize_case=False, subencoding='utf-8',
-                    raise_subencoding_exc=False, _decode_map=_HEX_CHAR_MAP):
+                    raise_subencoding_exc=False, encode_stray_percents=False,
+                    _decode_map=_HEX_CHAR_MAP):
     """Convert percent-encoded text characters to their normal,
     human-readable equivalents.
 
@@ -550,26 +556,26 @@ def _percent_decode(text, normalize_case=False, subencoding='utf-8',
     res = [bits[0]]
     append = res.append
 
-    if not normalize_case:
-        for item in bits[1:]:
-            try:
-                append(_decode_map[item[:2]])
-                append(item[2:])
-            except KeyError:
+    for item in bits[1:]:
+        hexpair, rest = item[:2], item[2:]
+        try:
+            append(_decode_map[hexpair])
+            append(rest)
+        except KeyError:
+            pair_is_hex = hexpair in _HEX_CHAR_MAP
+            if pair_is_hex or not encode_stray_percents:
                 append(b'%')
+            else:
+                # if it's undecodable, treat as a real percent sign,
+                # which is reserved (because it wasn't in the
+                # context-aware _decode_map passed in), and should
+                # stay in an encoded state.
+                append(b'%25')
+            if normalize_case and pair_is_hex:
+                append(hexpair.upper())
+                append(rest)
+            else:
                 append(item)
-    else:
-        for item in bits[1:]:
-            try:
-                append(_decode_map[item[:2]])
-                append(item[2:])
-            except KeyError:
-                append(b'%')
-                if item[:2] in _HEX_CHAR_MAP:
-                    append(item[:2].upper())
-                    append(item[2:])
-                else:
-                    append(item)
 
     unquoted_bytes = b''.join(res)
 
@@ -1140,7 +1146,7 @@ class URL(object):
                    rooted, userinfo, uses_netloc)
 
     def normalize(self, scheme=True, host=True, path=True, query=True,
-                  fragment=True, userinfo=True):
+                  fragment=True, userinfo=True, percents=True):
         """Return a new URL object with several standard normalizations
         applied:
 
@@ -1149,6 +1155,8 @@ class URL(object):
         * Convert scheme and host casing to lowercase (`RFC 3986 3.2.2`_)
         * Resolve any "." and ".." references in the path (`RFC 3986 6.2.2.3`_)
         * Ensure an ending slash on URLs with an empty path (`RFC 3986 6.2.3`_)
+        * Encode any stray percent signs (`%`) in percent-encoded
+          fields (path, query, fragment, userinfo) (`RFC 3986 2.4`_)
 
         All are applied by default, but normalizations can be disabled
         per-part by passing `False` for that part's corresponding
@@ -1160,40 +1168,43 @@ class URL(object):
            path (bool): Normalize the path (see above for details)
            query (bool): Normalize the query string
            fragment (bool): Normalize the fragment
+           userinfo (bool): Normalize the userinfo
+           percents (bool): Encode isolated percent signs
+              for any percent-encoded fields which are being
+              normalized (defaults to True).
 
-        >>> url = URL.from_text(u'Http://example.COM/a/../b/./c%2f?%61')
+        >>> url = URL.from_text(u'Http://example.COM/a/../b/./c%2f?%61%')
         >>> print(url.normalize().to_text())
-        http://example.com/b/c%2F?a
+        http://example.com/b/c%2F?a%25
 
         .. _RFC 3986 3.2.2: https://tools.ietf.org/html/rfc3986#section-3.2.2
         .. _RFC 3986 2.3: https://tools.ietf.org/html/rfc3986#section-2.3
         .. _RFC 3986 2.1: https://tools.ietf.org/html/rfc3986#section-2.1
         .. _RFC 3986 6.2.2.3: https://tools.ietf.org/html/rfc3986#section-6.2.2.3
         .. _RFC 3986 6.2.3: https://tools.ietf.org/html/rfc3986#section-6.2.3
+        .. _RFC 3986 2.4: https://tools.ietf.org/html/rfc3986#section-2.4
 
         """
-        # TODO: userinfo?
         kw = {}
         if scheme:
             kw['scheme'] = self.scheme.lower()
         if host:
             kw['host'] = self.host.lower()
+        def _dec_unres(target):
+            return _decode_unreserved(target, normalize_case=True,
+                                      encode_stray_percents=percents)
         if path:
             if self.path:
-                kw['path'] = [_decode_unreserved(p, normalize_case=True)
-                              for p in _resolve_dot_segments(self.path)]
+                kw['path'] = [_dec_unres(p) for p in _resolve_dot_segments(self.path)]
             else:
                 kw['path'] = (u'',)
         if query:
-            kw['query'] = [(_decode_unreserved(k, normalize_case=True),
-                            _decode_unreserved(v, normalize_case=True)
-                            if v else v) for k, v in self.query]
+            kw['query'] = [(_dec_unres(k), _dec_unres(v) if v else v)
+                           for k, v in self.query]
         if fragment:
-            kw['fragment'] = _decode_unreserved(self.fragment,
-                                                normalize_case=True)
+            kw['fragment'] = _dec_unres(self.fragment)
         if userinfo:
-            kw['userinfo'] = u':'.join([_decode_unreserved(p,
-                                                           normalize_case=True)
+            kw['userinfo'] = u':'.join([_dec_unres(p)
                                         for p in self.userinfo.split(':', 1)])
 
         return self.replace(**kw)

@@ -1152,7 +1152,13 @@ class TestURL(HyperlinkTestCase):
         assert norm_delimited_url.to_text() == '/a%2Fb/cd%3F?k%3D=v%23#test'
 
         # test invalid percent encoding during normalize
-        assert URL(path=('', '%te%sts')).normalize().to_text() == '/%te%sts'
+        assert URL(path=('', '%te%sts')).normalize(percents=False).to_text() == '/%te%sts'
+        assert URL(path=('', '%te%sts')).normalize().to_text() == '/%25te%25sts'
+
+        percenty_url = URL(scheme='ftp', path=['%%%', '%a%b'], query=[('%', '%%')], fragment='%', userinfo='%:%')
+
+        assert percenty_url.to_text(with_password=True) == 'ftp://%:%@/%%%/%a%b?%=%%#%'
+        assert percenty_url.normalize().to_text(with_password=True) == 'ftp://%25:%25@/%25%25%25/%25a%25b?%25=%25%25#%25'
 
     def test_str(self):
         # see also issue #49
