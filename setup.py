@@ -11,7 +11,7 @@ from setuptools import setup
 
 
 __author__ = 'Mahmoud Hashemi and Glyph Lefkowitz'
-__version__ = '18.0.0dev'
+__version__ = '18.0.0'
 __contact__ = 'mahmoud@hatnote.com'
 __url__ = 'https://github.com/python-hyper/hyperlink'
 __license__ = 'MIT'
