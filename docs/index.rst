@@ -41,13 +41,13 @@ Then, URLs are just an import away::
 
   url = URL.from_text('http://github.com/python-hyper/hyperlink?utm_souce=readthedocs')
 
-  better_url = url.replace(scheme='https')
-  user_url = better_url.click('..')
+  better_url = url.replace(scheme='https', port=443)
+  org_url = better_url.click('.')
 
-  print(user_url.to_text())
-  # prints: https://github.com/mahmoud
+  print(str(org_url))
+  # prints: https://github.com/python-hyper/
 
-  print(user_url.get('utm_source'))
+  print(better_url.get('utm_source'))
   # prints: readthedocs
 
 See :ref:`the API docs <hyperlink_api>` for more usage examples.
