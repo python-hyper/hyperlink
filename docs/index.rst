@@ -44,7 +44,7 @@ Then, URLs are just an import away::
   better_url = url.replace(scheme='https', port=443)
   org_url = better_url.click('.')
 
-  print(str(org_url))
+  print(org_url.to_text())
   # prints: https://github.com/python-hyper/
 
   print(better_url.get('utm_source'))
