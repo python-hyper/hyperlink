@@ -582,7 +582,7 @@ class TestURL(HyperlinkTestCase):
         """
         u1 = URL.from_text('http://localhost/a')
         u2 = URL.from_text('http://localhost/b')
-        self.assertFalse(u1 == u2, "%r != %r" % (u1, u2))
+        self.assertNotEqual(u1, u2, "%r != %r" % (u1, u2))
         self.assertNotEqual(u1, u2)
 
     def test_otherTypesNotEqual(self):
@@ -590,8 +590,8 @@ class TestURL(HyperlinkTestCase):
         L{URL} is not equal (C{==}) to other types.
         """
         u = URL.from_text('http://localhost/')
-        self.assertFalse(u == 42, "URL must not equal a number.")
-        self.assertFalse(u == object(), "URL must not equal an object.")
+        self.assertNotEqual(u, 42, "URL must not equal a number.")
+        self.assertNotEqual(u, object(), "URL must not equal an object.")
         self.assertNotEqual(u, 42)
         self.assertNotEqual(u, object())
 
@@ -616,15 +616,15 @@ class TestURL(HyperlinkTestCase):
         """
         u1 = URL.from_text('http://localhost/a')
         u2 = URL.from_text('http://localhost/b')
-        self.assertTrue(u1 != u2, "%r == %r" % (u1, u2))
+        self.assertNotEqual(u1, u2, "%r == %r" % (u1, u2))
 
     def test_otherTypesUnequal(self):
         """
         L{URL} is unequal (C{!=}) to other types.
         """
         u = URL.from_text('http://localhost/')
-        self.assertTrue(u != 42, "URL must differ from a number.")
-        self.assertTrue(u != object(), "URL must be differ from an object.")
+        self.assertNotEqual(u, 42, "URL must differ from a number.")
+        self.assertNotEqual(u, object(), "URL must be differ from an object.")
 
     def test_asURI(self):
         """
@@ -783,7 +783,7 @@ class TestURL(HyperlinkTestCase):
 
         def assertRaised(raised, expectation, name):
             self.assertEqual(str(raised.exception),
-                             "expected {0} for {1}, got {2}".format(
+                             "expected {} for {}, got {}".format(
                                  expectation,
                                  name, "<unexpected>"))
 
@@ -848,7 +848,7 @@ class TestURL(HyperlinkTestCase):
             URL(path='foo')
         self.assertEqual(
             str(raised.exception),
-            "expected iterable of text for path, not: {0}"
+            "expected iterable of text for path, not: {}"
             .format(repr('foo'))
         )
 
@@ -863,7 +863,7 @@ class TestURL(HyperlinkTestCase):
         self.assertEqual(url.uses_netloc, False)
 
         url = URL(scheme='ztp')
-        self.assertEqual(url.uses_netloc, None)
+        self.assertIsNone(url.uses_netloc)
 
         url = URL.from_text('ztp://test.com')
         self.assertEqual(url.uses_netloc, True)

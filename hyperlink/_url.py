@@ -150,9 +150,9 @@ _AUTHORITY_RE = re.compile(r'^(?:(?P<userinfo>[^@/?#]*)@)?'
                            r'(?::(?P<port>.*))?$')
 
 
-_HEX_CHAR_MAP = dict([((a + b).encode('ascii'),
-                       unichr(int(a + b, 16)).encode('charmap'))
-                      for a in string.hexdigits for b in string.hexdigits])
+_HEX_CHAR_MAP = {(a + b).encode('ascii'):
+                 unichr(int(a + b, 16)).encode('charmap')
+                 for a in string.hexdigits for b in string.hexdigits}
 _ASCII_RE = re.compile('([\x00-\x7f]+)')
 
 # RFC 3986 section 2.2, Reserved Characters
@@ -176,7 +176,7 @@ _QUERY_DELIMS = _ALL_DELIMS - _QUERY_SAFE
 def _make_decode_map(delims, allow_percent=False):
     ret = dict(_HEX_CHAR_MAP)
     if not allow_percent:
-        delims = set(delims) | set([u'%'])
+        delims = set(delims) | {u'%'}
     for delim in delims:
         _hexord = '{0:02X}'.format(ord(delim)).encode('ascii')
         _hexord_lower = _hexord.lower()
@@ -209,9 +209,9 @@ _QUERY_DECODE_MAP = _make_decode_map(_QUERY_DELIMS)
 _FRAGMENT_QUOTE_MAP = _make_quote_map(_FRAGMENT_SAFE)
 _FRAGMENT_DECODE_MAP = _make_decode_map(_FRAGMENT_DELIMS)
 _UNRESERVED_QUOTE_MAP = _make_quote_map(_UNRESERVED_CHARS)
-_UNRESERVED_DECODE_MAP = dict([(k, v) for k, v in _HEX_CHAR_MAP.items()
-                               if v.decode('ascii', 'replace')
-                               in _UNRESERVED_CHARS])
+_UNRESERVED_DECODE_MAP = {k: v for k, v in _HEX_CHAR_MAP.items()
+                          if v.decode('ascii', 'replace')
+                          in _UNRESERVED_CHARS}
 
 _ROOT_PATHS = frozenset(((), (u'',)))
 
@@ -341,9 +341,9 @@ SCHEME_PORT_MAP = {'acap': 674, 'afp': 548, 'dict': 2628, 'dns': 53,
                    'wais': 210, 'ws': 80, 'wss': 443, 'xmpp': None}
 
 # This list of schemes that don't use authorities is also from the link above.
-NO_NETLOC_SCHEMES = set(['urn', 'about', 'bitcoin', 'blob', 'data', 'geo',
-                         'magnet', 'mailto', 'news', 'pkcs11',
-                         'sip', 'sips', 'tel'])
+NO_NETLOC_SCHEMES = {'urn', 'about', 'bitcoin', 'blob', 'data', 'geo',
+                     'magnet', 'mailto', 'news', 'pkcs11',
+                     'sip', 'sips', 'tel'}
 # As of Mar 11, 2017, there were 44 netloc schemes, and 13 non-netloc
 
 
@@ -623,7 +623,7 @@ def _decode_host(host):
       File "/home/mahmoud/virtualenvs/hyperlink/local/lib/python2.7/site-packages/idna/core.py", line 276, in alabel
         check_label(label)
       File "/home/mahmoud/virtualenvs/hyperlink/local/lib/python2.7/site-packages/idna/core.py", line 253, in check_label
-        raise InvalidCodepoint('Codepoint {0} at position {1} of {2} not allowed'.format(_unot(cp_value), pos+1, repr(label)))
+        raise InvalidCodepoint('Codepoint {} at position {} of {} not allowed'.format(_unot(cp_value), pos+1, repr(label)))
     idna.core.InvalidCodepoint: Codepoint U+004D at position 1 of u'Mahm\xf6ud' not allowed
     >> idna.encode(u'Mahmoud.io')
     'Mahmoud.io'
@@ -1340,10 +1340,10 @@ class URL(object):
             userinfo=new_userinfo,
             host=new_host,
             path=new_path,
-            query=tuple([tuple(_encode_query_part(x, maximal=True)
-                               if x is not None else None
-                               for x in (k, v))
-                         for k, v in self.query]),
+            query=tuple(tuple(_encode_query_part(x, maximal=True)
+                              if x is not None else None
+                              for x in (k, v))
+                        for k, v in self.query),
             fragment=_encode_fragment_part(self.fragment, maximal=True)
         )
 
@@ -1484,7 +1484,7 @@ class URL(object):
         except AttributeError:
             # object.__dir__ == AttributeError  # pdw for py2
             ret = dir(self.__class__) + list(self.__dict__.keys())
-        ret = sorted(set(ret) - set(['fromText', 'asURI', 'asIRI', 'asText']))
+        ret = sorted(set(ret) - {'fromText', 'asURI', 'asIRI', 'asText'})
         return ret
 
     # # End Twisted Compat Code
@@ -1689,8 +1689,8 @@ class DecodedURL(object):
             return self._path
         except AttributeError:
             pass
-        self._path = tuple([_percent_decode(p, raise_subencoding_exc=True)
-                            for p in self._url.path])
+        self._path = tuple(_percent_decode(p, raise_subencoding_exc=True)
+                           for p in self._url.path)
         return self._path
 
     @property
@@ -1722,8 +1722,8 @@ class DecodedURL(object):
             return self._userinfo
         except AttributeError:
             pass
-        self._userinfo = tuple([_percent_decode(p, raise_subencoding_exc=True)
-                                for p in self._url.userinfo.split(':', 1)])
+        self._userinfo = tuple(_percent_decode(p, raise_subencoding_exc=True)
+                               for p in self._url.userinfo.split(':', 1))
         return self._userinfo
 
     @property
@@ -1830,7 +1830,7 @@ class DecodedURL(object):
         except AttributeError:
             # object.__dir__ == AttributeError  # pdw for py2
             ret = dir(self.__class__) + list(self.__dict__.keys())
-        ret = sorted(set(ret) - set(['fromText', 'asURI', 'asIRI', 'asText']))
+        ret = sorted(set(ret) - {'fromText', 'asURI', 'asIRI', 'asText'})
         return ret
 
     # # End Twisted Compat Code
