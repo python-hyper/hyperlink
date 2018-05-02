@@ -176,7 +176,7 @@ _QUERY_DELIMS = _ALL_DELIMS - _QUERY_SAFE
 def _make_decode_map(delims, allow_percent=False):
     ret = dict(_HEX_CHAR_MAP)
     if not allow_percent:
-        delims = set(delims) | set([u'%'])
+        delims = set(delims) | {u'%'}
     for delim in delims:
         _hexord = '{0:02X}'.format(ord(delim)).encode('ascii')
         _hexord_lower = _hexord.lower()
@@ -341,9 +341,9 @@ SCHEME_PORT_MAP = {'acap': 674, 'afp': 548, 'dict': 2628, 'dns': 53,
                    'wais': 210, 'ws': 80, 'wss': 443, 'xmpp': None}
 
 # This list of schemes that don't use authorities is also from the link above.
-NO_NETLOC_SCHEMES = set(['urn', 'about', 'bitcoin', 'blob', 'data', 'geo',
-                         'magnet', 'mailto', 'news', 'pkcs11',
-                         'sip', 'sips', 'tel'])
+NO_NETLOC_SCHEMES = {'urn', 'about', 'bitcoin', 'blob', 'data', 'geo',
+                     'magnet', 'mailto', 'news', 'pkcs11',
+                     'sip', 'sips', 'tel'}
 # As of Mar 11, 2017, there were 44 netloc schemes, and 13 non-netloc
 
 
@@ -1484,7 +1484,7 @@ class URL(object):
         except AttributeError:
             # object.__dir__ == AttributeError  # pdw for py2
             ret = dir(self.__class__) + list(self.__dict__.keys())
-        ret = sorted(set(ret) - set(['fromText', 'asURI', 'asIRI', 'asText']))
+        ret = sorted(set(ret) - {'fromText', 'asURI', 'asIRI', 'asText'})
         return ret
 
     # # End Twisted Compat Code
@@ -1830,7 +1830,7 @@ class DecodedURL(object):
         except AttributeError:
             # object.__dir__ == AttributeError  # pdw for py2
             ret = dir(self.__class__) + list(self.__dict__.keys())
-        ret = sorted(set(ret) - set(['fromText', 'asURI', 'asIRI', 'asText']))
+        ret = sorted(set(ret) - {'fromText', 'asURI', 'asIRI', 'asText'})
         return ret
 
     # # End Twisted Compat Code
