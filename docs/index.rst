@@ -55,13 +55,13 @@ See :ref:`the API docs <hyperlink_api>` for more usage examples.
 Gaps
 ----
 
-Found something missing in hyperlink? `Pull Requests`_ and `Issues`_ weclome!
+Found something missing in hyperlink? `Pull Requests`_ and `Issues`_ are welcome!
 
 .. _Pull Requests: https://github.com/python-hyper/hyperlink/pulls
 .. _Issues: https://github.com/python-hyper/hyperlink/issues
 
-Section listing
----------------
+Table of Contents
+-----------------
 
 .. toctree::
    :maxdepth: 2
