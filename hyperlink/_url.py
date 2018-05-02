@@ -1340,10 +1340,10 @@ class URL(object):
             userinfo=new_userinfo,
             host=new_host,
             path=new_path,
-            query=tuple([tuple(_encode_query_part(x, maximal=True)
-                               if x is not None else None
-                               for x in (k, v))
-                         for k, v in self.query]),
+            query=tuple(tuple(_encode_query_part(x, maximal=True)
+                              if x is not None else None
+                              for x in (k, v))
+                        for k, v in self.query),
             fragment=_encode_fragment_part(self.fragment, maximal=True)
         )
 
@@ -1689,8 +1689,8 @@ class DecodedURL(object):
             return self._path
         except AttributeError:
             pass
-        self._path = tuple([_percent_decode(p, raise_subencoding_exc=True)
-                            for p in self._url.path])
+        self._path = tuple(_percent_decode(p, raise_subencoding_exc=True)
+                           for p in self._url.path)
         return self._path
 
     @property
@@ -1722,8 +1722,8 @@ class DecodedURL(object):
             return self._userinfo
         except AttributeError:
             pass
-        self._userinfo = tuple([_percent_decode(p, raise_subencoding_exc=True)
-                                for p in self._url.userinfo.split(':', 1)])
+        self._userinfo = tuple(_percent_decode(p, raise_subencoding_exc=True)
+                               for p in self._url.userinfo.split(':', 1))
         return self._userinfo
 
     @property
