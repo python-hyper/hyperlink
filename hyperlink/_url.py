@@ -150,9 +150,9 @@ _AUTHORITY_RE = re.compile(r'^(?:(?P<userinfo>[^@/?#]*)@)?'
                            r'(?::(?P<port>.*))?$')
 
 
-_HEX_CHAR_MAP = dict([((a + b).encode('ascii'),
-                       unichr(int(a + b, 16)).encode('charmap'))
-                      for a in string.hexdigits for b in string.hexdigits])
+_HEX_CHAR_MAP = {(a + b).encode('ascii'):
+                 unichr(int(a + b, 16)).encode('charmap')
+                 for a in string.hexdigits for b in string.hexdigits}
 _ASCII_RE = re.compile('([\x00-\x7f]+)')
 
 # RFC 3986 section 2.2, Reserved Characters
@@ -209,9 +209,9 @@ _QUERY_DECODE_MAP = _make_decode_map(_QUERY_DELIMS)
 _FRAGMENT_QUOTE_MAP = _make_quote_map(_FRAGMENT_SAFE)
 _FRAGMENT_DECODE_MAP = _make_decode_map(_FRAGMENT_DELIMS)
 _UNRESERVED_QUOTE_MAP = _make_quote_map(_UNRESERVED_CHARS)
-_UNRESERVED_DECODE_MAP = dict([(k, v) for k, v in _HEX_CHAR_MAP.items()
-                               if v.decode('ascii', 'replace')
-                               in _UNRESERVED_CHARS])
+_UNRESERVED_DECODE_MAP = {k: v for k, v in _HEX_CHAR_MAP.items()
+                          if v.decode('ascii', 'replace')
+                          in _UNRESERVED_CHARS}
 
 _ROOT_PATHS = frozenset(((), (u'',)))
 
