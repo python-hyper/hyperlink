@@ -783,7 +783,7 @@ class TestURL(HyperlinkTestCase):
 
         def assertRaised(raised, expectation, name):
             self.assertEqual(str(raised.exception),
-                             "expected {0} for {1}, got {2}".format(
+                             "expected {} for {}, got {}".format(
                                  expectation,
                                  name, "<unexpected>"))
 
@@ -848,7 +848,7 @@ class TestURL(HyperlinkTestCase):
             URL(path='foo')
         self.assertEqual(
             str(raised.exception),
-            "expected iterable of text for path, not: {0}"
+            "expected iterable of text for path, not: {}"
             .format(repr('foo'))
         )
 

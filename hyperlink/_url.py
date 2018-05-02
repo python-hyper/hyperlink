@@ -623,7 +623,7 @@ def _decode_host(host):
       File "/home/mahmoud/virtualenvs/hyperlink/local/lib/python2.7/site-packages/idna/core.py", line 276, in alabel
         check_label(label)
       File "/home/mahmoud/virtualenvs/hyperlink/local/lib/python2.7/site-packages/idna/core.py", line 253, in check_label
-        raise InvalidCodepoint('Codepoint {0} at position {1} of {2} not allowed'.format(_unot(cp_value), pos+1, repr(label)))
+        raise InvalidCodepoint('Codepoint {} at position {} of {} not allowed'.format(_unot(cp_value), pos+1, repr(label)))
     idna.core.InvalidCodepoint: Codepoint U+004D at position 1 of u'Mahm\xf6ud' not allowed
     >> idna.encode(u'Mahmoud.io')
     'Mahmoud.io'
