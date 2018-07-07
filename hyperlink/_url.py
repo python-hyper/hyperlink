@@ -1594,8 +1594,8 @@ class DecodedURL(object):
 
     Args:
        url (URL): A :class:`URL` object to wrap.
-       lazy (bool): Whether to pre-decode all parts of the URL to
-           check for validity. Defaults to True.
+       lazy (bool): Set to True to avoid pre-decode all parts of the
+           URL to check for validity. Defaults to False.
 
     """
     def __init__(self, url, lazy=False):
@@ -1640,6 +1640,8 @@ class DecodedURL(object):
 
     def click(self, href=u''):
         "Return a new DecodedURL wrapping the result of :meth:`~hyperlink.URL.click()`"
+        if isinstance(href, DecodedURL):
+            href = href._url
         return self.__class__(self._url.click(href=href))
 
     def sibling(self, segment):
