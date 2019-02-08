@@ -1109,7 +1109,8 @@ class URL(object):
             raise URLParseError('invalid authority %r in url: %r'
                                 % (au_text, text))
         if au_gs['bad_host']:
-            raise URLParseError('invalid host %r in url: %r')
+            raise URLParseError('invalid host %r in url: %r'
+                               % (au_gs['bad_host'], text))
 
         userinfo = au_gs['userinfo'] or u''
 
