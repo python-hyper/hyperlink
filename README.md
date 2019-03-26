@@ -32,10 +32,10 @@ Then, hyperlink away!
 ```python
 from hyperlink import URL
 
-url = URL.from_text('http://github.com/mahmoud/hyperlink?utm_source=README')
-utm_source = url.get('utm_source')
-better_url = url.replace(scheme='https')
-user_url = better_url.click('..')
+url = URL.from_text(u'http://github.com/python-hyper/hyperlink?utm_source=README')
+utm_source = url.get(u'utm_source')
+better_url = url.replace(scheme=u'https', port=443)
+org_url = better_url.click(u'.')
 ```
 
 See the full API docs on [Read the Docs][docs].

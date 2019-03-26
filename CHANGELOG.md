@@ -2,12 +2,38 @@
 
 ## dev (not yet released)
 
+## 18.0.0
+
+*(February 25, 2018)*
+
+Maybe the biggest release since the original. Big thanks to @glyph,
+@wsanchez, @Julian, @wbolster, and of course, @markrwilliams, for all
+the reports, reviews, and other contributions.
+
+* When passed to `str()` URLs now stringify to usable URL
+  strings. (See #49)
+* Switched off of Python's built-in IDNA facilities to using the
+  [idna](https://pypi.python.org/pypi/idna) package. Not only is it
+  much more modern, it's also much more strict and correct in its
+  output. (See #19 and #56)
+* Added new `DecodedURL` type with almost-identical API to the normal
+  `URL`, except that it automatically handles reserved characters in
+  argument values passed to its methods. (See #6, #11, #44)
+* Added top-level `parse()` convenience function that now represents
+  the main entrypoint to hyperlink.
+* Accept dictionaries as ‘query=’ arguments, in addition to
+  sequences of tuples (see #50)
+* `URL.child()` will no longer fail when child gets no segments (#42 and #43)
+* `URL.normalize()` now supports encoding stray/unmatched `%` characters
+  in character-encoded fields (userinfo, path, query string, fragment)
+  (see #61, #62)
+
 ## 17.3.1
 
 *(August 19, 2017)*
 
 * Add `URL.normalize()` method, which applies five normalizations from
-  RFC 3986 (sections 2.3, 2.1, 3.2.2, 6.2.2.3, 6.2.3). See the odcs
+  RFC 3986 (sections 2.3, 2.1, 3.2.2, 6.2.2.3, 6.2.3). See [the docs](http://hyperlink.readthedocs.io/en/latest/api.html#hyperlink.URL.normalize)
   for more details.
 * Enable `URL.click()` to accept a URL object as a target.
 

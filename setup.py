@@ -11,7 +11,7 @@ from setuptools import setup
 
 
 __author__ = 'Mahmoud Hashemi and Glyph Lefkowitz'
-__version__ = '17.3.2dev'
+__version__ = '18.0.1dev'
 __contact__ = 'mahmoud@hatnote.com'
 __url__ = 'https://github.com/python-hyper/hyperlink'
 __license__ = 'MIT'
@@ -19,7 +19,7 @@ __license__ = 'MIT'
 
 setup(name='hyperlink',
       version=__version__,
-      description="A featureful, correct URL for Python.",
+      description="A featureful, immutable, and correct URL for Python.",
       long_description=__doc__,
       author=__author__,
       author_email=__contact__,
@@ -29,6 +29,7 @@ setup(name='hyperlink',
       zip_safe=False,
       license=__license__,
       platforms='any',
+      install_requires=['idna>=2.5'],
       classifiers=[
           'Topic :: Utilities',
           'Intended Audience :: Developers',

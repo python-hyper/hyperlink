@@ -10,7 +10,7 @@ hyperlink
 URLs. Based on `RFC 3986`_ and `RFC 3987`_, the Hyperlink URL balances
 simplicity and correctness for both :ref:`URIs and IRIs <uris_and_iris>`.
 
-Hyperlink is tested against Python 2.7, 3.4, 3.5, and PyPy.
+Hyperlink is tested against Python 2.7, 3.4, 3.5, 3.6, and PyPy.
 
 For an introduction to the hyperlink library, its background, and URLs
 in general, see `this talk from PyConWeb 2017`_ (and `the accompanying
@@ -39,15 +39,15 @@ Then, URLs are just an import away::
 
   from hyperlink import URL
 
-  url = URL.from_text('http://github.com/mahmoud/hyperlink?utm_souce=readthedocs')
+  url = URL.from_text(u'http://github.com/python-hyper/hyperlink?utm_source=readthedocs')
 
-  better_url = url.replace(scheme='https')
-  user_url = better_url.click('..')
+  better_url = url.replace(scheme=u'https', port=443)
+  org_url = better_url.click(u'.')
 
-  print(user_url.to_text())
-  # prints: https://github.com/mahmoud
+  print(org_url.to_text())
+  # prints: https://github.com/python-hyper/
 
-  print(user_url.get('utm_source'))
+  print(better_url.get(u'utm_source'))
   # prints: readthedocs
 
 See :ref:`the API docs <hyperlink_api>` for more usage examples.
@@ -55,13 +55,13 @@ See :ref:`the API docs <hyperlink_api>` for more usage examples.
 Gaps
 ----
 
-Found something missing in hyperlink? `Pull Requests`_ and `Issues`_ weclome!
+Found something missing in hyperlink? `Pull Requests`_ and `Issues`_ are welcome!
 
-.. _Pull Requests: https://github.com/mahmoud/python-hyper/pulls
-.. _Issues: https://github.com/mahmoud/python-hyper/issues
+.. _Pull Requests: https://github.com/python-hyper/hyperlink/pulls
+.. _Issues: https://github.com/python-hyper/hyperlink/issues
 
-Section listing
----------------
+Table of Contents
+-----------------
 
 .. toctree::
    :maxdepth: 2
