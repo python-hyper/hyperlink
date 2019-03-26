@@ -1560,7 +1560,7 @@ class URL(object):
         """
         return [value for (key, value) in self.query if name == key]
 
-    def remove(self, name):
+    def remove(self, name, value=_UNSET):
         """Make a new :class:`URL` instance with all occurrences of the query
         parameter *name* removed. No exception is raised if the
         parameter is not already set.
@@ -1572,8 +1572,11 @@ class URL(object):
             URL: A new :class:`URL` instance with the parameter removed.
 
         """
-        return self.replace(query=((k, v) for (k, v) in self.query
-                                   if k != name))
+        if value is _UNSET:
+            nq = [(k, v) for (k, v) in self.query if k != name]
+        else:
+            nq = [(k, v) for (k, v) in self.query if not (k == name and v == value)]
+        return self.replace(query=nq)
 
 
 EncodedURL = URL  # An alias better describing what the URL really is

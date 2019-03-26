@@ -535,6 +535,13 @@ class TestURL(HyperlinkTestCase):
             URL.from_text(u"https://example.com/a/b/?bar=2")
         )
 
+        self.assertEqual(
+            url.remove(name=u"foo", value=u"1"),
+            URL.from_text(u"https://example.com/a/b/?bar=2&foo=3")
+        )
+
+
+
     def test_parseEqualSignInParamValue(self):
         """
         Every C{=}-sign after the first in a query parameter is simply included
