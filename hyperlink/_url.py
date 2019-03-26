@@ -1562,15 +1562,18 @@ class URL(object):
 
     def remove(self, name, value=_UNSET):
         """Make a new :class:`URL` instance with all occurrences of the query
-        parameter *name* removed. No exception is raised if the
+        parameter *name* removed, or, if *value* is set, parameters
+        matching *name* and *value*. No exception is raised if the
         parameter is not already set.
 
         Args:
             name (unicode): The name of the query parameter to remove.
+            value (unicode): Optional value to additionally filter
+               on. Setting this removes query parameters which match
+               both name and value.
 
         Returns:
             URL: A new :class:`URL` instance with the parameter removed.
-
         """
         if value is _UNSET:
             nq = [(k, v) for (k, v) in self.query if k != name]
