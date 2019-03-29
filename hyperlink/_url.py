@@ -1802,10 +1802,22 @@ class DecodedURL(object):
         q[idx:idx] = [(name, value)]
         return self.replace(query=q)
 
-    def remove(self, name):
+    def remove(self, name, value=_UNSET, limit=None):
         "Return a new DecodedURL with query parameter *name* removed."
-        return self.replace(query=((k, v) for (k, v) in self.query
-                                   if k != name))
+        if limit is None:
+            if value is _UNSET:
+                nq = [(k, v) for (k, v) in self.query if k != name]
+            else:
+                nq = [(k, v) for (k, v) in self.query if not (k == name and v == value)]
+        else:
+            nq, removed_count = [], 0
+            for k, v in self.query:
+                if k != name and (value is _UNSET or v != value) or removed_count >= limit:
+                    nq.append((k, v))
+                else:
+                    removed_count += 1
+
+        return self.replace(query=nq)
 
     def __repr__(self):
         cn = self.__class__.__name__

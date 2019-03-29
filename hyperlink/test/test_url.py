@@ -527,7 +527,7 @@ class TestURL(HyperlinkTestCase):
 
     def test_queryRemove(self):
         """
-        L{URL.remove} removes all instances of a query parameter.
+        L{URL.remove} removes instances of a query parameter.
         """
         url = URL.from_text(u"https://example.com/a/b/?foo=1&bar=2&foo=3")
         self.assertEqual(
