@@ -1571,6 +1571,7 @@ class URL(object):
             value (unicode): Optional value to additionally filter
                on. Setting this removes query parameters which match
                both name and value.
+            limit (int): Optional maximum number of parameters to remove.
 
         Returns:
             URL: A new :class:`URL` instance with the parameter removed.
@@ -1803,7 +1804,11 @@ class DecodedURL(object):
         return self.replace(query=q)
 
     def remove(self, name, value=_UNSET, limit=None):
-        "Return a new DecodedURL with query parameter *name* removed."
+        """Return a new DecodedURL with query parameter *name* removed.
+
+        Optionally also filter for *value*, as well as cap the number
+        of parameters removed with *limit*.
+        """
         if limit is None:
             if value is _UNSET:
                 nq = [(k, v) for (k, v) in self.query if k != name]
