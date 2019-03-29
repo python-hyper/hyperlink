@@ -1560,7 +1560,7 @@ class URL(object):
         """
         return [value for (key, value) in self.query if name == key]
 
-    def remove(self, name, value=_UNSET):
+    def remove(self, name, value=_UNSET, limit=None):
         """Make a new :class:`URL` instance with all occurrences of the query
         parameter *name* removed, or, if *value* is set, parameters
         matching *name* and *value*. No exception is raised if the
@@ -1575,10 +1575,19 @@ class URL(object):
         Returns:
             URL: A new :class:`URL` instance with the parameter removed.
         """
-        if value is _UNSET:
-            nq = [(k, v) for (k, v) in self.query if k != name]
+        if limit is None:
+            if value is _UNSET:
+                nq = [(k, v) for (k, v) in self.query if k != name]
+            else:
+                nq = [(k, v) for (k, v) in self.query if not (k == name and v == value)]
         else:
-            nq = [(k, v) for (k, v) in self.query if not (k == name and v == value)]
+            nq, removed_count = [], 0
+            for k, v in self.query:
+                if k != name and (value is _UNSET or v != value) or removed_count >= limit:
+                    nq.append((k, v))
+                else:
+                    removed_count += 1
+
         return self.replace(query=nq)
 
 
