@@ -169,8 +169,10 @@ _SCHEMELESS_PATH_SAFE = _PATH_SAFE - set(':')
 _SCHEMELESS_PATH_DELIMS = _ALL_DELIMS - _SCHEMELESS_PATH_SAFE
 _FRAGMENT_SAFE = _UNRESERVED_CHARS | _PATH_SAFE | set(u'/?')
 _FRAGMENT_DELIMS = _ALL_DELIMS - _FRAGMENT_SAFE
-_QUERY_SAFE = _UNRESERVED_CHARS | _FRAGMENT_SAFE - set(u'&=+')
-_QUERY_DELIMS = _ALL_DELIMS - _QUERY_SAFE
+_QUERY_VALUE_SAFE = _UNRESERVED_CHARS | _FRAGMENT_SAFE - set(u'&+')
+_QUERY_VALUE_DELIMS = _ALL_DELIMS - _QUERY_VALUE_SAFE
+_QUERY_KEY_SAFE = _UNRESERVED_CHARS | _QUERY_VALUE_SAFE - set(u'=')
+_QUERY_KEY_DELIMS = _ALL_DELIMS - _QUERY_KEY_SAFE
 
 
 def _make_decode_map(delims, allow_percent=False):
@@ -204,8 +206,10 @@ _USERINFO_DECODE_MAP = _make_decode_map(_USERINFO_DELIMS)
 _PATH_PART_QUOTE_MAP = _make_quote_map(_PATH_SAFE)
 _SCHEMELESS_PATH_PART_QUOTE_MAP = _make_quote_map(_SCHEMELESS_PATH_SAFE)
 _PATH_DECODE_MAP = _make_decode_map(_PATH_DELIMS)
-_QUERY_PART_QUOTE_MAP = _make_quote_map(_QUERY_SAFE)
-_QUERY_DECODE_MAP = _make_decode_map(_QUERY_DELIMS)
+_QUERY_KEY_QUOTE_MAP = _make_quote_map(_QUERY_KEY_SAFE)
+_QUERY_KEY_DECODE_MAP = _make_decode_map(_QUERY_KEY_DELIMS)
+_QUERY_VALUE_QUOTE_MAP = _make_quote_map(_QUERY_VALUE_SAFE)
+_QUERY_VALUE_DECODE_MAP = _make_decode_map(_QUERY_VALUE_DELIMS)
 _FRAGMENT_QUOTE_MAP = _make_quote_map(_FRAGMENT_SAFE)
 _FRAGMENT_DECODE_MAP = _make_decode_map(_FRAGMENT_DELIMS)
 _UNRESERVED_QUOTE_MAP = _make_quote_map(_UNRESERVED_CHARS)
@@ -290,15 +294,26 @@ def _encode_path_parts(text_parts, rooted=False, has_scheme=True,
     return tuple(encoded_parts)
 
 
-def _encode_query_part(text, maximal=True):
+def _encode_query_key(text, maximal=True):
     """
     Percent-encode a single query string key or value.
     """
     if maximal:
         bytestr = normalize('NFC', text).encode('utf8')
-        return u''.join([_QUERY_PART_QUOTE_MAP[b] for b in bytestr])
-    return u''.join([_QUERY_PART_QUOTE_MAP[t] if t in _QUERY_DELIMS else t
+        return u''.join([_QUERY_KEY_QUOTE_MAP[b] for b in bytestr])
+    return u''.join([_QUERY_KEY_QUOTE_MAP[t] if t in _QUERY_KEY_DELIMS else t
                      for t in text])
+
+
+def _encode_query_value(text, maximal=True):
+    """
+    Percent-encode a single query string key or value.
+    """
+    if maximal:
+        bytestr = normalize('NFC', text).encode('utf8')
+        return u''.join([_QUERY_VALUE_QUOTE_MAP[b] for b in bytestr])
+    return u''.join([_QUERY_VALUE_QUOTE_MAP[t]
+                     if t in _QUERY_VALUE_DELIMS else t for t in text])
 
 
 def _encode_fragment_part(text, maximal=True):
@@ -498,10 +513,16 @@ def _decode_path_part(text, normalize_case=False, encode_stray_percents=False):
                            _decode_map=_PATH_DECODE_MAP)
 
 
-def _decode_query_part(text, normalize_case=False, encode_stray_percents=False):
+def _decode_query_key(text, normalize_case=False, encode_stray_percents=False):
     return _percent_decode(text, normalize_case=normalize_case,
                            encode_stray_percents=encode_stray_percents,
-                           _decode_map=_QUERY_DECODE_MAP)
+                           _decode_map=_QUERY_KEY_DECODE_MAP)
+
+
+def _decode_query_value(text, normalize_case=False, encode_stray_percents=False):
+    return _percent_decode(text, normalize_case=normalize_case,
+                           encode_stray_percents=encode_stray_percents,
+                           _decode_map=_QUERY_VALUE_DECODE_MAP)
 
 
 def _decode_fragment_part(text, normalize_case=False, encode_stray_percents=False):
@@ -1341,9 +1362,9 @@ class URL(object):
             userinfo=new_userinfo,
             host=new_host,
             path=new_path,
-            query=tuple([tuple(_encode_query_part(x, maximal=True)
-                               if x is not None else None
-                               for x in (k, v))
+            query=tuple([(_encode_query_key(k, maximal=True),
+                          _encode_query_value(v, maximal=True)
+                          if v is not None else None)
                          for k, v in self.query]),
             fragment=_encode_fragment_part(self.fragment, maximal=True)
         )
@@ -1379,9 +1400,9 @@ class URL(object):
                             host=host_text,
                             path=[_decode_path_part(segment)
                                   for segment in self.path],
-                            query=[tuple(_decode_query_part(x)
-                                         if x is not None else None
-                                         for x in (k, v))
+                            query=[(_decode_query_key(k),
+                                    _decode_query_value(v)
+                                    if v is not None else None)
                                    for k, v in self.query],
                             fragment=_decode_fragment_part(self.fragment))
 
@@ -1417,10 +1438,14 @@ class URL(object):
                                   has_scheme=bool(scheme),
                                   has_authority=bool(authority),
                                   maximal=False)
-        query_string = u'&'.join(
-            u'='.join((_encode_query_part(x, maximal=False)
-                       for x in ([k] if v is None else [k, v])))
-            for (k, v) in self.query)
+        query_parts = []
+        for k, v in self.query:
+            if v is None:
+                query_parts.append(_encode_query_key(k, maximal=False))
+            else:
+                query_parts.append(u'='.join((_encode_query_key(k, maximal=False),
+                                              _encode_query_value(v, maximal=False))))
+        query_string = u'&'.join(query_parts)
 
         fragment = self.fragment
 
