@@ -1608,11 +1608,12 @@ class URL(object):
                 nq = [(k, v) for (k, v) in self.query if not (k == name and v == value)]
         else:
             nq, removed_count = [], 0
+
             for k, v in self.query:
-                if k != name and (value is _UNSET or v != value) or removed_count >= limit:
-                    nq.append((k, v))
+                if k == name and (value is _UNSET or v == value) and removed_count < limit:
+                    removed_count += 1  # drop it
                 else:
-                    removed_count += 1
+                    nq.append((k, v))  # keep it
 
         return self.replace(query=nq)
 
@@ -1842,10 +1843,10 @@ class DecodedURL(object):
         else:
             nq, removed_count = [], 0
             for k, v in self.query:
-                if k != name and (value is _UNSET or v != value) or removed_count >= limit:
-                    nq.append((k, v))
+                if k == name and (value is _UNSET or v == value) and removed_count < limit:
+                    removed_count += 1  # drop it
                 else:
-                    removed_count += 1
+                    nq.append((k, v))  # keep it
 
         return self.replace(query=nq)
 
