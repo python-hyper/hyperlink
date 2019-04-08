@@ -1586,7 +1586,7 @@ class URL(object):
         return [value for (key, value) in self.query if name == key]
 
     def remove(self, name, value=_UNSET, limit=None):
-        """Make a new :class:`URL` instance with all occurrences of the query
+        """Make a new :class:`URL` instance with occurrences of the query
         parameter *name* removed, or, if *value* is set, parameters
         matching *name* and *value*. No exception is raised if the
         parameter is not already set.
