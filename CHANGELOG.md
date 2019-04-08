@@ -2,6 +2,19 @@
 
 ## dev (not yet released)
 
+## 19.0.0
+
+*(April 7, 2019)*
+
+A queryparameter-centric release, with two small enhancements:
+
+* "equals sign" characters in uery parameter values are no longer
+  escaped. (see
+  [#39](https://github.com/python-hyper/hyperlink/pull/39))
+* `URL.remove()` now accepts *value* and *limit* parameters, allowing
+  for removal of specific name-value pairs, as well as limiting the
+  number of removals. (see [#71](https://github.com/python-hyper/hyperlink/pull/71))
+
 ## 18.0.0
 
 *(February 25, 2018)*
