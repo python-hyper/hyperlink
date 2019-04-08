@@ -1585,20 +1585,37 @@ class URL(object):
         """
         return [value for (key, value) in self.query if name == key]
 
-    def remove(self, name):
-        """Make a new :class:`URL` instance with all occurrences of the query
-        parameter *name* removed. No exception is raised if the
+    def remove(self, name, value=_UNSET, limit=None):
+        """Make a new :class:`URL` instance with occurrences of the query
+        parameter *name* removed, or, if *value* is set, parameters
+        matching *name* and *value*. No exception is raised if the
         parameter is not already set.
 
         Args:
             name (unicode): The name of the query parameter to remove.
+            value (unicode): Optional value to additionally filter
+               on. Setting this removes query parameters which match
+               both name and value.
+            limit (int): Optional maximum number of parameters to remove.
 
         Returns:
             URL: A new :class:`URL` instance with the parameter removed.
-
         """
-        return self.replace(query=((k, v) for (k, v) in self.query
-                                   if k != name))
+        if limit is None:
+            if value is _UNSET:
+                nq = [(k, v) for (k, v) in self.query if k != name]
+            else:
+                nq = [(k, v) for (k, v) in self.query if not (k == name and v == value)]
+        else:
+            nq, removed_count = [], 0
+
+            for k, v in self.query:
+                if k == name and (value is _UNSET or v == value) and removed_count < limit:
+                    removed_count += 1  # drop it
+                else:
+                    nq.append((k, v))  # keep it
+
+        return self.replace(query=nq)
 
 
 EncodedURL = URL  # An alias better describing what the URL really is
@@ -1812,10 +1829,26 @@ class DecodedURL(object):
         q[idx:idx] = [(name, value)]
         return self.replace(query=q)
 
-    def remove(self, name):
-        "Return a new DecodedURL with query parameter *name* removed."
-        return self.replace(query=((k, v) for (k, v) in self.query
-                                   if k != name))
+    def remove(self, name, value=_UNSET, limit=None):
+        """Return a new DecodedURL with query parameter *name* removed.
+
+        Optionally also filter for *value*, as well as cap the number
+        of parameters removed with *limit*.
+        """
+        if limit is None:
+            if value is _UNSET:
+                nq = [(k, v) for (k, v) in self.query if k != name]
+            else:
+                nq = [(k, v) for (k, v) in self.query if not (k == name and v == value)]
+        else:
+            nq, removed_count = [], 0
+            for k, v in self.query:
+                if k == name and (value is _UNSET or v == value) and removed_count < limit:
+                    removed_count += 1  # drop it
+                else:
+                    nq.append((k, v))  # keep it
+
+        return self.replace(query=nq)
 
     def __repr__(self):
         cn = self.__class__.__name__

@@ -88,6 +88,12 @@ class TestURL(HyperlinkTestCase):
 
         assert durl.set('arg', 'd').get('arg') == ['d']
 
+        durl = DecodedURL.from_text(u"https://example.com/a/b/?fóó=1&bar=2&fóó=3")
+        assert durl.remove("fóó") == DecodedURL.from_text("https://example.com/a/b/?bar=2")
+        assert durl.remove("fóó", value="1") == DecodedURL.from_text("https://example.com/a/b/?bar=2&fóó=3")
+        assert durl.remove("fóó", limit=1) == DecodedURL.from_text("https://example.com/a/b/?bar=2&fóó=3")
+        assert durl.remove("fóó", value="1", limit=0) == DecodedURL.from_text("https://example.com/a/b/?fóó=1&bar=2&fóó=3")
+
     def test_equality_and_hashability(self):
         durl = DecodedURL.from_text(TOTAL_URL)
         durl2 = DecodedURL.from_text(TOTAL_URL)
