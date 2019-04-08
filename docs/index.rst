@@ -4,7 +4,7 @@ hyperlink
 
 *Cool URLs that don't change.*
 
-|release| |calver|
+|release| |calver| |changelog|
 
 **Hyperlink** provides a pure-Python implementation of immutable
 URLs. Based on `RFC 3986`_ and `RFC 3987`_, the Hyperlink URL balances
@@ -25,6 +25,8 @@ slides`_).
 
 .. |calver| image:: https://img.shields.io/badge/calver-YY.MINOR.MICRO-22bfda.svg
    :target: http://calver.org
+.. |changelog| image:: https://img.shields.io/badge/CHANGELOG-UPDATED-b84ad6.svg
+   :target: https://github.com/python-hyper/hyperlink/blob/master/CHANGELOG.md
 
 
 Installation and Integration
