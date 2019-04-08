@@ -6,9 +6,9 @@
 
 *(April 7, 2019)*
 
-A queryparameter-centric release, with two small enhancements:
+A query parameter-centric release, with two enhancements:
 
-* "equals sign" characters in uery parameter values are no longer
+* "equals sign" characters in query parameter values are no longer
   escaped. (see
   [#39](https://github.com/python-hyper/hyperlink/pull/39))
 * `URL.remove()` now accepts *value* and *limit* parameters, allowing
