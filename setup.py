@@ -2,7 +2,7 @@
 are you've used several just to read this text.
 
 Hyperlink is a featureful, pure-Python implementation of the URL, with
-an emphasis on correctness. BSD licensed.
+an emphasis on correctness. MIT licensed.
 
 See the docs at http://hyperlink.readthedocs.io.
 """
@@ -40,7 +40,8 @@ setup(name='hyperlink',
           'Programming Language :: Python :: 3.4',
           'Programming Language :: Python :: 3.5',
           'Programming Language :: Python :: 3.6',
-          'Programming Language :: Python :: Implementation :: PyPy', ]
+          'Programming Language :: Python :: Implementation :: PyPy',
+          'License :: OSI Approved :: MIT License', ]
       )
 
 """
