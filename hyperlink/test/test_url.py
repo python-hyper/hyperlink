@@ -947,65 +947,65 @@ class TestURL(HyperlinkTestCase):
 
     def test_idna(self):
         u1 = URL.from_text('http://bücher.ch')
-        self.assertEquals(u1.host, 'bücher.ch')
-        self.assertEquals(u1.to_text(), 'http://bücher.ch')
-        self.assertEquals(u1.to_uri().to_text(), 'http://xn--bcher-kva.ch')
+        self.assertEqual(u1.host, 'bücher.ch')
+        self.assertEqual(u1.to_text(), 'http://bücher.ch')
+        self.assertEqual(u1.to_uri().to_text(), 'http://xn--bcher-kva.ch')
 
         u2 = URL.from_text('https://xn--bcher-kva.ch')
-        self.assertEquals(u2.host, 'xn--bcher-kva.ch')
-        self.assertEquals(u2.to_text(), 'https://xn--bcher-kva.ch')
-        self.assertEquals(u2.to_iri().to_text(), u'https://bücher.ch')
+        self.assertEqual(u2.host, 'xn--bcher-kva.ch')
+        self.assertEqual(u2.to_text(), 'https://xn--bcher-kva.ch')
+        self.assertEqual(u2.to_iri().to_text(), u'https://bücher.ch')
 
     def test_netloc_slashes(self):
         # basic sanity checks
         url = URL.from_text('mailto:mahmoud@hatnote.com')
-        self.assertEquals(url.scheme, 'mailto')
-        self.assertEquals(url.to_text(), 'mailto:mahmoud@hatnote.com')
+        self.assertEqual(url.scheme, 'mailto')
+        self.assertEqual(url.to_text(), 'mailto:mahmoud@hatnote.com')
 
         url = URL.from_text('http://hatnote.com')
-        self.assertEquals(url.scheme, 'http')
-        self.assertEquals(url.to_text(), 'http://hatnote.com')
+        self.assertEqual(url.scheme, 'http')
+        self.assertEqual(url.to_text(), 'http://hatnote.com')
 
         # test that unrecognized schemes stay consistent with '//'
         url = URL.from_text('newscheme:a:b:c')
-        self.assertEquals(url.scheme, 'newscheme')
-        self.assertEquals(url.to_text(), 'newscheme:a:b:c')
+        self.assertEqual(url.scheme, 'newscheme')
+        self.assertEqual(url.to_text(), 'newscheme:a:b:c')
 
         url = URL.from_text('newerscheme://a/b/c')
-        self.assertEquals(url.scheme, 'newerscheme')
-        self.assertEquals(url.to_text(), 'newerscheme://a/b/c')
+        self.assertEqual(url.scheme, 'newerscheme')
+        self.assertEqual(url.to_text(), 'newerscheme://a/b/c')
 
         # test that reasonable guesses are made
         url = URL.from_text('git+ftp://gitstub.biz/glyph/lefkowitz')
-        self.assertEquals(url.scheme, 'git+ftp')
-        self.assertEquals(url.to_text(),
+        self.assertEqual(url.scheme, 'git+ftp')
+        self.assertEqual(url.to_text(),
                           'git+ftp://gitstub.biz/glyph/lefkowitz')
 
         url = URL.from_text('what+mailto:freerealestate@enotuniq.org')
-        self.assertEquals(url.scheme, 'what+mailto')
-        self.assertEquals(url.to_text(),
+        self.assertEqual(url.scheme, 'what+mailto')
+        self.assertEqual(url.to_text(),
                           'what+mailto:freerealestate@enotuniq.org')
 
         url = URL(scheme='ztp', path=('x', 'y', 'z'), rooted=True)
-        self.assertEquals(url.to_text(), 'ztp:/x/y/z')
+        self.assertEqual(url.to_text(), 'ztp:/x/y/z')
 
         # also works when the input doesn't include '//'
         url = URL(scheme='git+ftp', path=('x', 'y', 'z' ,''),
                   rooted=True, uses_netloc=True)
         # broken bc urlunsplit
-        self.assertEquals(url.to_text(), 'git+ftp:///x/y/z/')
+        self.assertEqual(url.to_text(), 'git+ftp:///x/y/z/')
 
         # really why would this ever come up but ok
         url = URL.from_text('file:///path/to/heck')
         url2 = url.replace(scheme='mailto')
-        self.assertEquals(url2.to_text(), 'mailto:/path/to/heck')
+        self.assertEqual(url2.to_text(), 'mailto:/path/to/heck')
 
         url_text = 'unregisteredscheme:///a/b/c'
         url = URL.from_text(url_text)
         no_netloc_url = url.replace(uses_netloc=False)
-        self.assertEquals(no_netloc_url.to_text(), 'unregisteredscheme:/a/b/c')
+        self.assertEqual(no_netloc_url.to_text(), 'unregisteredscheme:/a/b/c')
         netloc_url = url.replace(uses_netloc=True)
-        self.assertEquals(netloc_url.to_text(), url_text)
+        self.assertEqual(netloc_url.to_text(), url_text)
 
         return
 
