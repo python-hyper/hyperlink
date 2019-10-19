@@ -7,10 +7,10 @@
 environment:
   matrix:
     - PYTHON: "C:\\Python27-x64"
-      TOX_ENV: "py27,codecov-py27"
+      TOX_ENV: "test-py27,codecov-py27"
 
     - PYTHON: "C:\\Python36-x64"
-      TOX_ENV: "py36,codecov-py36"
+      TOX_ENV: "test-py36,codecov-py36"
 
 
 init:
