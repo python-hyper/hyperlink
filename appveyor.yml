@@ -2,18 +2,25 @@
 # http://www.appveyor.com/docs/installed-software#python
 
 # This configuration based on:
-# https://github.com/audreyr/cookiecutter/commit/3c4685f536afda3be93da3fe3039cec0ab0d60a3
+# https://github.com/cookiecutter/cookiecutter/blob/5e65edf4c340993f462ddeaf44f99eb6f9da66f9/appveyor.yml
 
 environment:
   matrix:
     - PYTHON: "C:\\Python27-x64"
-      TOX_ENV: "test-py27,codecov-py27"
+      TOX_ENV: "test-py27,codecov"
+
+    - PYTHON: "C:\\Python35-x64"
+      TOX_ENV: "test-py35,codecov"
 
     - PYTHON: "C:\\Python36-x64"
-      TOX_ENV: "test-py36,codecov-py36"
+      TOX_ENV: "test-py36,codecov"
+
+    - PYTHON: "C:\\Python37-x64"
+      TOX_ENV: "test-py37,codecov"
 
 
 init:
+  - set OS=WINDOWS
   - set PATH=%PYTHON%;%PYTHON%\Scripts;%PATH%
   - "git config --system http.sslcainfo \"C:\\Program Files\\Git\\mingw64\\ssl\\certs\\ca-bundle.crt\""
   - "%PYTHON%/python -V"
@@ -21,7 +28,7 @@ init:
 
 install:
   - "%PYTHON%/Scripts/easy_install -U pip"
-  - "%PYTHON%/Scripts/pip install -U --force-reinstall tox wheel"
+  - "%PYTHON%/Scripts/pip install -U --force-reinstall tox virtualenv wheel"
 
 
 build: false  # Not a C# project, build stuff at the test step instead.
@@ -29,18 +36,5 @@ build: false  # Not a C# project, build stuff at the test step instead.
 test_script:
   - "%PYTHON%/Scripts/tox -e %TOX_ENV%"
 
-after_test:
-  - "%PYTHON%/python setup.py bdist_wheel"
-  - ps: "ls dist"
-
-on_success:
-    # Report coverage results to codecov.io
-    # and export tox environment variables
-    - set OS=WINDOWS
-    - "%PYTHON%/Scripts/tox -e codecov"
-
 artifacts:
   - path: dist\*
-
-#on_success:
-#  - TODO: upload the content of dist/*.whl to a public wheelhouse
