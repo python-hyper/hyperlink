@@ -7,10 +7,10 @@
 environment:
   matrix:
     - PYTHON: "C:\\Python27-x64"
-      TOX_ENV: "py27"
+      TOX_ENV: "py27,codecov-py27"
 
     - PYTHON: "C:\\Python36-x64"
-      TOX_ENV: "py36"
+      TOX_ENV: "py36,codecov-py36"
 
 
 init:
@@ -36,12 +36,8 @@ after_test:
 on_success:
     # Report coverage results to codecov.io
     # and export tox environment variables
-    - "%PYTHON%/Scripts/tox -e coverage-report"
-    - "%PYTHON%/Scripts/pip install codecov coverage"
-    - set COVERAGE_FILE=.tox/.coverage
-    - "%PYTHON%/Scripts/coverage xml"
     - set OS=WINDOWS
-    - "%PYTHON%/Scripts/codecov -f coverage.xml -e TOX_ENV OS"
+    - "%PYTHON%/Scripts/tox -e codecov"
 
 artifacts:
   - path: dist\*
