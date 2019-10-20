@@ -9,31 +9,26 @@ language: python
 matrix:
   include:
     - python: "2.7"
-      env: TOXENV=py27
+      env: TOXENV=test-py27,codecov
     - python: "3.4"
-      env: TOXENV=py34
+      env: TOXENV=test-py34,codecov
     - python: "3.5"
-      env: TOXENV=py35
+      env: TOXENV=test-py35,codecov
     - python: "3.6"
-      env: TOXENV=py36
+      env: TOXENV=test-py36,codecov
+    - python: "3.7"
+      env: TOXENV=test-py37,codecov
     - python: "pypy"
-      env: TOXENV=pypy
+      env: TOXENV=test-pypy,codecov
+    - python: "pypy3"
+      env: TOXENV=test-pypy3,codecov
     - python: "2.7"
-      env: TOXENV=packaging
+      env: TOXENV=packaging-py27
 
 
 install:
-  - "pip install -r requirements-test.txt"
+  - pip install tox
+
 
 script:
   - tox
-
-
-before_install:
-  - pip install codecov coverage
-
-
-after_success:
-  - tox -e coverage-report
-  - COVERAGE_FILE=.tox/.coverage coverage xml
-  - codecov -f coverage.xml

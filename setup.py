@@ -7,7 +7,7 @@ an emphasis on correctness. MIT licensed.
 See the docs at http://hyperlink.readthedocs.io.
 """
 
-from setuptools import setup
+from setuptools import find_packages, setup
 
 
 __author__ = 'Mahmoud Hashemi and Glyph Lefkowitz'
@@ -24,7 +24,8 @@ setup(name='hyperlink',
       author=__author__,
       author_email=__contact__,
       url=__url__,
-      packages=['hyperlink', 'hyperlink.test'],
+      packages=find_packages(where="src"),
+      package_dir={"": "src"},
       include_package_data=True,
       zip_safe=False,
       license=__license__,
