@@ -37,7 +37,7 @@ if inet_pton is None:
     # this code only applies on Windows Python 2.7
     import ctypes
 
-    class _sockaddr(ctypes.Structure):  # noqa: N801
+    class SockAddr(ctypes.Structure):
         _fields_ = [("sa_family", ctypes.c_short),
                     ("__pad1", ctypes.c_ushort),
                     ("ipv4_addr", ctypes.c_byte * 4),
@@ -48,7 +48,7 @@ if inet_pton is None:
     WSAAddressToStringA = ctypes.windll.ws2_32.WSAAddressToStringA
 
     def inet_pton(address_family, ip_string):
-        addr = _sockaddr()
+        addr = SockAddr()
         ip_string = ip_string.encode('ascii')
         addr.sa_family = address_family
         addr_size = ctypes.c_int(ctypes.sizeof(addr))
