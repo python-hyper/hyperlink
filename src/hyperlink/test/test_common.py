@@ -1,7 +1,9 @@
 """
 Tests for hyperlink.test.common
 """
+
 from unittest import TestCase
+
 from .common import HyperlinkTestCase
 
 

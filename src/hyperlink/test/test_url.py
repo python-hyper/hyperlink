@@ -5,12 +5,12 @@
 
 from __future__ import unicode_literals
 
-import sys
 import socket
+import sys
 
 from .common import HyperlinkTestCase
 from .. import URL, URLParseError
-from .._url import inet_pton, SCHEME_PORT_MAP
+from .._url import SCHEME_PORT_MAP, inet_pton
 
 
 PY2 = (sys.version_info[0] == 2)

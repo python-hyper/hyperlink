@@ -15,21 +15,21 @@ As seen here, the API revolves around the lightweight and immutable
 :class:`URL` type, documented below.
 """  # noqa: E501
 
-import re
-import sys
-import string
-import socket
-from unicodedata import normalize
-try:
-    from socket import inet_pton
-except ImportError:
-    inet_pton = None  # defined below
 try:
     from collections.abc import Mapping
 except ImportError:  # Python 2
     from collections import Mapping
+import re
+import socket
+try:
+    from socket import inet_pton
+except ImportError:
+    inet_pton = None  # defined below
+import string
+import sys
+from unicodedata import normalize
 
-from idna import encode as idna_encode, decode as idna_decode
+from idna import decode as idna_decode, encode as idna_encode
 
 
 if inet_pton is None:

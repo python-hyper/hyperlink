@@ -3,7 +3,8 @@
 from __future__ import unicode_literals
 
 from .common import HyperlinkTestCase
-from hyperlink import parse, EncodedURL, DecodedURL
+from .. import DecodedURL, EncodedURL, parse
+
 
 BASIC_URL = 'http://example.com/#'
 TOTAL_URL = (

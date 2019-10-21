@@ -1,16 +1,17 @@
-
-from ._url import (URL,
-                   parse,
-                   EncodedURL,
-                   DecodedURL,
-                   URLParseError,
-                   register_scheme)
+from ._url import (
+    DecodedURL,
+    EncodedURL,
+    URL,
+    URLParseError,
+    parse,
+    register_scheme,
+)
 
 __all__ = [
-    "URL",
-    "parse",
-    "EncodedURL",
     "DecodedURL",
+    "EncodedURL",
+    "URL",
     "URLParseError",
+    "parse",
     "register_scheme",
 ]

@@ -2,9 +2,10 @@
 
 from __future__ import unicode_literals
 
+from .common import HyperlinkTestCase
 from .. import DecodedURL
 from .._url import _percent_decode
-from .common import HyperlinkTestCase
+
 
 BASIC_URL = 'http://example.com/#'
 TOTAL_URL = (

@@ -2,9 +2,9 @@
 from __future__ import unicode_literals
 
 
-from .. import _url
 from .common import HyperlinkTestCase
-from .._url import register_scheme, URL
+from .. import _url
+from .._url import URL, register_scheme
 
 
 class TestSchemeRegistration(HyperlinkTestCase):
