@@ -7,7 +7,10 @@ from .._url import _percent_decode
 from .common import HyperlinkTestCase
 
 BASIC_URL = 'http://example.com/#'
-TOTAL_URL = "https://%75%73%65%72:%00%00%00%00@xn--bcher-kva.ch:8080/a/nice%20nice/./path/?zot=23%25&zut#frég"
+TOTAL_URL = (
+    "https://%75%73%65%72:%00%00%00%00@xn--bcher-kva.ch:8080/"
+    "a/nice%20nice/./path/?zot=23%25&zut#frég"
+)
 
 
 class TestURL(HyperlinkTestCase):
@@ -60,7 +63,10 @@ class TestURL(HyperlinkTestCase):
         durl2 = DecodedURL.from_text(TOTAL_URL, lazy=True)
         assert durl2 == durl2.encoded_url.get_decoded_url(lazy=True)
 
-        assert str(DecodedURL.from_text(BASIC_URL).child(' ')) == 'http://example.com/%20'
+        assert (
+            str(DecodedURL.from_text(BASIC_URL).child(' ')) ==
+            'http://example.com/%20'
+        )
 
         assert not (durl == 1)
         assert durl != 1
@@ -88,11 +94,25 @@ class TestURL(HyperlinkTestCase):
 
         assert durl.set('arg', 'd').get('arg') == ['d']
 
-        durl = DecodedURL.from_text(u"https://example.com/a/b/?fóó=1&bar=2&fóó=3")
-        assert durl.remove("fóó") == DecodedURL.from_text("https://example.com/a/b/?bar=2")
-        assert durl.remove("fóó", value="1") == DecodedURL.from_text("https://example.com/a/b/?bar=2&fóó=3")
-        assert durl.remove("fóó", limit=1) == DecodedURL.from_text("https://example.com/a/b/?bar=2&fóó=3")
-        assert durl.remove("fóó", value="1", limit=0) == DecodedURL.from_text("https://example.com/a/b/?fóó=1&bar=2&fóó=3")
+        durl = DecodedURL.from_text(
+            u"https://example.com/a/b/?fóó=1&bar=2&fóó=3"
+        )
+        assert (
+            durl.remove("fóó") ==
+            DecodedURL.from_text("https://example.com/a/b/?bar=2")
+        )
+        assert (
+            durl.remove("fóó", value="1") ==
+            DecodedURL.from_text("https://example.com/a/b/?bar=2&fóó=3")
+        )
+        assert (
+            durl.remove("fóó", limit=1) ==
+            DecodedURL.from_text("https://example.com/a/b/?bar=2&fóó=3")
+        )
+        assert (
+            durl.remove("fóó", value="1", limit=0) ==
+            DecodedURL.from_text("https://example.com/a/b/?fóó=1&bar=2&fóó=3")
+        )
 
     def test_equality_and_hashability(self):
         durl = DecodedURL.from_text(TOTAL_URL)
@@ -103,7 +123,7 @@ class TestURL(HyperlinkTestCase):
         assert durl == durl
         assert durl == durl2
         assert durl != burl
-        assert durl != None
+        assert durl is not None
         assert durl != durl._url
 
         durl_map = {}

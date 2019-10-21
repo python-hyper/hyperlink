@@ -10,9 +10,7 @@ import socket
 
 from .common import HyperlinkTestCase
 from .. import URL, URLParseError
-# automatically import the py27 windows implementation when appropriate
-from .. import _url
-from .._url import inet_pton, SCHEME_PORT_MAP, parse_host
+from .._url import inet_pton, SCHEME_PORT_MAP
 
 
 PY2 = (sys.version_info[0] == 2)
@@ -162,7 +160,7 @@ class TestURL(HyperlinkTestCase):
                         repr(u))
         for seg in u.path:
             self.assertEqual(type(seg), unicode, repr(u))
-        for (k, v) in u.query:
+        for (_k, v) in u.query:
             self.assertEqual(type(seg), unicode, repr(u))
             self.assertTrue(v is None or isinstance(v, unicode), repr(u))
         self.assertEqual(type(u.fragment), unicode, repr(u))
@@ -235,8 +233,8 @@ class TestURL(HyperlinkTestCase):
     def test_repr(self):
         """
         L{URL.__repr__} will display the canonical form of the URL, wrapped in
-        a L{URL.from_text} invocation, so that it is C{eval}-able but still easy
-        to read.
+        a L{URL.from_text} invocation, so that it is C{eval}-able but still
+        easy to read.
         """
         self.assertEqual(
             repr(URL(scheme='http', host='foo', path=['bar'],
@@ -366,16 +364,16 @@ class TestURL(HyperlinkTestCase):
         urlpath = URL.from_text(BASIC_URL)
         # A null uri should be valid (return here).
         self.assertEqual("http://www.foo.com/a/nice/path/?zot=23&zut",
-                          urlpath.click("").to_text())
+                         urlpath.click("").to_text())
         # A simple relative path remove the query.
         self.assertEqual("http://www.foo.com/a/nice/path/click",
-                          urlpath.click("click").to_text())
+                         urlpath.click("click").to_text())
         # An absolute path replace path and query.
         self.assertEqual("http://www.foo.com/click",
-                          urlpath.click("/click").to_text())
+                         urlpath.click("/click").to_text())
         # Replace just the query.
         self.assertEqual("http://www.foo.com/a/nice/path/?burp",
-                          urlpath.click("?burp").to_text())
+                         urlpath.click("?burp").to_text())
         # One full url to another should not generate '//' between authority.
         # and path
         self.assertTrue("//foobar" not in
@@ -562,7 +560,9 @@ class TestURL(HyperlinkTestCase):
         self.assertEqual(u.query, (('foo', 'x=x=x'), ('bar', 'y')))
         self.assertEqual(u.to_text(), 'http://localhost/?foo=x=x=x&bar=y')
 
-        u = URL.from_text('https://example.com/?argument=3&argument=4&operator=%3D')
+        u = URL.from_text(
+            'https://example.com/?argument=3&argument=4&operator=%3D'
+        )
         iri = u.to_iri()
         self.assertEqual(iri.get('operator'), ['='])
         # assert that the equals is not unnecessarily escaped
@@ -757,8 +757,8 @@ class TestURL(HyperlinkTestCase):
         """
         Although L{URL} instances are mainly for dealing with HTTP, other
         schemes (such as C{mailto:}) should work as well.  For example,
-        L{URL.from_text}/L{URL.to_text} round-trips cleanly for a C{mailto:} URL
-        representing an email address.
+        L{URL.from_text}/L{URL.to_text} round-trips cleanly for a C{mailto:}
+        URL representing an email address.
         """
         self.assertEqual(URL.from_text(u"mailto:user@example.com").to_text(),
                          u"mailto:user@example.com")
@@ -869,8 +869,7 @@ class TestURL(HyperlinkTestCase):
             URL(path='foo')
         self.assertEqual(
             str(raised.exception),
-            "expected iterable of text for path, not: {0}"
-            .format(repr('foo'))
+            "expected iterable of text for path, not: {0}".format(repr('foo'))
         )
 
     def test_netloc(self):
@@ -936,12 +935,13 @@ class TestURL(HyperlinkTestCase):
                             '::256.0.0.1']
         for ip in invalid_ipv6_ips:
             url_text = 'http://[' + ip + ']'
-            self.assertRaises(socket.error, inet_pton,
-                              socket.AF_INET6, ip)
+            self.assertRaises(socket.error, inet_pton, socket.AF_INET6, ip)
             self.assertRaises(URLParseError, URL.from_text, url_text)
 
     def test_invalid_port(self):
-        self.assertRaises(URLParseError, URL.from_text, 'ftp://portmouth:smash')
+        self.assertRaises(
+            URLParseError, URL.from_text, 'ftp://portmouth:smash'
+        )
         self.assertRaises(ValueError, URL.from_text,
                           'http://reader.googlewebsite.com:neverforget')
 
@@ -979,18 +979,18 @@ class TestURL(HyperlinkTestCase):
         url = URL.from_text('git+ftp://gitstub.biz/glyph/lefkowitz')
         self.assertEqual(url.scheme, 'git+ftp')
         self.assertEqual(url.to_text(),
-                          'git+ftp://gitstub.biz/glyph/lefkowitz')
+                         'git+ftp://gitstub.biz/glyph/lefkowitz')
 
         url = URL.from_text('what+mailto:freerealestate@enotuniq.org')
         self.assertEqual(url.scheme, 'what+mailto')
         self.assertEqual(url.to_text(),
-                          'what+mailto:freerealestate@enotuniq.org')
+                         'what+mailto:freerealestate@enotuniq.org')
 
         url = URL(scheme='ztp', path=('x', 'y', 'z'), rooted=True)
         self.assertEqual(url.to_text(), 'ztp:/x/y/z')
 
         # also works when the input doesn't include '//'
-        url = URL(scheme='git+ftp', path=('x', 'y', 'z' ,''),
+        url = URL(scheme='git+ftp', path=('x', 'y', 'z', ''),
                   rooted=True, uses_netloc=True)
         # broken bc urlunsplit
         self.assertEqual(url.to_text(), 'git+ftp:///x/y/z/')
@@ -1022,9 +1022,18 @@ class TestURL(HyperlinkTestCase):
         assert url.userinfo == 'user:pass'
         url = url.replace(userinfo='us%20her:pass')
         iri = url.to_iri()
-        assert iri.to_text(with_password=True) == 'http://us her:pass@example.com'
-        assert iri.to_text(with_password=False) == 'http://us her:@example.com'
-        assert iri.to_uri().to_text(with_password=True) == 'http://us%20her:pass@example.com'
+        assert (
+            iri.to_text(with_password=True) ==
+            'http://us her:pass@example.com'
+        )
+        assert (
+            iri.to_text(with_password=False) ==
+            'http://us her:@example.com'
+        )
+        assert (
+            iri.to_uri().to_text(with_password=True) ==
+            'http://us%20her:pass@example.com'
+        )
 
     def test_hash(self):
         url_map = {}
@@ -1173,13 +1182,27 @@ class TestURL(HyperlinkTestCase):
         assert norm_delimited_url.to_text() == '/a%2Fb/cd%3F?k%3D=v%23#test'
 
         # test invalid percent encoding during normalize
-        assert URL(path=('', '%te%sts')).normalize(percents=False).to_text() == '/%te%sts'
-        assert URL(path=('', '%te%sts')).normalize().to_text() == '/%25te%25sts'
+        assert (
+            URL(path=('', '%te%sts')).normalize(percents=False).to_text() ==
+            '/%te%sts'
+        )
+        assert (
+            URL(path=('', '%te%sts')).normalize().to_text() == '/%25te%25sts'
+        )
 
-        percenty_url = URL(scheme='ftp', path=['%%%', '%a%b'], query=[('%', '%%')], fragment='%', userinfo='%:%')
+        percenty_url = URL(
+            scheme='ftp', path=['%%%', '%a%b'], query=[('%', '%%')],
+            fragment='%', userinfo='%:%',
+        )
 
-        assert percenty_url.to_text(with_password=True) == 'ftp://%:%@/%%%/%a%b?%=%%#%'
-        assert percenty_url.normalize().to_text(with_password=True) == 'ftp://%25:%25@/%25%25%25/%25a%25b?%25=%25%25#%25'
+        assert (
+            percenty_url.to_text(with_password=True) ==
+            'ftp://%:%@/%%%/%a%b?%=%%#%'
+        )
+        assert (
+            percenty_url.normalize().to_text(with_password=True) ==
+            'ftp://%25:%25@/%25%25%25/%25a%25b?%25=%25%25#%25'
+        )
 
     def test_str(self):
         # see also issue #49
@@ -1196,8 +1219,7 @@ class TestURL(HyperlinkTestCase):
             assert isinstance(bytes(url), bytes)
 
     def test_idna_corners(self):
-        text = u'http://abé.com/'
-        url = URL.from_text(text)
+        url = URL.from_text(u'http://abé.com/')
         assert url.to_iri().host == u'abé.com'
         assert url.to_uri().host == u'xn--ab-cja.com'
 
@@ -1207,4 +1229,8 @@ class TestURL(HyperlinkTestCase):
 
         assert url.to_uri().get_decoded_url().host == u'ドメイン.テスト.co.jp'
 
-        assert URL.from_text('http://Example.com').to_uri().get_decoded_url().host == 'example.com'
+        text = 'http://Example.com'
+        assert (
+            URL.from_text(text).to_uri().get_decoded_url().host ==
+            'example.com'
+        )
