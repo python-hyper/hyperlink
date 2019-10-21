@@ -13,7 +13,7 @@ Usage is straightforward::
 
 As seen here, the API revolves around the lightweight and immutable
 :class:`URL` type, documented below.
-"""
+"""  # noqa: E501
 
 import re
 import sys
@@ -29,8 +29,7 @@ try:
 except ImportError:  # Python 2
     from collections import Mapping
 
-# Note: IDNAError is a subclass of UnicodeError
-from idna import encode as idna_encode, decode as idna_decode, IDNAError
+from idna import encode as idna_encode, decode as idna_decode
 
 
 if inet_pton is None:
@@ -38,7 +37,7 @@ if inet_pton is None:
     # this code only applies on Windows Python 2.7
     import ctypes
 
-    class _sockaddr(ctypes.Structure):
+    class SockAddr(ctypes.Structure):
         _fields_ = [("sa_family", ctypes.c_short),
                     ("__pad1", ctypes.c_ushort),
                     ("ipv4_addr", ctypes.c_byte * 4),
@@ -49,12 +48,15 @@ if inet_pton is None:
     WSAAddressToStringA = ctypes.windll.ws2_32.WSAAddressToStringA
 
     def inet_pton(address_family, ip_string):
-        addr = _sockaddr()
+        addr = SockAddr()
         ip_string = ip_string.encode('ascii')
         addr.sa_family = address_family
         addr_size = ctypes.c_int(ctypes.sizeof(addr))
 
-        if WSAStringToAddressA(ip_string, address_family, None, ctypes.byref(addr), ctypes.byref(addr_size)) != 0:
+        if WSAStringToAddressA(
+            ip_string, address_family, None,
+            ctypes.byref(addr), ctypes.byref(addr_size)
+        ) != 0:
             raise socket.error(ctypes.FormatError())
 
         if address_family == socket.AF_INET:
@@ -338,7 +340,6 @@ def _encode_userinfo_part(text, maximal=True):
                      else t for t in text])
 
 
-
 # This port list painstakingly curated by hand searching through
 # https://www.iana.org/assignments/uri-schemes/uri-schemes.xhtml
 # and
@@ -489,19 +490,25 @@ def iter_pairs(iterable):
     return iter(iterable)
 
 
-def _decode_unreserved(text, normalize_case=False, encode_stray_percents=False):
+def _decode_unreserved(
+    text, normalize_case=False, encode_stray_percents=False
+):
     return _percent_decode(text, normalize_case=normalize_case,
                            encode_stray_percents=encode_stray_percents,
                            _decode_map=_UNRESERVED_DECODE_MAP)
 
 
-def _decode_userinfo_part(text, normalize_case=False, encode_stray_percents=False):
+def _decode_userinfo_part(
+    text, normalize_case=False, encode_stray_percents=False
+):
     return _percent_decode(text, normalize_case=normalize_case,
                            encode_stray_percents=encode_stray_percents,
                            _decode_map=_USERINFO_DECODE_MAP)
 
 
-def _decode_path_part(text, normalize_case=False, encode_stray_percents=False):
+def _decode_path_part(
+    text, normalize_case=False, encode_stray_percents=False
+):
     """
     >>> _decode_path_part(u'%61%77%2f%7a')
     u'aw%2fz'
@@ -513,19 +520,25 @@ def _decode_path_part(text, normalize_case=False, encode_stray_percents=False):
                            _decode_map=_PATH_DECODE_MAP)
 
 
-def _decode_query_key(text, normalize_case=False, encode_stray_percents=False):
+def _decode_query_key(
+    text, normalize_case=False, encode_stray_percents=False
+):
     return _percent_decode(text, normalize_case=normalize_case,
                            encode_stray_percents=encode_stray_percents,
                            _decode_map=_QUERY_KEY_DECODE_MAP)
 
 
-def _decode_query_value(text, normalize_case=False, encode_stray_percents=False):
+def _decode_query_value(
+    text, normalize_case=False, encode_stray_percents=False
+):
     return _percent_decode(text, normalize_case=normalize_case,
                            encode_stray_percents=encode_stray_percents,
                            _decode_map=_QUERY_VALUE_DECODE_MAP)
 
 
-def _decode_fragment_part(text, normalize_case=False, encode_stray_percents=False):
+def _decode_fragment_part(
+    text, normalize_case=False, encode_stray_percents=False
+):
     return _percent_decode(text, normalize_case=normalize_case,
                            encode_stray_percents=encode_stray_percents,
                            _decode_map=_FRAGMENT_DECODE_MAP)
@@ -566,7 +579,9 @@ def _percent_decode(text, normalize_case=False, subencoding='utf-8',
 
     """
     try:
-        quoted_bytes = text.encode('utf-8' if subencoding is False else subencoding)
+        quoted_bytes = text.encode(
+            'utf-8' if subencoding is False else subencoding
+        )
     except UnicodeEncodeError:
         return text
 
@@ -654,7 +669,7 @@ def _decode_host(host):
     u'mahmoud.io
     >> idna.decode(u'Méhmoud.io', uts46=True)
     u'm\xe9hmoud.io'
-    """
+    """  # noqa: E501
     if not host:
         return u''
     try:
@@ -685,7 +700,7 @@ def _resolve_dot_segments(path):
           removed and resolved.
 
     .. _RFC 3986 section 5.2.4, Remove Dot Segments: https://tools.ietf.org/html/rfc3986#section-5.2.4
-    """
+    """  # noqa: E501
     segs = []
 
     for seg in path:
@@ -742,7 +757,7 @@ def parse_host(host):
 
 
 class URL(object):
-    """From blogs to billboards, URLs are so common, that it's easy to
+    r"""From blogs to billboards, URLs are so common, that it's easy to
     overlook their complexity and power. With hyperlink's
     :class:`URL` type, working with URLs doesn't have to be hard.
 
@@ -794,7 +809,7 @@ class URL(object):
 
     .. _RFC 3986: https://tools.ietf.org/html/rfc3986
     .. _RFC 3987: https://tools.ietf.org/html/rfc3987
-    """
+    """  # noqa: E501
 
     def __init__(self, scheme=None, host=None, path=(), query=(), fragment=u'',
                  port=None, rooted=None, userinfo=u'', uses_netloc=None):
@@ -1009,8 +1024,10 @@ class URL(object):
                      'fragment', 'port', 'uses_netloc']:
             if getattr(self, attr) != getattr(other, attr):
                 return False
-        if self.path == other.path or (self.path in _ROOT_PATHS
-                                       and other.path in _ROOT_PATHS):
+        if (
+            self.path == other.path or
+            (self.path in _ROOT_PATHS and other.path in _ROOT_PATHS)
+        ):
             return True
         return False
 
@@ -1127,11 +1144,13 @@ class URL(object):
         try:
             au_gs = au_m.groupdict()
         except AttributeError:
-            raise URLParseError('invalid authority %r in url: %r'
-                                % (au_text, text))
+            raise URLParseError(
+                'invalid authority %r in url: %r' % (au_text, text)
+            )
         if au_gs['bad_host']:
-            raise URLParseError('invalid host %r in url: %r'
-                               % (au_gs['bad_host'], text))
+            raise URLParseError(
+                'invalid host %r in url: %r' % (au_gs['bad_host'], text)
+            )
 
         userinfo = au_gs['userinfo'] or u''
 
@@ -1206,18 +1225,21 @@ class URL(object):
         .. _RFC 3986 6.2.3: https://tools.ietf.org/html/rfc3986#section-6.2.3
         .. _RFC 3986 2.4: https://tools.ietf.org/html/rfc3986#section-2.4
 
-        """
+        """  # noqa: E501
         kw = {}
         if scheme:
             kw['scheme'] = self.scheme.lower()
         if host:
             kw['host'] = self.host.lower()
+
         def _dec_unres(target):
             return _decode_unreserved(target, normalize_case=True,
                                       encode_stray_percents=percents)
         if path:
             if self.path:
-                kw['path'] = [_dec_unres(p) for p in _resolve_dot_segments(self.path)]
+                kw['path'] = [
+                    _dec_unres(p) for p in _resolve_dot_segments(self.path)
+                ]
             else:
                 kw['path'] = (u'',)
         if query:
@@ -1357,7 +1379,11 @@ class URL(object):
                                   self.userinfo.split(':', 1)])
         new_path = _encode_path_parts(self.path, has_scheme=bool(self.scheme),
                                       rooted=False, joined=False, maximal=True)
-        new_host = self.host if not self.host else idna_encode(self.host, uts46=True).decode("ascii")
+        new_host = (
+            self.host
+            if not self.host
+            else idna_encode(self.host, uts46=True).decode("ascii")
+        )
         return self.replace(
             userinfo=new_userinfo,
             host=new_host,
@@ -1391,7 +1417,7 @@ class URL(object):
         Returns:
             URL: A new instance with its path segments, query parameters, and
             hostname decoded for display purposes.
-        """
+        """  # noqa: E501
         new_userinfo = u':'.join([_decode_userinfo_part(p) for p in
                                   self.userinfo.split(':', 1)])
         host_text = _decode_host(self.host)
@@ -1443,8 +1469,10 @@ class URL(object):
             if v is None:
                 query_parts.append(_encode_query_key(k, maximal=False))
             else:
-                query_parts.append(u'='.join((_encode_query_key(k, maximal=False),
-                                              _encode_query_value(v, maximal=False))))
+                query_parts.append(u'='.join((
+                    _encode_query_key(k, maximal=False),
+                    _encode_query_value(v, maximal=False)
+                )))
         query_string = u'&'.join(query_parts)
 
         fragment = self.fragment
@@ -1605,12 +1633,19 @@ class URL(object):
             if value is _UNSET:
                 nq = [(k, v) for (k, v) in self.query if k != name]
             else:
-                nq = [(k, v) for (k, v) in self.query if not (k == name and v == value)]
+                nq = [
+                    (k, v) for (k, v) in self.query
+                    if not (k == name and v == value)
+                ]
         else:
             nq, removed_count = [], 0
 
             for k, v in self.query:
-                if k == name and (value is _UNSET or v == value) and removed_count < limit:
+                if (
+                    k == name and
+                    (value is _UNSET or v == value) and
+                    removed_count < limit
+                ):
                     removed_count += 1  # drop it
                 else:
                     nq.append((k, v))  # keep it
@@ -1682,7 +1717,9 @@ class DecodedURL(object):
         return self._url.to_iri(*a, **kw)
 
     def click(self, href=u''):
-        "Return a new DecodedURL wrapping the result of :meth:`~hyperlink.URL.click()`"
+        """Return a new DecodedURL wrapping the result of
+        :meth:`~hyperlink.URL.click()`
+        """
         if isinstance(href, DecodedURL):
             href = href._url
         return self.__class__(self._url.click(href=href))
@@ -1705,7 +1742,9 @@ class DecodedURL(object):
         return self.__class__(self._url.child(*new_segs))
 
     def normalize(self, *a, **kw):
-        "Return a new `DecodedURL` wrapping the result of :meth:`~hyperlink.URL.normalize()`"
+        """Return a new `DecodedURL` wrapping the result of
+        :meth:`~hyperlink.URL.normalize()`
+        """
         return self.__class__(self._url.normalize(*a, **kw))
 
     @property
@@ -1788,7 +1827,6 @@ class DecodedURL(object):
         containing a `:`. As with the rest of the methods on
         DecodedURL, if you pass a reserved character, it will be
         automatically encoded instead of an error being raised.
-
         """
         if path is not _UNSET:
             path = [_encode_reserved(p) for p in path]
@@ -1818,7 +1856,8 @@ class DecodedURL(object):
         return [v for (k, v) in self.query if name == k]
 
     def add(self, name, value=None):
-        "Return a new DecodedURL with the query parameter *name* and *value* added."
+        """Return a new DecodedURL with the query parameter *name* and *value*
+        added."""
         return self.replace(query=self.query + ((name, value),))
 
     def set(self, name, value=None):
@@ -1839,11 +1878,18 @@ class DecodedURL(object):
             if value is _UNSET:
                 nq = [(k, v) for (k, v) in self.query if k != name]
             else:
-                nq = [(k, v) for (k, v) in self.query if not (k == name and v == value)]
+                nq = [
+                    (k, v) for (k, v) in self.query
+                    if not (k == name and v == value)
+                ]
         else:
             nq, removed_count = [], 0
             for k, v in self.query:
-                if k == name and (value is _UNSET or v == value) and removed_count < limit:
+                if (
+                    k == name and
+                    (value is _UNSET or v == value) and
+                    removed_count < limit
+                ):
                     removed_count += 1  # drop it
                 else:
                     nq.append((k, v))  # keep it
