@@ -240,7 +240,7 @@ class TestURL(HyperlinkTestCase):
             repr(URL(scheme='http', host='foo', path=['bar'],
                      query=[('baz', None), ('k', 'v')],
                      fragment='frob')),
-            "URL.from_text(%s)" % (repr(u"http://foo/bar?baz&k=v#frob"),)
+            "URL.from_text({})".format(repr(u"http://foo/bar?baz&k=v#frob"))
         )
 
     def test_from_text(self):
@@ -603,7 +603,7 @@ class TestURL(HyperlinkTestCase):
         """
         u1 = URL.from_text('http://localhost/a')
         u2 = URL.from_text('http://localhost/b')
-        self.assertFalse(u1 == u2, "%r != %r" % (u1, u2))
+        self.assertFalse(u1 == u2, "{!r} != {!r}".format(u1, u2))
         self.assertNotEqual(u1, u2)
 
     def test_otherTypesNotEqual(self):
@@ -621,7 +621,7 @@ class TestURL(HyperlinkTestCase):
         Identical L{URL}s are not unequal (C{!=}) to each other.
         """
         u = URL.from_text('http://u@localhost:8080/p/a/t/h?q=p#f')
-        self.assertFalse(u != u, "%r == itself" % u)
+        self.assertFalse(u != u, "{!r} == itself".format(u))
 
     def test_similarNotUnequal(self):
         """
@@ -629,7 +629,7 @@ class TestURL(HyperlinkTestCase):
         """
         u1 = URL.from_text('http://u@localhost:8080/p/a/t/h?q=p#f')
         u2 = URL.from_text('http://u@localhost:8080/p/a/t/h?q=p#f')
-        self.assertFalse(u1 != u2, "%r == %r" % (u1, u2))
+        self.assertFalse(u1 != u2, "{!r} == {!r}".format(u1, u2))
 
     def test_differentUnequal(self):
         """
@@ -637,7 +637,7 @@ class TestURL(HyperlinkTestCase):
         """
         u1 = URL.from_text('http://localhost/a')
         u2 = URL.from_text('http://localhost/b')
-        self.assertTrue(u1 != u2, "%r == %r" % (u1, u2))
+        self.assertTrue(u1 != u2, "{!r} == {!r}".format(u1, u2))
 
     def test_otherTypesUnequal(self):
         """
@@ -666,7 +666,7 @@ class TestURL(HyperlinkTestCase):
         expectedURI = 'http://xn--9ca.com/%C3%A9?%C3%A1=%C3%AD#%C3%BA'
         actualURI = uri.to_text()
         self.assertEqual(actualURI, expectedURI,
-                         '%r != %r' % (actualURI, expectedURI))
+                         "{!r} != {!r}".format(actualURI, expectedURI))
 
     def test_asIRI(self):
         """
@@ -686,7 +686,7 @@ class TestURL(HyperlinkTestCase):
                        '#\N{LATIN SMALL LETTER U WITH ACUTE}')
         actualIRI = iri.to_text()
         self.assertEqual(actualIRI, expectedIRI,
-                         '%r != %r' % (actualIRI, expectedIRI))
+                         "{!r} != {!r}".format(actualIRI, expectedIRI))
 
     def test_badUTF8AsIRI(self):
         """
@@ -701,7 +701,7 @@ class TestURL(HyperlinkTestCase):
                        '\N{LATIN SMALL LETTER E WITH ACUTE}')
         actualIRI = iri.to_text()
         self.assertEqual(actualIRI, expectedIRI,
-                         '%r != %r' % (actualIRI, expectedIRI))
+                         "{!r} != {!r}".format(actualIRI, expectedIRI))
 
     def test_alreadyIRIAsIRI(self):
         """
@@ -803,10 +803,12 @@ class TestURL(HyperlinkTestCase):
         defaultExpectation = "unicode" if bytes is str else "str"
 
         def assertRaised(raised, expectation, name):
-            self.assertEqual(str(raised.exception),
-                             "expected {0} for {1}, got {2}".format(
-                                 expectation,
-                                 name, "<unexpected>"))
+            self.assertEqual(
+                str(raised.exception),
+                "expected {} for {}, got {}".format(
+                    expectation, name, "<unexpected>"
+                )
+            )
 
         def check(param, expectation=defaultExpectation):
             with self.assertRaises(TypeError) as raised:

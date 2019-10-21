@@ -114,7 +114,8 @@ def make_sentinel(name='_MISSING', var_name=None):
         def __repr__(self):
             if self.var_name:
                 return self.var_name
-            return '%s(%r)' % (self.__class__.__name__, self.name)
+            return "{}({!r})".format(self.__class__.__name__, self.name)
+
         if var_name:
             def __reduce__(self):
                 return self.var_name
@@ -182,7 +183,7 @@ def _make_decode_map(delims, allow_percent=False):
     if not allow_percent:
         delims = set(delims) | set([u'%'])
     for delim in delims:
-        _hexord = '{0:02X}'.format(ord(delim)).encode('ascii')
+        _hexord = '{:02X}'.format(ord(delim)).encode('ascii')
         _hexord_lower = _hexord.lower()
         ret.pop(_hexord)
         if _hexord != _hexord_lower:
@@ -199,7 +200,7 @@ def _make_quote_map(safe_chars):
         if c in safe_chars:
             ret[c] = ret[v] = c
         else:
-            ret[c] = ret[v] = '%{0:02X}'.format(i)
+            ret[c] = ret[v] = '%{:02X}'.format(i)
     return ret
 
 
@@ -388,18 +389,25 @@ def register_scheme(text, uses_netloc=True, default_port=None):
         try:
             default_port = int(default_port)
         except (ValueError, TypeError):
-            raise ValueError('default_port expected integer or None, not %r'
-                             % (default_port,))
+            raise ValueError(
+                "default_port expected integer or None, not {!r}"
+                .format(default_port)
+            )
 
     if uses_netloc is True:
         SCHEME_PORT_MAP[text] = default_port
     elif uses_netloc is False:
         if default_port is not None:
-            raise ValueError('unexpected default port while specifying'
-                             ' non-netloc scheme: %r' % default_port)
+            raise ValueError(
+                "unexpected default port while specifying non-netloc scheme: "
+                "{!r}"
+                .format(default_port)
+            )
         NO_NETLOC_SCHEMES.add(text)
     else:
-        raise ValueError('uses_netloc expected bool, not: %r' % uses_netloc)
+        raise ValueError(
+            "uses_netloc expected bool, not: {!r}".format(uses_netloc)
+        )
 
     return
 
@@ -457,9 +465,10 @@ def _typecheck(name, value, *types):
     if not types:
         raise ValueError('expected one or more types, maybe use _textcheck?')
     if not isinstance(value, types):
-        raise TypeError("expected %s for %s, got %r"
-                        % (" or ".join([t.__name__ for t in types]),
-                           name, value))
+        raise TypeError(
+            "expected {} for {}, got {!r}"
+            .format(" or ".join([t.__name__ for t in types]), name, value)
+        )
     return value
 
 
@@ -470,10 +479,14 @@ def _textcheck(name, value, delims=frozenset(), nullable=False):
         else:
             str_name = "unicode" if PY2 else "str"
             exp = str_name + ' or NoneType' if nullable else str_name
-            raise TypeError('expected %s for %s, got %r' % (exp, name, value))
+            raise TypeError(
+                "expected {} for {}, got {!r}".format(exp, name, value)
+            )
     if delims and set(value) & set(delims):  # TODO: test caching into regexes
-        raise ValueError('one or more reserved delimiters %s present in %s: %r'
-                         % (''.join(delims), name, value))
+        raise ValueError(
+            "one or more reserved delimiters {} present in {}: {!r}"
+            .format(''.join(delims), name, value)
+        )
     return value
 
 
@@ -741,7 +754,9 @@ def parse_host(host):
         try:
             inet_pton(socket.AF_INET6, host)
         except socket.error as se:
-            raise URLParseError('invalid IPv6 host: %r (%r)' % (host, se))
+            raise URLParseError(
+                "invalid IPv6 host: {!r} ({!r})".format(host, se)
+            )
         except UnicodeEncodeError:
             pass  # TODO: this can't be a real host right?
         else:
@@ -836,15 +851,17 @@ class URL(object):
         self._scheme = _textcheck("scheme", scheme)
         if self._scheme:
             if not _SCHEME_RE.match(self._scheme):
-                raise ValueError('invalid scheme: %r. Only alphanumeric, "+",'
-                                 ' "-", and "." allowed. Did you meant to call'
-                                 ' %s.from_text()?'
-                                 % (self._scheme, self.__class__.__name__))
+                raise ValueError(
+                    'invalid scheme: {!r}. Only alphanumeric, "+", "-", and '
+                    '"." allowed. Did you mean to call {}.from_text()?'
+                    .format(self._scheme, self.__class__.__name__)
+                )
 
         _, self._host = parse_host(_textcheck('host', host, '/?#@'))
         if isinstance(path, unicode):
-            raise TypeError("expected iterable of text for path, not: %r"
-                            % (path,))
+            raise TypeError(
+                "expected iterable of text for path, not: {!r}".format(path)
+            )
         self._path = tuple((_textcheck("path segment", segment, '/?#')
                             for segment in path))
         self._query = tuple(
@@ -1000,7 +1017,9 @@ class URL(object):
         # first, a bit of twisted compat
         with_password = kw.pop('includeSecrets', with_password)
         if kw:
-            raise TypeError('got unexpected keyword arguments: %r' % kw.keys())
+            raise TypeError(
+                "got unexpected keyword arguments: {!r}".format(kw.keys())
+            )
         host = self.host
         if ':' in host:
             hostport = ['[' + host + ']']
@@ -1137,7 +1156,7 @@ class URL(object):
         try:
             gs = um.groupdict()
         except AttributeError:
-            raise URLParseError('could not parse url: %r' % text)
+            raise URLParseError("could not parse url: {!r}".format(text))
 
         au_text = gs['authority'] or u''
         au_m = _AUTHORITY_RE.match(au_text)
@@ -1145,11 +1164,12 @@ class URL(object):
             au_gs = au_m.groupdict()
         except AttributeError:
             raise URLParseError(
-                'invalid authority %r in url: %r' % (au_text, text)
+                "invalid authority {!r} in url: {!r}".format(au_text, text)
             )
         if au_gs['bad_host']:
             raise URLParseError(
-                'invalid host %r in url: %r' % (au_gs['bad_host'], text)
+                "invalid host {!r} in url: {!r}"
+                .format(au_gs['bad_host'], text)
             )
 
         userinfo = au_gs['userinfo'] or u''
@@ -1161,8 +1181,12 @@ class URL(object):
                 port = int(port)
             except ValueError:
                 if not port:  # TODO: excessive?
-                    raise URLParseError('port must not be empty: %r' % au_text)
-                raise URLParseError('expected integer for port, not %r' % port)
+                    raise URLParseError(
+                        "port must not be empty: {!r}".format(au_text)
+                    )
+                raise URLParseError(
+                    "expected integer for port, not {!r}".format(port)
+                )
 
         scheme = gs['scheme'] or u''
         fragment = gs['fragment'] or u''
@@ -1342,8 +1366,9 @@ class URL(object):
             # Schemes with relative paths are not well-defined.  RFC 3986 calls
             # them a "loophole in prior specifications" that should be avoided,
             # or supported only for backwards compatibility.
-            raise NotImplementedError('absolute URI with rootless path: %r'
-                                      % (href,))
+            raise NotImplementedError(
+                "absolute URI with rootless path: {!r}".format(href)
+            )
         else:
             if clicked.rooted:
                 path = clicked.path
@@ -1504,7 +1529,9 @@ class URL(object):
         constituent parts, as well as being a valid argument to
         :func:`eval`.
         """
-        return '%s.from_text(%r)' % (self.__class__.__name__, self.to_text())
+        return "{}.from_text({!r})".format(
+            self.__class__.__name__, self.to_text()
+        )
 
     def _to_bytes(self):
         """
@@ -1837,8 +1864,11 @@ class DecodedURL(object):
                      for k, v in iter_pairs(query)]
         if userinfo is not _UNSET:
             if len(userinfo) > 2:
-                raise ValueError('userinfo expected sequence of ["user"] or'
-                                 ' ["user", "password"], got %r' % userinfo)
+                raise ValueError(
+                    'userinfo expected sequence of ["user"] or '
+                    '["user", "password"], got {!r}'
+                    .format(userinfo)
+                )
             userinfo = u':'.join([_encode_reserved(p) for p in userinfo])
         new_url = self._url.replace(scheme=scheme,
                                     host=host,
@@ -1898,7 +1928,7 @@ class DecodedURL(object):
 
     def __repr__(self):
         cn = self.__class__.__name__
-        return '%s(url=%r)' % (cn, self._url)
+        return "{}(url={!r})".format(cn, self._url)
 
     def __str__(self):
         # TODO: the underlying URL's __str__ needs to change to make

@@ -48,7 +48,7 @@ class _AssertRaisesContext(object):
     def __exit__(self, exc_type, exc_value, tb):
         if exc_type is None:
             exc_name = self.expected.__name__
-            raise self.failureException("%s not raised" % (exc_name,))
+            raise self.failureException("{} not raised".format(exc_name))
         if not issubclass(exc_type, self.expected):
             # let unexpected exceptions pass through
             return False
