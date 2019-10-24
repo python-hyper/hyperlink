@@ -29,7 +29,7 @@
 * Speed up percent encoding with urlutils approach
 * More default ports
 * resolve dots on (empty) click
-* better error on URL constructor (single string argument leads to succesful instantiation with invalid scheme)
+* better error on URL constructor (single string argument leads to successful instantiation with invalid scheme)
 * pct encode userinfo
 * `__hash__`
 * README
