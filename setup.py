@@ -30,7 +30,10 @@ setup(name='hyperlink',
       zip_safe=False,
       license=__license__,
       platforms='any',
-      install_requires=['idna>=2.5'],
+      install_requires=[
+          'idna>=2.5',
+          'typing ; python_version<"3.5"',
+      ],
       classifiers=[
           'Topic :: Utilities',
           'Intended Audience :: Developers',
