@@ -35,5 +35,3 @@ class TestURL(HyperlinkTestCase):
 
         with self.assertRaises(UnicodeDecodeError):
             purl3.fragment
-
-        return
