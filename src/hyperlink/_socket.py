@@ -2,7 +2,9 @@ try:
     from socket import inet_pton
 except ImportError:
     from typing import TYPE_CHECKING
-    if not TYPE_CHECKING:
+    if TYPE_CHECKING:  # pragma: no cover
+        pass
+    else:
         # based on https://gist.github.com/nnemkin/4966028
         # this code only applies on Windows Python 2.7
         import ctypes
