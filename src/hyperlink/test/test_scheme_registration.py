@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 from __future__ import unicode_literals
+from typing import cast
 
 
 from .. import _url
@@ -57,16 +58,16 @@ class TestSchemeRegistration(HyperlinkTestCase):
     def test_invalid_uses_netloc(self):
         # type: () -> None
         with self.assertRaises(ValueError):
-            register_scheme('badnetloc', uses_netloc=None)
+            register_scheme('badnetloc', uses_netloc=cast(bool, None))
         with self.assertRaises(ValueError):
-            register_scheme('badnetloc', uses_netloc=object())
+            register_scheme('badnetloc', uses_netloc=cast(bool, object()))
 
     def test_register_invalid_uses_netloc(self):
         # type: () -> None
         with self.assertRaises(ValueError):
-            register_scheme('lol', uses_netloc=lambda: 'nope')
+            register_scheme('lol', uses_netloc=cast(bool, lambda: 'nope'))
 
     def test_register_invalid_port(self):
         # type: () -> None
         with self.assertRaises(ValueError):
-            register_scheme('nope', default_port=lambda: 'lol')
+            register_scheme('nope', default_port=cast(int, lambda: 'lol'))
