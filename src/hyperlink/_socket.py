@@ -20,7 +20,8 @@ except ImportError:
         WSAStringToAddressA = ctypes.windll.ws2_32.WSAStringToAddressA
         WSAAddressToStringA = ctypes.windll.ws2_32.WSAAddressToStringA
 
-        def inet_pton(address_family: int, ip_string: str) -> bytes:
+        def inet_pton(address_family, ip_string):
+            # type: (int, str) -> bytes
             addr = SockAddr()
             ip_string_bytes = ip_string.encode('ascii')
             addr.sa_family = address_family

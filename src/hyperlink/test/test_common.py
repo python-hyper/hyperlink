@@ -79,7 +79,7 @@ class TestHyperlink(TestCase):
         with self.hyperlink_test.assertRaises(_ExpectedException) as cm:
             raise _ExpectedException
 
-        self.assertTrue(  # type: ignore[misc]  (unreachable)
+        self.assertTrue(  # type: ignore[misc] unreachable
             isinstance(cm.exception, _ExpectedException)
         )
 

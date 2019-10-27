@@ -33,10 +33,10 @@ from idna import encode as idna_encode, decode as idna_decode
 PY2 = (sys.version_info[0] == 2)
 unicode = type(u'')
 try:
-    unichr: Callable[[int], Text]
-except NameError:
-    unichr = chr  # py3
-NoneType: Type[None] = type(None)
+    unichr
+except NameError:  # Py3
+    unichr = chr  # type: Callable[[int], Text]
+NoneType = type(None)  # type: Type[None]
 
 
 # from boltons.typeutils
