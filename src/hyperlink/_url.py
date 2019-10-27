@@ -19,6 +19,7 @@ import re
 import sys
 import string
 import socket
+from typing import Callable, Text, Type
 from unicodedata import normalize
 from ._socket import inet_pton
 try:
@@ -32,10 +33,10 @@ from idna import encode as idna_encode, decode as idna_decode
 PY2 = (sys.version_info[0] == 2)
 unicode = type(u'')
 try:
-    unichr
+    unichr: Callable[[int], Text]
 except NameError:
     unichr = chr  # py3
-NoneType = type(None)
+NoneType: Type[None] = type(None)
 
 
 # from boltons.typeutils
