@@ -7,6 +7,7 @@ from __future__ import unicode_literals
 
 import sys
 import socket
+from typing import Any, Iterable, Optional, Text, Tuple
 
 from .common import HyperlinkTestCase
 from .. import URL, URLParseError
@@ -149,6 +150,7 @@ class TestURL(HyperlinkTestCase):
     """
 
     def assertUnicoded(self, u):
+        # type: (URL) -> None
         """
         The given L{URL}'s components should be L{unicode}.
 
@@ -165,8 +167,18 @@ class TestURL(HyperlinkTestCase):
             self.assertTrue(v is None or isinstance(v, unicode), repr(u))
         self.assertEqual(type(u.fragment), unicode, repr(u))
 
-    def assertURL(self, u, scheme, host, path, query,
-                  fragment, port, userinfo=''):
+    def assertURL(
+        self,
+        u,            # type: URL
+        scheme,       # type: Text
+        host,         # type: Text
+        path,         # type: Iterable[Text]
+        query,        # type: Iterable[Tuple[Text, Optional[Text]]]
+        fragment,     # type: Text
+        port,         # type: Optional[int]
+        userinfo='',  # type: Text
+    ):
+        # type: (...) -> None
         """
         The given L{URL} should have the given components.
 
@@ -198,6 +210,7 @@ class TestURL(HyperlinkTestCase):
         L{URL} should have appropriate default values.
         """
         def check(u):
+            # type: (URL) -> None
             self.assertUnicoded(u)
             self.assertURL(u, 'http', '', [], [], '', 80, '')
 
@@ -839,20 +852,24 @@ class TestURL(HyperlinkTestCase):
         """
         class Unexpected(object):
             def __str__(self):
+                # type: () -> str
                 return "wrong"
 
             def __repr__(self):
+                # type: () -> str
                 return "<unexpected>"
 
         defaultExpectation = "unicode" if bytes is str else "str"
 
         def assertRaised(raised, expectation, name):
+            # type: (Any, Text, Text) -> None
             self.assertEqual(str(raised.exception),
                              "expected {0} for {1}, got {2}".format(
                                  expectation,
                                  name, "<unexpected>"))
 
         def check(param, expectation=defaultExpectation):
+            # type: (Any, str) -> None
             with self.assertRaises(TypeError) as raised:
                 URL(**{param: Unexpected()})
 
