@@ -193,6 +193,7 @@ class TestURL(HyperlinkTestCase):
         self.assertEqual(actual, expected)
 
     def test_initDefaults(self):
+        # type: () -> None
         """
         L{URL} should have appropriate default values.
         """
@@ -205,6 +206,7 @@ class TestURL(HyperlinkTestCase):
         check(URL('http', '', [], [], ''))
 
     def test_init(self):
+        # type: () -> None
         """
         L{URL} should accept L{unicode} parameters.
         """
@@ -219,6 +221,7 @@ class TestURL(HyperlinkTestCase):
                        [('\u03bb', '\u03c0')], '\u22a5', 80)
 
     def test_initPercent(self):
+        # type: () -> None
         """
         L{URL} should accept (and not interpret) percent characters.
         """
@@ -231,6 +234,7 @@ class TestURL(HyperlinkTestCase):
                        '%66', None)
 
     def test_repr(self):
+        # type: () -> None
         """
         L{URL.__repr__} will display the canonical form of the URL, wrapped in
         a L{URL.from_text} invocation, so that it is C{eval}-able but still
@@ -244,6 +248,7 @@ class TestURL(HyperlinkTestCase):
         )
 
     def test_from_text(self):
+        # type: () -> None
         """
         Round-tripping L{URL.from_text} with C{str} results in an equivalent
         URL.
@@ -252,6 +257,7 @@ class TestURL(HyperlinkTestCase):
         self.assertEqual(BASIC_URL, urlpath.to_text())
 
     def test_roundtrip(self):
+        # type: () -> None
         """
         L{URL.to_text} should invert L{URL.from_text}.
         """
@@ -260,6 +266,7 @@ class TestURL(HyperlinkTestCase):
             self.assertEqual(test, result)
 
     def test_roundtrip_double_iri(self):
+        # type: () -> None
         for test in ROUNDTRIP_TESTS:
             url = URL.from_text(test)
             iri = url.to_iri()
@@ -272,6 +279,7 @@ class TestURL(HyperlinkTestCase):
         return
 
     def test_equality(self):
+        # type: () -> None
         """
         Two URLs decoded using L{URL.from_text} will be equal (C{==}) if they
         decoded same URL string, and unequal (C{!=}) if they decoded different
@@ -286,6 +294,7 @@ class TestURL(HyperlinkTestCase):
         )
 
     def test_fragmentEquality(self):
+        # type: () -> None
         """
         An URL created with the empty string for a fragment compares equal
         to an URL created with an unspecified fragment.
@@ -295,6 +304,7 @@ class TestURL(HyperlinkTestCase):
                          URL.from_text(u"http://localhost/"))
 
     def test_child(self):
+        # type: () -> None
         """
         L{URL.child} appends a new path segment, but does not affect the query
         or fragment.
@@ -314,6 +324,7 @@ class TestURL(HyperlinkTestCase):
         )
 
     def test_multiChild(self):
+        # type: () -> None
         """
         L{URL.child} receives multiple segments as C{*args} and appends each in
         turn.
@@ -323,6 +334,7 @@ class TestURL(HyperlinkTestCase):
                          'http://example.com/a/b/c/d/e')
 
     def test_childInitRoot(self):
+        # type: () -> None
         """
         L{URL.child} of a L{URL} without a path produces a L{URL} with a single
         path segment.
@@ -332,6 +344,7 @@ class TestURL(HyperlinkTestCase):
         self.assertEqual("http://www.foo.com/c", childURL.to_text())
 
     def test_emptyChild(self):
+        # type: () -> None
         """
         L{URL.child} without any new segments returns the original L{URL}.
         """
@@ -339,6 +352,7 @@ class TestURL(HyperlinkTestCase):
         self.assertEqual(url.child(), url)
 
     def test_sibling(self):
+        # type: () -> None
         """
         L{URL.sibling} of a L{URL} replaces the last path segment, but does not
         affect the query or fragment.
@@ -357,6 +371,7 @@ class TestURL(HyperlinkTestCase):
         )
 
     def test_click(self):
+        # type: () -> None
         """
         L{URL.click} interprets the given string as a relative URI-reference
         and returns a new L{URL} interpreting C{self} as the base absolute URI.
@@ -406,6 +421,7 @@ class TestURL(HyperlinkTestCase):
         self.assertEqual(u3.to_text(), 'http://localhost/foo/bar')
 
     def test_clickRFC3986(self):
+        # type: () -> None
         """
         L{URL.click} should correctly resolve the examples in RFC 3986.
         """
@@ -414,6 +430,7 @@ class TestURL(HyperlinkTestCase):
             self.assertEqual(base.click(ref).to_text(), expected)
 
     def test_clickSchemeRelPath(self):
+        # type: () -> None
         """
         L{URL.click} should not accept schemes with relative paths.
         """
@@ -422,6 +439,7 @@ class TestURL(HyperlinkTestCase):
         self.assertRaises(NotImplementedError, base.click, 'http:h')
 
     def test_cloneUnchanged(self):
+        # type: () -> None
         """
         Verify that L{URL.replace} doesn't change any of the arguments it
         is passed.
@@ -437,6 +455,7 @@ class TestURL(HyperlinkTestCase):
         self.assertEqual(urlpath.replace(), urlpath)
 
     def test_clickCollapse(self):
+        # type: () -> None
         """
         L{URL.click} collapses C{.} and C{..} according to RFC 3986 section
         5.2.4.
@@ -472,6 +491,7 @@ class TestURL(HyperlinkTestCase):
             )
 
     def test_queryAdd(self):
+        # type: () -> None
         """
         L{URL.add} adds query parameters.
         """
@@ -504,6 +524,7 @@ class TestURL(HyperlinkTestCase):
             .to_text())
 
     def test_querySet(self):
+        # type: () -> None
         """
         L{URL.set} replaces query parameters by name.
         """
@@ -524,6 +545,7 @@ class TestURL(HyperlinkTestCase):
         )
 
     def test_queryRemove(self):
+        # type: () -> None
         """
         L{URL.remove} removes instances of a query parameter.
         """
@@ -549,6 +571,7 @@ class TestURL(HyperlinkTestCase):
         )
 
     def test_parseEqualSignInParamValue(self):
+        # type: () -> None
         """
         Every C{=}-sign after the first in a query parameter is simply included
         in the value of the parameter.
@@ -569,12 +592,14 @@ class TestURL(HyperlinkTestCase):
         self.assertEqual(iri.to_uri().get('operator'), ['='])
 
     def test_empty(self):
+        # type: () -> None
         """
         An empty L{URL} should serialize as the empty string.
         """
         self.assertEqual(URL().to_text(), '')
 
     def test_justQueryText(self):
+        # type: () -> None
         """
         An L{URL} with query text should serialize as just query text.
         """
@@ -582,6 +607,7 @@ class TestURL(HyperlinkTestCase):
         self.assertEqual(u.to_text(), '?hello=world')
 
     def test_identicalEqual(self):
+        # type: () -> None
         """
         L{URL} compares equal to itself.
         """
@@ -589,6 +615,7 @@ class TestURL(HyperlinkTestCase):
         self.assertEqual(u, u)
 
     def test_similarEqual(self):
+        # type: () -> None
         """
         URLs with equivalent components should compare equal.
         """
@@ -597,6 +624,7 @@ class TestURL(HyperlinkTestCase):
         self.assertEqual(u1, u2)
 
     def test_differentNotEqual(self):
+        # type: () -> None
         """
         L{URL}s that refer to different resources are both unequal (C{!=}) and
         also not equal (not C{==}).
@@ -607,6 +635,7 @@ class TestURL(HyperlinkTestCase):
         self.assertNotEqual(u1, u2)
 
     def test_otherTypesNotEqual(self):
+        # type: () -> None
         """
         L{URL} is not equal (C{==}) to other types.
         """
@@ -617,6 +646,7 @@ class TestURL(HyperlinkTestCase):
         self.assertNotEqual(u, object())
 
     def test_identicalNotUnequal(self):
+        # type: () -> None
         """
         Identical L{URL}s are not unequal (C{!=}) to each other.
         """
@@ -624,6 +654,7 @@ class TestURL(HyperlinkTestCase):
         self.assertFalse(u != u, "%r == itself" % u)
 
     def test_similarNotUnequal(self):
+        # type: () -> None
         """
         Structurally similar L{URL}s are not unequal (C{!=}) to each other.
         """
@@ -632,6 +663,7 @@ class TestURL(HyperlinkTestCase):
         self.assertFalse(u1 != u2, "%r == %r" % (u1, u2))
 
     def test_differentUnequal(self):
+        # type: () -> None
         """
         Structurally different L{URL}s are unequal (C{!=}) to each other.
         """
@@ -640,6 +672,7 @@ class TestURL(HyperlinkTestCase):
         self.assertTrue(u1 != u2, "%r == %r" % (u1, u2))
 
     def test_otherTypesUnequal(self):
+        # type: () -> None
         """
         L{URL} is unequal (C{!=}) to other types.
         """
@@ -648,6 +681,7 @@ class TestURL(HyperlinkTestCase):
         self.assertTrue(u != object(), "URL must be differ from an object.")
 
     def test_asURI(self):
+        # type: () -> None
         """
         L{URL.asURI} produces an URI which converts any URI unicode encoding
         into pure US-ASCII and returns a new L{URL}.
@@ -669,6 +703,7 @@ class TestURL(HyperlinkTestCase):
                          '%r != %r' % (actualURI, expectedURI))
 
     def test_asIRI(self):
+        # type: () -> None
         """
         L{URL.asIRI} decodes any percent-encoded text in the URI, making it
         more suitable for reading by humans, and returns a new L{URL}.
@@ -689,6 +724,7 @@ class TestURL(HyperlinkTestCase):
                          '%r != %r' % (actualIRI, expectedIRI))
 
     def test_badUTF8AsIRI(self):
+        # type: () -> None
         """
         Bad UTF-8 in a path segment, query parameter, or fragment results in
         that portion of the URI remaining percent-encoded in the IRI.
@@ -704,6 +740,7 @@ class TestURL(HyperlinkTestCase):
                          '%r != %r' % (actualIRI, expectedIRI))
 
     def test_alreadyIRIAsIRI(self):
+        # type: () -> None
         """
         A L{URL} composed of non-ASCII text will result in non-ASCII text.
         """
@@ -717,6 +754,7 @@ class TestURL(HyperlinkTestCase):
         self.assertEqual(alsoIRI.to_text(), unicodey)
 
     def test_alreadyURIAsURI(self):
+        # type: () -> None
         """
         A L{URL} composed of encoded text will remain encoded.
         """
@@ -726,6 +764,7 @@ class TestURL(HyperlinkTestCase):
         self.assertEqual(actualURI, expectedURI)
 
     def test_userinfo(self):
+        # type: () -> None
         """
         L{URL.from_text} will parse the C{userinfo} portion of the URI
         separately from the host and port.
@@ -746,6 +785,7 @@ class TestURL(HyperlinkTestCase):
         )
 
     def test_portText(self):
+        # type: () -> None
         """
         L{URL.from_text} parses custom port numbers as integers.
         """
@@ -754,6 +794,7 @@ class TestURL(HyperlinkTestCase):
         self.assertEqual(portURL.to_text(), u"http://www.example.com:8080/")
 
     def test_mailto(self):
+        # type: () -> None
         """
         Although L{URL} instances are mainly for dealing with HTTP, other
         schemes (such as C{mailto:}) should work as well.  For example,
@@ -764,6 +805,7 @@ class TestURL(HyperlinkTestCase):
                          u"mailto:user@example.com")
 
     def test_queryIterable(self):
+        # type: () -> None
         """
         When a L{URL} is created with a C{query} argument, the C{query}
         argument is converted into an N-tuple of 2-tuples, sensibly
@@ -776,6 +818,7 @@ class TestURL(HyperlinkTestCase):
         self.assertEqual(url.query, expected)
 
     def test_pathIterable(self):
+        # type: () -> None
         """
         When a L{URL} is created with a C{path} argument, the C{path} is
         converted into a tuple.
@@ -784,6 +827,7 @@ class TestURL(HyperlinkTestCase):
         self.assertEqual(url.path, ('hello', 'world'))
 
     def test_invalidArguments(self):
+        # type: () -> None
         """
         Passing an argument of the wrong type to any of the constructor
         arguments of L{URL} will raise a descriptive L{TypeError}.
@@ -860,6 +904,7 @@ class TestURL(HyperlinkTestCase):
         assertRaised(raised, defaultExpectation, "relative URL")
 
     def test_technicallyTextIsIterableBut(self):
+        # type: () -> None
         """
         Technically, L{str} (or L{unicode}, as appropriate) is iterable, but
         C{URL(path="foo")} resulting in C{URL.from_text("f/o/o")} is never what
@@ -873,6 +918,7 @@ class TestURL(HyperlinkTestCase):
         )
 
     def test_netloc(self):
+        # type: () -> None
         url = URL(scheme='https')
         self.assertEqual(url.uses_netloc, True)
 
@@ -892,6 +938,7 @@ class TestURL(HyperlinkTestCase):
         self.assertEqual(url.uses_netloc, False)
 
     def test_ipv6_with_port(self):
+        # type: () -> None
         t = 'https://[2001:0db8:85a3:0000:0000:8a2e:0370:7334]:80/'
         url = URL.from_text(t)
         assert url.host == '2001:0db8:85a3:0000:0000:8a2e:0370:7334'
@@ -899,6 +946,7 @@ class TestURL(HyperlinkTestCase):
         assert SCHEME_PORT_MAP[url.scheme] != url.port
 
     def test_basic(self):
+        # type: () -> None
         text = 'https://user:pass@example.com/path/to/here?k=v#nice'
         url = URL.from_text(text)
         assert url.scheme == 'https'
@@ -922,12 +970,15 @@ class TestURL(HyperlinkTestCase):
         assert url.path == ('path', 'to', 'here')
 
     def test_invalid_url(self):
+        # type: () -> None
         self.assertRaises(URLParseError, URL.from_text, '#\n\n')
 
     def test_invalid_authority_url(self):
+        # type: () -> None
         self.assertRaises(URLParseError, URL.from_text, 'http://abc:\n\n/#')
 
     def test_invalid_ipv6(self):
+        # type: () -> None
         invalid_ipv6_ips = ['2001::0234:C1ab::A0:aabc:003F',
                             '2001::1::3F',
                             ':',
@@ -939,6 +990,7 @@ class TestURL(HyperlinkTestCase):
             self.assertRaises(URLParseError, URL.from_text, url_text)
 
     def test_invalid_port(self):
+        # type: () -> None
         self.assertRaises(
             URLParseError, URL.from_text, 'ftp://portmouth:smash'
         )
@@ -946,6 +998,7 @@ class TestURL(HyperlinkTestCase):
                           'http://reader.googlewebsite.com:neverforget')
 
     def test_idna(self):
+        # type: () -> None
         u1 = URL.from_text('http://bücher.ch')
         self.assertEqual(u1.host, 'bücher.ch')
         self.assertEqual(u1.to_text(), 'http://bücher.ch')
@@ -957,6 +1010,8 @@ class TestURL(HyperlinkTestCase):
         self.assertEqual(u2.to_iri().to_text(), u'https://bücher.ch')
 
     def test_netloc_slashes(self):
+        # type: () -> None
+
         # basic sanity checks
         url = URL.from_text('mailto:mahmoud@hatnote.com')
         self.assertEqual(url.scheme, 'mailto')
@@ -1010,6 +1065,7 @@ class TestURL(HyperlinkTestCase):
         return
 
     def test_wrong_constructor(self):
+        # type: () -> None
         with self.assertRaises(ValueError):
             # whole URL not allowed
             URL(BASIC_URL)
@@ -1018,6 +1074,7 @@ class TestURL(HyperlinkTestCase):
             URL('HTTP_____more_like_imHoTTeP')
 
     def test_encoded_userinfo(self):
+        # type: () -> None
         url = URL.from_text('http://user:pass@example.com')
         assert url.userinfo == 'user:pass'
         url = url.replace(userinfo='us%20her:pass')
@@ -1036,6 +1093,7 @@ class TestURL(HyperlinkTestCase):
         )
 
     def test_hash(self):
+        # type: () -> None
         url_map = {}
         url1 = URL.from_text('http://blog.hatnote.com/ask?utm_source=geocity')
         assert hash(url1) == hash(url1)  # sanity
@@ -1053,6 +1111,7 @@ class TestURL(HyperlinkTestCase):
         assert hash(URL()) == hash(URL())  # slightly more sanity
 
     def test_dir(self):
+        # type: () -> None
         url = URL()
         res = dir(url)
 
@@ -1064,12 +1123,15 @@ class TestURL(HyperlinkTestCase):
         assert 'asIRI' not in res
 
     def test_twisted_compat(self):
+        # type: () -> None
         url = URL.fromText(u'http://example.com/a%20té%C3%A9st')
         assert url.asText() == 'http://example.com/a%20té%C3%A9st'
         assert url.asURI().asText() == 'http://example.com/a%20t%C3%A9%C3%A9st'
         # TODO: assert url.asIRI().asText() == u'http://example.com/a%20téést'
 
     def test_set_ordering(self):
+        # type: () -> None
+
         # TODO
         url = URL.from_text('http://example.com/?a=b&c')
         url = url.set(u'x', u'x')
@@ -1079,6 +1141,7 @@ class TestURL(HyperlinkTestCase):
         # assert url.to_text() == u'http://example.com/?a=b&c&x=x&x=y'
 
     def test_schemeless_path(self):
+        # type: () -> None
         "See issue #4"
         u1 = URL.from_text("urn%3Aietf%3Awg%3Aoauth%3A2.0%3Aoob")
         u2 = URL.from_text(u1.to_text())
@@ -1097,6 +1160,7 @@ class TestURL(HyperlinkTestCase):
         assert u5 == u6  # colons stay decoded bc they're not in the first seg
 
     def test_emoji_domain(self):
+        # type: () -> None
         "See issue #7, affecting only narrow builds (2.6-3.3)"
         url = URL.from_text('https://xn--vi8hiv.ws')
         iri = url.to_iri()
@@ -1104,6 +1168,7 @@ class TestURL(HyperlinkTestCase):
         # as long as we don't get ValueErrors, we're good
 
     def test_delim_in_param(self):
+        # type: () -> None
         "Per issue #6 and #8"
         self.assertRaises(ValueError, URL, scheme=u'http', host=u'a/c')
         self.assertRaises(ValueError, URL, path=(u"?",))
@@ -1111,6 +1176,7 @@ class TestURL(HyperlinkTestCase):
         self.assertRaises(ValueError, URL, query=((u"&", "test")))
 
     def test_empty_paths_eq(self):
+        # type: () -> None
         u1 = URL.from_text('http://example.com/')
         u2 = URL.from_text('http://example.com')
 
@@ -1132,11 +1198,14 @@ class TestURL(HyperlinkTestCase):
         assert u1 == u2
 
     def test_from_text_type(self):
+        # type: () -> None
         assert URL.from_text(u'#ok').fragment == u'ok'  # sanity
         self.assertRaises(TypeError, URL.from_text, b'bytes://x.y.z')
         self.assertRaises(TypeError, URL.from_text, object())
 
     def test_from_text_bad_authority(self):
+        # type: () -> None
+
         # bad ipv6 brackets
         self.assertRaises(URLParseError, URL.from_text, 'http://[::1/')
         self.assertRaises(URLParseError, URL.from_text, 'http://::1]/')
@@ -1151,6 +1220,7 @@ class TestURL(HyperlinkTestCase):
         self.assertRaises(URLParseError, URL.from_text, 'http://127.0.0.1::80')
 
     def test_normalize(self):
+        # type: () -> None
         url = URL.from_text('HTTP://Example.com/A%61/./../A%61?B%62=C%63#D%64')
         assert url.get('Bb') == []
         assert url.get('B%62') == ['C%63']
@@ -1205,6 +1275,8 @@ class TestURL(HyperlinkTestCase):
         )
 
     def test_str(self):
+        # type: () -> None
+
         # see also issue #49
         text = u'http://example.com/á/y%20a%20y/?b=%25'
         url = URL.from_text(text)
@@ -1219,6 +1291,7 @@ class TestURL(HyperlinkTestCase):
             assert isinstance(bytes(url), bytes)
 
     def test_idna_corners(self):
+        # type: () -> None
         url = URL.from_text(u'http://abé.com/')
         assert url.to_iri().host == u'abé.com'
         assert url.to_uri().host == u'xn--ab-cja.com'

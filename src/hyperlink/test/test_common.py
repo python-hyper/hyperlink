@@ -1,6 +1,7 @@
 """
 Tests for hyperlink.test.common
 """
+from typing import Any
 from unittest import TestCase
 from .common import HyperlinkTestCase
 
@@ -21,9 +22,11 @@ class TestHyperlink(TestCase):
     """Tests for HyperlinkTestCase"""
 
     def setUp(self):
+        # type: () -> None
         self.hyperlink_test = HyperlinkTestCase("run")
 
     def test_assertRaisesWithCallable(self):
+        # type: () -> None
         """HyperlinkTestCase.assertRaises does not raise an AssertionError
         when given a callable that, when called with the provided
         arguments, raises the expected exception.
@@ -32,6 +35,7 @@ class TestHyperlink(TestCase):
         called_with = []
 
         def raisesExpected(*args, **kwargs):
+            # type: (Any, Any) -> None
             called_with.append((args, kwargs))
             raise _ExpectedException
 
@@ -40,12 +44,14 @@ class TestHyperlink(TestCase):
         self.assertEqual(called_with, [((1,), {"keyword": True})])
 
     def test_assertRaisesWithCallableUnexpectedException(self):
+        # type: () -> None
         """When given a callable that raises an unexpected exception,
         HyperlinkTestCase.assertRaises raises that exception.
 
         """
 
         def doesNotRaiseExpected(*args, **kwargs):
+            # type: (Any, Any) -> None
             raise _UnexpectedException
 
         try:
@@ -55,13 +61,15 @@ class TestHyperlink(TestCase):
             pass
 
     def test_assertRaisesWithCallableDoesNotRaise(self):
+        # type: () -> None
         """HyperlinkTestCase.assertRaises raises an AssertionError when given
         a callable that, when called, does not raise any exception.
 
         """
 
         def doesNotRaise(*args, **kwargs):
-            return True
+            # type: (Any, Any) -> None
+            pass
 
         try:
             self.hyperlink_test.assertRaises(_ExpectedException,
@@ -70,6 +78,7 @@ class TestHyperlink(TestCase):
             pass
 
     def test_assertRaisesContextManager(self):
+        # type: () -> None
         """HyperlinkTestCase.assertRaises does not raise an AssertionError
         when used as a context manager with a suite that raises the
         expected exception.  The context manager stores the exception
@@ -84,6 +93,7 @@ class TestHyperlink(TestCase):
         )
 
     def test_assertRaisesContextManagerUnexpectedException(self):
+        # type: () -> None
         """When used as a context manager with a block that raises an
         unexpected exception, HyperlinkTestCase.assertRaises raises
         that unexpected exception.
@@ -96,6 +106,7 @@ class TestHyperlink(TestCase):
             pass
 
     def test_assertRaisesContextManagerDoesNotRaise(self):
+        # type: () -> None
         """HyperlinkTestcase.assertRaises raises an AssertionError when used
         as a context manager with a block that does not raise any
         exception.

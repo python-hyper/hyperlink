@@ -16,6 +16,7 @@ TOTAL_URL = (
 class TestURL(HyperlinkTestCase):
 
     def test_durl_basic(self):
+        # type: () -> None
         bdurl = DecodedURL.from_text(BASIC_URL)
         assert bdurl.scheme == 'http'
         assert bdurl.host == 'example.com'
@@ -36,6 +37,8 @@ class TestURL(HyperlinkTestCase):
         assert durl.userinfo == ('user', '\0\0\0\0')
 
     def test_passthroughs(self):
+        # type: () -> None
+
         # just basic tests for the methods that more or less pass straight
         # through to the underlying URL
 
@@ -72,10 +75,12 @@ class TestURL(HyperlinkTestCase):
         assert durl != 1
 
     def test_repr(self):
+        # type: () -> None
         durl = DecodedURL.from_text(TOTAL_URL)
         assert repr(durl) == 'DecodedURL(url=' + repr(durl._url) + ')'
 
     def test_query_manipulation(self):
+        # type: () -> None
         durl = DecodedURL.from_text(TOTAL_URL)
 
         assert durl.get('zot') == ['23%']
@@ -115,6 +120,7 @@ class TestURL(HyperlinkTestCase):
         )
 
     def test_equality_and_hashability(self):
+        # type: () -> None
         durl = DecodedURL.from_text(TOTAL_URL)
         durl2 = DecodedURL.from_text(TOTAL_URL)
         burl = DecodedURL.from_text(BASIC_URL)
@@ -141,6 +147,7 @@ class TestURL(HyperlinkTestCase):
         assert len(durl_map) == 3
 
     def test_replace_roundtrip(self):
+        # type: () -> None
         durl = DecodedURL.from_text(TOTAL_URL)
 
         durl2 = durl.replace(scheme=durl.scheme,
@@ -156,12 +163,14 @@ class TestURL(HyperlinkTestCase):
         assert durl == durl2
 
     def test_replace_userinfo(self):
+        # type: () -> None
         durl = DecodedURL.from_text(TOTAL_URL)
         with self.assertRaises(ValueError):
             durl.replace(userinfo=['user', 'pw', 'thiswillcauseafailure'])
         return
 
     def test_twisted_compat(self):
+        # type: () -> None
         durl = DecodedURL.from_text(TOTAL_URL)
 
         assert durl == DecodedURL.fromText(TOTAL_URL)
@@ -170,9 +179,12 @@ class TestURL(HyperlinkTestCase):
         assert durl.to_text() == durl.asText()
 
     def test_percent_decode_bytes(self):
+        # type: () -> None
         assert _percent_decode('%00', subencoding=False) == b'\0'
 
     def test_percent_decode_mixed(self):
+        # type: () -> None
+
         # See https://github.com/python-hyper/hyperlink/pull/59 for a
         # nice discussion of the possibilities
         assert _percent_decode('abcdé%C3%A9éfg') == 'abcdéééfg'
@@ -191,6 +203,7 @@ class TestURL(HyperlinkTestCase):
         assert _percent_decode('é%25é', subencoding='ascii') == 'é%25é'
 
     def test_click_decoded_url(self):
+        # type: () -> None
         durl = DecodedURL.from_text(TOTAL_URL)
         durl_dest = DecodedURL.from_text('/tëst')
 
