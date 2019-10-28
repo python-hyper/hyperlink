@@ -65,9 +65,9 @@ class TestSchemeRegistration(HyperlinkTestCase):
     def test_register_invalid_uses_netloc(self):
         # type: () -> None
         with self.assertRaises(ValueError):
-            register_scheme('lol', uses_netloc=cast(bool, lambda: 'nope'))
+            register_scheme('lol', uses_netloc=cast(bool, object()))
 
     def test_register_invalid_port(self):
         # type: () -> None
         with self.assertRaises(ValueError):
-            register_scheme('nope', default_port=cast(int, lambda: 'lol'))
+            register_scheme('nope', default_port=cast(bool, object()))
