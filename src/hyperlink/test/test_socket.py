@@ -9,22 +9,27 @@ except ImportError:
 
     class TestSocket(HyperlinkTestCase):
         def test_inet_pton_ipv4_valid(self):
+            # type: () -> None
             data = inet_pton(socket.AF_INET, "127.0.0.1")
             assert isinstance(data, bytes)
 
         def test_inet_pton_ipv4_bogus(self):
+            # type: () -> None
             with self.assertRaises(socket.error):
                 inet_pton(socket.AF_INET, "blah")
 
         def test_inet_pton_ipv6_valid(self):
+            # type: () -> None
             data = inet_pton(socket.AF_INET6, "::1")
             assert isinstance(data, bytes)
 
         def test_inet_pton_ipv6_bogus(self):
+            # type: () -> None
             with self.assertRaises(socket.error):
                 inet_pton(socket.AF_INET6, "blah")
 
         def test_inet_pton_bogus_family(self):
+            # type: () -> None
             # Find an integer not associated with a known address family
             i = int(socket.AF_INET6) + 100
             while True:
