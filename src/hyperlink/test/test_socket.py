@@ -1,6 +1,11 @@
+# mypy: always-true=inet_pton
+
 try:
     from socket import inet_pton
 except ImportError:
+    inet_pton = None  # type: ignore[assignment]
+
+if inet_pton:
     import socket
 
     from .common import HyperlinkTestCase
