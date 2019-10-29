@@ -26,4 +26,4 @@ except ImportError:
 
         def test_inet_pton_bogus_family(self):
             with self.assertRaises(socket.error):
-                inet_pton("blah", "blah")
+                inet_pton(-1, "blah")
