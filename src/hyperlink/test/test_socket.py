@@ -36,7 +36,7 @@ if inet_pton:
         def test_inet_pton_bogus_family(self):
             # type: () -> None
             # Find an integer not associated with a known address family
-            i = int(socket.AF_INET6) + 100
+            i = int(socket.AF_INET6)
             while True:
                 if i != socket.AF_INET and i != socket.AF_INET6:
                     break
