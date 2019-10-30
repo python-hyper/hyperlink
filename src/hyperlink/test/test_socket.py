@@ -5,7 +5,7 @@ try:
 except ImportError:
     inet_pton = None  # type: ignore[assignment]
 
-if inet_pton:
+if not inet_pton:
     import socket
 
     from .common import HyperlinkTestCase
