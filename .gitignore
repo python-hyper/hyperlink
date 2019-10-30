@@ -3,6 +3,7 @@ tmp.py
 htmlcov/
 .coverage.*
 *.py[cod]
+.mypy_cache
 
 # emacs
 *~
@@ -33,7 +34,7 @@ pip-log.txt
 
 # Unit test / coverage reports
 .coverage
-.tox
+.tox/
 nosetests.xml
 
 # Translations
