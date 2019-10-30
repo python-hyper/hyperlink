@@ -43,4 +43,4 @@ if not inet_pton:
                 i += 100
 
             with self.assertRaises(socket.error):
-                inet_pton(i, "blah")
+                inet_pton(i, "127.0.0.1")
