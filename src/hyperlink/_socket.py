@@ -29,14 +29,18 @@ except ImportError:
             addr.sa_family = address_family
             addr_size = ctypes.c_int(ctypes.sizeof(addr))
 
+            try:
+                attribute, size = {
+                    socket.AF_INET: ("ipv4_addr", 4),
+                    socket.AF_INET6: ("ipv6_addr", 16),
+                }[address_family]
+            except KeyError:
+                raise socket.error("unknown address family")
+
             if WSAStringToAddressA(
                 ip_string_bytes, address_family, None,
                 ctypes.byref(addr), ctypes.byref(addr_size)
             ) != 0:
                 raise socket.error(ctypes.FormatError())
 
-            if address_family == socket.AF_INET:
-                return ctypes.string_at(addr.ipv4_addr, 4)
-            if address_family == socket.AF_INET6:
-                return ctypes.string_at(addr.ipv6_addr, 16)
-            raise socket.error('unknown address family')
+            return ctypes.string_at(getattr(addr, attribute), size)
