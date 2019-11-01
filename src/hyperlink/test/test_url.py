@@ -7,7 +7,7 @@ from __future__ import unicode_literals
 
 import sys
 import socket
-from typing import Any, Iterable, Optional, Text, Tuple
+from typing import Any, Iterable, Optional, Text, Tuple, cast
 
 from .common import HyperlinkTestCase
 from .. import URL, URLParseError
@@ -825,7 +825,7 @@ class TestURL(HyperlinkTestCase):
         handling dictionaries.
         """
         expected = (('alpha', 'beta'),)
-        url = URL(query=[['alpha', 'beta']])
+        url = URL(query=[('alpha', 'beta')])
         self.assertEqual(url.query, expected)
         url = URL(query={'alpha': 'beta'})
         self.assertEqual(url.query, expected)
@@ -871,7 +871,7 @@ class TestURL(HyperlinkTestCase):
         def check(param, expectation=defaultExpectation):
             # type: (Any, str) -> None
             with self.assertRaises(TypeError) as raised:
-                URL(**{param: Unexpected()})
+                URL(**{param: Unexpected()})  # type: ignore[arg-type] ok
 
             assertRaised(raised, expectation, param)
 
@@ -883,41 +883,41 @@ class TestURL(HyperlinkTestCase):
         check("port", "int or NoneType")
 
         with self.assertRaises(TypeError) as raised:
-            URL(path=[Unexpected()])
+            URL(path=[cast(Text, Unexpected())])
 
         assertRaised(raised, defaultExpectation, "path segment")
 
         with self.assertRaises(TypeError) as raised:
-            URL(query=[(u"name", Unexpected())])
+            URL(query=[(u"name", cast(Text, Unexpected()))])
 
         assertRaised(raised, defaultExpectation + " or NoneType",
                      "query parameter value")
 
         with self.assertRaises(TypeError) as raised:
-            URL(query=[(Unexpected(), u"value")])
+            URL(query=[(cast(Text, Unexpected()), u"value")])
 
         assertRaised(raised, defaultExpectation, "query parameter name")
         # No custom error message for this one, just want to make sure
         # non-2-tuples don't get through.
 
         with self.assertRaises(TypeError):
-            URL(query=[Unexpected()])
+            URL(query=[cast(Tuple[Text, Text], Unexpected())])
 
         with self.assertRaises(ValueError):
-            URL(query=[('k', 'v', 'vv')])
+            URL(query=[cast(Tuple[Text, Text], ('k', 'v', 'vv'))])
 
         with self.assertRaises(ValueError):
-            URL(query=[('k',)])
+            URL(query=[cast(Tuple[Text, Text], ('k',))])
 
         url = URL.from_text("https://valid.example.com/")
         with self.assertRaises(TypeError) as raised:
-            url.child(Unexpected())
+            url.child(cast(Text, Unexpected()))
         assertRaised(raised, defaultExpectation, "path segment")
         with self.assertRaises(TypeError) as raised:
-            url.sibling(Unexpected())
+            url.sibling(cast(Text, Unexpected()))
         assertRaised(raised, defaultExpectation, "path segment")
         with self.assertRaises(TypeError) as raised:
-            url.click(Unexpected())
+            url.click(cast(Text, Unexpected()))
         assertRaised(raised, defaultExpectation, "relative URL")
 
     def test_technicallyTextIsIterableBut(self):

@@ -18,14 +18,21 @@ As seen here, the API revolves around the lightweight and immutable
 import re
 import sys
 import string
-import socket
-from typing import Callable, Text, Type
+from socket import AF_INET, AF_INET6, error as SocketError
+try:
+    from socket import AddressFamily
+except ImportError:
+    AddressFamily = int  # type: ignore[assignment,misc] Python 2
+from typing import (
+    Callable, Iterable, Iterator, List, Mapping, Optional,
+    Sequence, Text, Tuple, Type, Union,
+)
 from unicodedata import normalize
 from ._socket import inet_pton
 try:
-    from collections.abc import Mapping
+    from collections.abc import Mapping as MappingABC
 except ImportError:  # Python 2
-    from collections import Mapping
+    from collections import Mapping as MappingABC
 
 from idna import encode as idna_encode, decode as idna_decode
 
@@ -37,6 +44,10 @@ try:
 except NameError:  # Py3
     unichr = chr  # type: Callable[[int], Text]
 NoneType = type(None)  # type: Type[None]
+QueryParameter = Union[
+    Mapping[Text, Optional[Text]],
+    Iterable[Tuple[Text, Optional[Text]]],
+]
 
 
 # from boltons.typeutils
@@ -187,6 +198,7 @@ _ROOT_PATHS = frozenset(((), (u'',)))
 
 
 def _encode_reserved(text, maximal=True):
+    # type: (Text, bool) -> Text
     """A very comprehensive percent encoding for encoding all
     delimiters. Used for arguments to DecodedURL, where a % means a
     percent sign, and not the character used by URLs for escaping
@@ -200,6 +212,7 @@ def _encode_reserved(text, maximal=True):
 
 
 def _encode_path_part(text, maximal=True):
+    # type: (Text, bool) -> Text
     "Percent-encode a single segment of a URL path."
     if maximal:
         bytestr = normalize('NFC', text).encode('utf8')
@@ -209,6 +222,7 @@ def _encode_path_part(text, maximal=True):
 
 
 def _encode_schemeless_path_part(text, maximal=True):
+    # type: (Text, bool) -> Text
     """Percent-encode the first segment of a URL path for a URL without a
     scheme specified.
     """
@@ -261,6 +275,7 @@ def _encode_path_parts(text_parts, rooted=False, has_scheme=True,
 
 
 def _encode_query_key(text, maximal=True):
+    # type: (Text, bool) -> Text
     """
     Percent-encode a single query string key or value.
     """
@@ -272,6 +287,7 @@ def _encode_query_key(text, maximal=True):
 
 
 def _encode_query_value(text, maximal=True):
+    # type: (Text, bool) -> Text
     """
     Percent-encode a single query string key or value.
     """
@@ -283,6 +299,7 @@ def _encode_query_value(text, maximal=True):
 
 
 def _encode_fragment_part(text, maximal=True):
+    # type: (Text, bool) -> Text
     """Quote the fragment part of the URL. Fragments don't have
     subdelimiters, so the whole URL fragment can be passed.
     """
@@ -294,6 +311,7 @@ def _encode_fragment_part(text, maximal=True):
 
 
 def _encode_userinfo_part(text, maximal=True):
+    # type: (Text, bool) -> Text
     """Quote special characters in either the username or password
     section of the URL.
     """
@@ -369,6 +387,7 @@ def register_scheme(text, uses_netloc=True, default_port=None):
 
 
 def scheme_uses_netloc(scheme, default=None):
+    # type: (Text, Optional[bool]) -> Optional[bool]
     """Whether or not a URL uses :code:`:` or :code:`://` to separate the
     scheme from the rest of the URL depends on the scheme's own
     standard definition. There is no way to infer this behavior
@@ -442,6 +461,7 @@ def _textcheck(name, value, delims=frozenset(), nullable=False):
 
 
 def iter_pairs(iterable):
+    # type: (Iterable) -> Iterator
     """
     Iterate over the (key, value) pairs in ``iterable``.
 
@@ -449,7 +469,7 @@ def iter_pairs(iterable):
     iterable yields (key, value) pairs. This behaviour is similar to
     what Python's ``dict()`` constructor does.
     """
-    if isinstance(iterable, Mapping):
+    if isinstance(iterable, MappingABC):
         iterable = iterable.items()
     return iter(iterable)
 
@@ -590,6 +610,7 @@ def _percent_decode(text, normalize_case=False, subencoding='utf-8',
 
 
 def _decode_host(host):
+    # type: (Text) -> Text
     """Decode a host from ASCII-encodable text to IDNA-decoded text. If
     the host text is not ASCII, it is returned unchanged, as it is
     presumed that it is already IDNA-decoded.
@@ -653,19 +674,20 @@ def _decode_host(host):
 
 
 def _resolve_dot_segments(path):
+    # type: (Sequence[Text]) -> Sequence[Text]
     """Normalize the URL path by resolving segments of '.' and '..'. For
     more details, see `RFC 3986 section 5.2.4, Remove Dot Segments`_.
 
     Args:
-       path (list): path segments in string form
+       path: sequence of path segments in text form
 
     Returns:
-       list: a new list of path segments with the '.' and '..' elements
+       list: a new sequence of path segments with the '.' and '..' elements
           removed and resolved.
 
     .. _RFC 3986 section 5.2.4, Remove Dot Segments: https://tools.ietf.org/html/rfc3986#section-5.2.4
     """  # noqa: E501
-    segs = []
+    segs = []  # type: List[Text]
 
     for seg in path:
         if seg == u'.':
@@ -683,6 +705,7 @@ def _resolve_dot_segments(path):
 
 
 def parse_host(host):
+    # type: (Text) -> Tuple[Optional[AddressFamily], Text]
     """Parse the host into a tuple of ``(family, host)``, where family
     is the appropriate :mod:`socket` module constant when the host is
     an IP address. Family is ``None`` when the host is not an IP.
@@ -692,6 +715,7 @@ def parse_host(host):
     Returns:
       tuple: family (socket constant or None), host (string)
 
+    >>> import socket
     >>> parse_host('googlewebsite.com') == (None, 'googlewebsite.com')
     True
     >>> parse_host('::1') == (socket.AF_INET6, '::1')
@@ -701,22 +725,24 @@ def parse_host(host):
     """
     if not host:
         return None, u''
+
     if u':' in host:
         try:
-            inet_pton(socket.AF_INET6, host)
-        except socket.error as se:
+            inet_pton(AF_INET6, host)
+        except SocketError as se:
             raise URLParseError('invalid IPv6 host: %r (%r)' % (host, se))
         except UnicodeEncodeError:
             pass  # TODO: this can't be a real host right?
         else:
-            family = socket.AF_INET6
-            return family, host
-    try:
-        inet_pton(socket.AF_INET, host)
-    except (socket.error, UnicodeEncodeError):
-        family = None  # not an IP
+            family = AF_INET6  # type: Optional[AddressFamily]
     else:
-        family = socket.AF_INET
+        try:
+            inet_pton(AF_INET, host)
+        except (SocketError, UnicodeEncodeError):
+            family = None  # not an IP
+        else:
+            family = AF_INET
+
     return family, host
 
 
@@ -749,37 +775,46 @@ class URL(object):
     constructor arguments is below.
 
     Args:
-       scheme (unicode): The text name of the scheme.
-       host (unicode): The host portion of the network location
-       port (int): The port part of the network location. If
-          ``None`` or no port is passed, the port will default to
-          the default port of the scheme, if it is known. See the
-          ``SCHEME_PORT_MAP`` and :func:`register_default_port`
-          for more info.
-       path (tuple): A tuple of strings representing the
-          slash-separated parts of the path.
-       query (tuple): The query parameters, as a dictionary or
-          as an iterable of key-value pairs.
-       fragment (unicode): The fragment part of the URL.
-       rooted (bool): Whether or not the path begins with a slash.
-       userinfo (unicode): The username or colon-separated
-          username:password pair.
-       uses_netloc (bool): Indicates whether two slashes appear
-          between the scheme and the host (``http://eg.com`` vs
-          ``mailto:e@g.com``). Set automatically based on scheme.
+        scheme: The text name of the scheme.
+        host: The host portion of the network location
+        port: The port part of the network location. If ``None`` or no port is
+            passed, the port will default to the default port of the scheme, if
+            it is known. See the ``SCHEME_PORT_MAP`` and
+            :func:`register_default_port` for more info.
+        path: A tuple of strings representing the slash-separated parts of the
+            path.
+        query: The query parameters, as a dictionary or as an iterable of
+            key-value pairs.
+        fragment: The fragment part of the URL.
+        rooted: Whether or not the path begins with a slash.
+        userinfo: The username or colon-separated username:password pair.
+        uses_netloc: Indicates whether two slashes appear between the scheme
+            and the host (``http://eg.com`` vs. ``mailto:e@g.com``).
+            Set automatically based on scheme.
 
-    All of these parts are also exposed as read-only attributes of
-    URL instances, along with several useful methods.
+    All of these parts are also exposed as read-only attributes of URL
+    instances, along with several useful methods.
 
     .. _RFC 3986: https://tools.ietf.org/html/rfc3986
     .. _RFC 3987: https://tools.ietf.org/html/rfc3987
     """  # noqa: E501
 
-    def __init__(self, scheme=None, host=None, path=(), query=(), fragment=u'',
-                 port=None, rooted=None, userinfo=u'', uses_netloc=None):
+    def __init__(
+        self,
+        scheme=None,       # type: Optional[Text]
+        host=None,         # type: Optional[Text]
+        path=(),           # type: Iterable[Text]
+        query=(),          # type: QueryParameter
+        fragment=u"",      # type: Text
+        port=None,         # type: Optional[int]
+        rooted=None,       # type: Optional[bool]
+        userinfo=u"",      # type: Text
+        uses_netloc=None,  # type: Optional[bool]
+    ):
+        # type: (...) -> None
         if host is not None and scheme is None:
             scheme = u'http'  # TODO: why
-        if port is None:
+        if port is None and scheme is not None:
             port = SCHEME_PORT_MAP.get(scheme)
         if host and query and not path:
             # per RFC 3986 6.2.3, "a URI that uses the generic syntax
