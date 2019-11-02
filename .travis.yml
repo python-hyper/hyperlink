@@ -18,6 +18,8 @@ matrix:
       env: TOXENV=test-py36,codecov
     - python: "3.7"
       env: TOXENV=test-py37,codecov
+    - python: "3.8"
+      env: TOXENV=test-py38,codecov
     - python: "pypy"
       env: TOXENV=test-pypy,codecov
     - python: "pypy3"
