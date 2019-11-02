@@ -52,7 +52,8 @@ QueryParameter = Union[
 
 
 # from boltons.typeutils
-def make_sentinel(name='_MISSING', var_name=None):
+def make_sentinel(name='_MISSING', var_name=""):
+    # type: (str, str) -> object
     """Creates and returns a new **instance** of a new class, suitable for
     usage as a "sentinel", a kind of singleton often used to indicate
     a value is missing when ``None`` is a valid input.
@@ -84,18 +85,24 @@ def make_sentinel(name='_MISSING', var_name=None):
     """
     class Sentinel(object):
         def __init__(self):
+            # type: () -> None
             self.name = name
             self.var_name = var_name
 
         def __repr__(self):
+            # type: () -> str
             if self.var_name:
                 return self.var_name
             return '%s(%r)' % (self.__class__.__name__, self.name)
         if var_name:
-            def __reduce__(self):
+            # superclass type hints don't allow str return type, but it is
+            # allowed in the docs, hence the ignore[override] below
+            def __reduce__(self):  # type: ignore[override] intentional
+                # type: () -> str
                 return self.var_name
 
         def __nonzero__(self):
+            # type: () -> bool
             return False
 
         __bool__ = __nonzero__
