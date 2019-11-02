@@ -18,7 +18,8 @@ As seen here, the API revolves around the lightweight and immutable
 import re
 import sys
 import string
-from socket import AF_INET, AF_INET6, error as SocketError
+import socket
+from socket import AF_INET, AF_INET6
 try:
     from socket import AddressFamily
 except ImportError:
@@ -729,7 +730,7 @@ def parse_host(host):
     if u':' in host:
         try:
             inet_pton(AF_INET6, host)
-        except SocketError as se:
+        except socket.error as se:
             raise URLParseError('invalid IPv6 host: %r (%r)' % (host, se))
         except UnicodeEncodeError:
             pass  # TODO: this can't be a real host right?
@@ -738,7 +739,7 @@ def parse_host(host):
     else:
         try:
             inet_pton(AF_INET, host)
-        except (SocketError, UnicodeEncodeError):
+        except (socket.error, UnicodeEncodeError):
             family = None  # not an IP
         else:
             family = AF_INET
