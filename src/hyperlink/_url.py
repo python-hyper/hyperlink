@@ -234,8 +234,14 @@ def _encode_schemeless_path_part(text, maximal=True):
                      if t in _SCHEMELESS_PATH_DELIMS else t for t in text])
 
 
-def _encode_path_parts(text_parts, rooted=False, has_scheme=True,
-                       has_authority=True, joined=True, maximal=True):
+def _encode_path_parts(
+    text_parts,          # type: Sequence[Text]
+    rooted=False,        # type: bool
+    has_scheme=True,     # type: bool
+    has_authority=True,  # type: bool
+    maximal=True,        # type: bool
+):
+    # type: (...) -> Sequence[Text]
     """
     Percent-encode a tuple of path parts into a complete path.
 
@@ -257,12 +263,12 @@ def _encode_path_parts(text_parts, rooted=False, has_scheme=True,
        first path segment cannot contain a colon (":") character.
     """
     if not text_parts:
-        return u'' if joined else text_parts
+        return ()
     if rooted:
-        text_parts = (u'',) + text_parts
+        text_parts = (u'',) + tuple(text_parts)
     # elif has_authority and text_parts:
     #     raise Exception('see rfc above')  # TODO: too late to fail like this?
-    encoded_parts = []
+    encoded_parts = []  # type: List[Text]
     if has_scheme:
         encoded_parts = [_encode_path_part(part, maximal=maximal)
                          if part else part for part in text_parts]
@@ -270,8 +276,6 @@ def _encode_path_parts(text_parts, rooted=False, has_scheme=True,
         encoded_parts = [_encode_schemeless_path_part(text_parts[0])]
         encoded_parts.extend([_encode_path_part(part, maximal=maximal)
                               if part else part for part in text_parts[1:]])
-    if joined:
-        return u'/'.join(encoded_parts)
     return tuple(encoded_parts)
 
 
@@ -1278,7 +1282,7 @@ class URL(object):
             return self
 
         segments = [_textcheck('path segment', s) for s in segments]
-        new_segs = _encode_path_parts(segments, joined=False, maximal=False)
+        new_segs = _encode_path_parts(segments, maximal=False)
         new_path = self.path[:-1 if (self.path and self.path[-1] == u'')
                              else None] + new_segs
         return self.replace(path=new_path)
@@ -1378,7 +1382,7 @@ class URL(object):
         new_userinfo = u':'.join([_encode_userinfo_part(p) for p in
                                   self.userinfo.split(':', 1)])
         new_path = _encode_path_parts(self.path, has_scheme=bool(self.scheme),
-                                      rooted=False, joined=False, maximal=True)
+                                      rooted=False, maximal=True)
         new_host = (
             self.host
             if not self.host
@@ -1459,11 +1463,13 @@ class URL(object):
         """
         scheme = self.scheme
         authority = self.authority(with_password)
-        path = _encode_path_parts(self.path,
-                                  rooted=self.rooted,
-                                  has_scheme=bool(scheme),
-                                  has_authority=bool(authority),
-                                  maximal=False)
+        path = "/".join(_encode_path_parts(
+            self.path,
+            rooted=self.rooted,
+            has_scheme=bool(scheme),
+            has_authority=bool(authority),
+            maximal=False
+        ))
         query_parts = []
         for k, v in self.query:
             if v is None:
