@@ -25,8 +25,8 @@ try:
 except ImportError:
     AddressFamily = int  # type: ignore[assignment,misc] Python 2
 from typing import (
-    Callable, Iterable, Iterator, List, Mapping, Optional,
-    Sequence, Text, Tuple, Type, Union,
+    Any, AnyStr, Callable, Iterable, Iterator, List, Mapping, Optional,
+    Sequence, Set, Text, Tuple, Type, TypeVar, Union,
 )
 from unicodedata import normalize
 from ._socket import inet_pton
@@ -39,7 +39,6 @@ from idna import encode as idna_encode, decode as idna_decode
 
 
 PY2 = (sys.version_info[0] == 2)
-unicode = type(u'')
 try:
     unichr
 except NameError:  # Py3
@@ -49,6 +48,7 @@ QueryParameter = Union[
     Mapping[Text, Optional[Text]],
     Iterable[Tuple[Text, Optional[Text]]],
 ]
+T = TypeVar('T')
 
 
 # from boltons.typeutils
@@ -161,6 +161,7 @@ _QUERY_KEY_DELIMS = _ALL_DELIMS - _QUERY_KEY_SAFE
 
 
 def _make_decode_map(delims, allow_percent=False):
+    # type: (Iterable[Text], bool) -> Mapping[bytes, bytes]
     ret = dict(_HEX_CHAR_MAP)
     if not allow_percent:
         delims = set(delims) | set([u'%'])
@@ -358,6 +359,7 @@ NO_NETLOC_SCHEMES = set(['urn', 'about', 'bitcoin', 'blob', 'data', 'geo',
 
 
 def register_scheme(text, uses_netloc=True, default_port=None):
+    # type: (Text, bool, Optional[int]) -> None
     """Registers new scheme information, resulting in correct port and
     slash behavior from the URL object. There are dozens of standard
     schemes preregistered, so this function is mostly meant for
@@ -366,13 +368,12 @@ def register_scheme(text, uses_netloc=True, default_port=None):
     `file an issue`_!
 
     Args:
-        text (unicode): Text representing the scheme.
+        text: Text representing the scheme.
            (the 'http' in 'http://hatnote.com')
-        uses_netloc (bool): Does the scheme support specifying a
-           network host? For instance, "http" does, "mailto" does
-           not. Defaults to True.
-        default_port (int): The default port, if any, for netloc-using
-           schemes.
+        uses_netloc: Does the scheme support specifying a
+           network host? For instance, "http" does, "mailto" does not.
+           Defaults to True.
+        default_port: The default port, if any, for netloc-using schemes.
 
     .. _file an issue: https://github.com/mahmoud/hyperlink/issues
 
@@ -394,8 +395,6 @@ def register_scheme(text, uses_netloc=True, default_port=None):
         NO_NETLOC_SCHEMES.add(text)
     else:
         raise ValueError('uses_netloc expected bool, not: %r' % uses_netloc)
-
-    return
 
 
 def scheme_uses_netloc(scheme, default=None):
@@ -438,6 +437,7 @@ class URLParseError(ValueError):
 
 
 def _optional(argument, default):
+    # type: (Any, Any) -> Any
     if argument is _UNSET:
         return default
     else:
@@ -445,6 +445,7 @@ def _optional(argument, default):
 
 
 def _typecheck(name, value, *types):
+    # type: (Text, T, Type) -> T
     """
     Check that the given *value* is one of the given *types*, or raise an
     exception describing the problem using *name*.
@@ -459,9 +460,11 @@ def _typecheck(name, value, *types):
 
 
 def _textcheck(name, value, delims=frozenset(), nullable=False):
-    if not isinstance(value, unicode):
+    # type: (Text, T, Iterable[Text], bool) -> T
+    if not isinstance(value, Text):
         if nullable and value is None:
-            return value  # used by query string values
+            # used by query string values
+            return value  # type: ignore[misc] unreachable
         else:
             str_name = "unicode" if PY2 else "str"
             exp = str_name + ' or NoneType' if nullable else str_name
@@ -469,7 +472,7 @@ def _textcheck(name, value, delims=frozenset(), nullable=False):
     if delims and set(value) & set(delims):  # TODO: test caching into regexes
         raise ValueError('one or more reserved delimiters %s present in %s: %r'
                          % (''.join(delims), name, value))
-    return value
+    return value  # type: ignore[return-value] T vs. Text
 
 
 def iter_pairs(iterable):
@@ -489,6 +492,7 @@ def iter_pairs(iterable):
 def _decode_unreserved(
     text, normalize_case=False, encode_stray_percents=False
 ):
+    # type: (Text, bool, bool) -> Union[str, bytes]
     return _percent_decode(text, normalize_case=normalize_case,
                            encode_stray_percents=encode_stray_percents,
                            _decode_map=_UNRESERVED_DECODE_MAP)
@@ -497,6 +501,7 @@ def _decode_unreserved(
 def _decode_userinfo_part(
     text, normalize_case=False, encode_stray_percents=False
 ):
+    # type: (Text, bool, bool) -> Union[str, bytes]
     return _percent_decode(text, normalize_case=normalize_case,
                            encode_stray_percents=encode_stray_percents,
                            _decode_map=_USERINFO_DECODE_MAP)
@@ -505,6 +510,7 @@ def _decode_userinfo_part(
 def _decode_path_part(
     text, normalize_case=False, encode_stray_percents=False
 ):
+    # type: (Text, bool, bool) -> Union[str, bytes]
     """
     >>> _decode_path_part(u'%61%77%2f%7a')
     u'aw%2fz'
@@ -519,6 +525,7 @@ def _decode_path_part(
 def _decode_query_key(
     text, normalize_case=False, encode_stray_percents=False
 ):
+    # type: (Text, bool, bool) -> Union[str, bytes]
     return _percent_decode(text, normalize_case=normalize_case,
                            encode_stray_percents=encode_stray_percents,
                            _decode_map=_QUERY_KEY_DECODE_MAP)
@@ -527,6 +534,7 @@ def _decode_query_key(
 def _decode_query_value(
     text, normalize_case=False, encode_stray_percents=False
 ):
+    # type: (Text, bool, bool) -> Union[str, bytes]
     return _percent_decode(text, normalize_case=normalize_case,
                            encode_stray_percents=encode_stray_percents,
                            _decode_map=_QUERY_VALUE_DECODE_MAP)
@@ -535,14 +543,21 @@ def _decode_query_value(
 def _decode_fragment_part(
     text, normalize_case=False, encode_stray_percents=False
 ):
+    # type: (Text, bool, bool) -> Union[str, bytes]
     return _percent_decode(text, normalize_case=normalize_case,
                            encode_stray_percents=encode_stray_percents,
                            _decode_map=_FRAGMENT_DECODE_MAP)
 
 
-def _percent_decode(text, normalize_case=False, subencoding='utf-8',
-                    raise_subencoding_exc=False, encode_stray_percents=False,
-                    _decode_map=_HEX_CHAR_MAP):
+def _percent_decode(
+    text,                         # type: Text
+    normalize_case=False,         # type: bool
+    subencoding="utf-8",          # type: Union[bool, Text]
+    raise_subencoding_exc=False,  # type: bool
+    encode_stray_percents=False,  # type: bool
+    _decode_map=_HEX_CHAR_MAP     # type: Mapping[bytes, bytes]
+):
+    # type: (...) -> Union[str, bytes]
     """Convert percent-encoded text characters to their normal,
     human-readable equivalents.
 
@@ -560,24 +575,26 @@ def _percent_decode(text, normalize_case=False, subencoding='utf-8',
     u'abc def'
 
     Args:
-       text (unicode): Text with percent-encoding present.
-       normalize_case (bool): Whether undecoded percent segments, such
-          as encoded delimiters, should be uppercased, per RFC 3986
-          Section 2.1. See :func:`_decode_path_part` for an example.
-       subencoding (unicode): The name of the encoding underlying the
-          percent-encoding. Pass `False` to get back raw bytes.
-       raise_subencoding_exc (bool): Whether an error in decoding the bytes
-          underlying the percent-decoding should be raised.
+        text: Text with percent-encoding present.
+        normalize_case: Whether undecoded percent segments, such as encoded
+            delimiters, should be uppercased, per RFC 3986 Section 2.1.
+            See :func:`_decode_path_part` for an example.
+        subencoding: The name of the encoding underlying the percent-encoding.
+            Pass `False` to get back raw bytes.
+        raise_subencoding_exc: Whether an error in decoding the bytes
+            underlying the percent-decoding should be raised.
 
     Returns:
-       unicode: The percent-decoded version of *text*, decoded by
-         *subencoding*, unless `subencoding=False` which returns bytes.
+        The percent-decoded version of *text*, decoded by *subencoding*,
+            unless `subencoding=False` which returns bytes.
 
     """
+    if subencoding is False:
+        subencoding = "utf-8"
+    assert isinstance(subencoding, Text)
+
     try:
-        quoted_bytes = text.encode(
-            'utf-8' if subencoding is False else subencoding
-        )
+        quoted_bytes = text.encode(subencoding)
     except UnicodeEncodeError:
         return text
 
@@ -694,7 +711,7 @@ def _resolve_dot_segments(path):
        path: sequence of path segments in text form
 
     Returns:
-       list: a new sequence of path segments with the '.' and '..' elements
+       A new sequence of path segments with the '.' and '..' elements
           removed and resolved.
 
     .. _RFC 3986 section 5.2.4, Remove Dot Segments: https://tools.ietf.org/html/rfc3986#section-5.2.4
@@ -725,7 +742,7 @@ def parse_host(host):
     Will raise :class:`URLParseError` on invalid IPv6 constants.
 
     Returns:
-      tuple: family (socket constant or None), host (string)
+        family (socket constant or None), host (string)
 
     >>> import socket
     >>> parse_host('googlewebsite.com') == (None, 'googlewebsite.com')
@@ -853,7 +870,7 @@ class URL(object):
                                  % (self._scheme, self.__class__.__name__))
 
         _, self._host = parse_host(_textcheck('host', host, '/?#@'))
-        if isinstance(path, unicode):
+        if isinstance(path, Text):
             raise TypeError("expected iterable of text for path, not: %r"
                             % (path,))
         self._path = tuple((_textcheck("path segment", segment, '/?#')
@@ -1018,7 +1035,7 @@ class URL(object):
         else:
             hostport = [self.host]
         if self.port != SCHEME_PORT_MAP.get(self.scheme):
-            hostport.append(unicode(self.port))
+            hostport.append(Text(self.port))
         authority = []
         if self.userinfo:
             userinfo = self.userinfo
