@@ -39,7 +39,6 @@ from idna import encode as idna_encode, decode as idna_decode
 
 
 PY2 = (sys.version_info[0] == 2)
-unicode = type(u'')
 try:
     unichr
 except NameError:  # Py3
@@ -459,7 +458,7 @@ def _typecheck(name, value, *types):
 
 
 def _textcheck(name, value, delims=frozenset(), nullable=False):
-    if not isinstance(value, unicode):
+    if not isinstance(value, Text):
         if nullable and value is None:
             return value  # used by query string values
         else:
@@ -853,7 +852,7 @@ class URL(object):
                                  % (self._scheme, self.__class__.__name__))
 
         _, self._host = parse_host(_textcheck('host', host, '/?#@'))
-        if isinstance(path, unicode):
+        if isinstance(path, Text):
             raise TypeError("expected iterable of text for path, not: %r"
                             % (path,))
         self._path = tuple((_textcheck("path segment", segment, '/?#')
@@ -1018,7 +1017,7 @@ class URL(object):
         else:
             hostport = [self.host]
         if self.port != SCHEME_PORT_MAP.get(self.scheme):
-            hostport.append(unicode(self.port))
+            hostport.append(Text(self.port))
         authority = []
         if self.userinfo:
             userinfo = self.userinfo
