@@ -891,14 +891,16 @@ class URL(object):
         return
 
     def get_decoded_url(self, lazy=False):
+        # type: (bool) -> DecodedURL
         try:
             return self._decoded_url
         except AttributeError:
-            self._decoded_url = DecodedURL(self, lazy=lazy)
+            self._decoded_url = DecodedURL(self, lazy=lazy)  # type: DecodedURL
         return self._decoded_url
 
     @property
     def scheme(self):
+        # type: () -> Text
         """The scheme is a string, and the first part of an absolute URL, the
         part before the first colon, and the part which defines the
         semantics of the rest of the URL. Examples include "http",
@@ -909,6 +911,7 @@ class URL(object):
 
     @property
     def host(self):
+        # type: () -> Text
         """The host is a string, and the second standard part of an absolute
         URL. When present, a valid host must be a domain name, or an
         IP (v4 or v6). It occurs before the first slash, or the second
@@ -918,6 +921,7 @@ class URL(object):
 
     @property
     def port(self):
+        # type: () -> Optional[int]
         """The port is an integer that is commonly used in connecting to the
         :attr:`host`, and almost never appears without it.
 
@@ -942,6 +946,7 @@ class URL(object):
 
     @property
     def path(self):
+        # type: () -> Sequence[Text]
         """A tuple of strings, created by splitting the slash-separated
         hierarchical path. Started by the first slash after the host,
         terminated by a "?", which indicates the start of the
@@ -951,6 +956,7 @@ class URL(object):
 
     @property
     def query(self):
+        # type: () -> QueryParameter
         """Tuple of pairs, created by splitting the ampersand-separated
         mapping of keys and optional values representing
         non-hierarchical data used to identify the resource. Keys are
@@ -966,6 +972,7 @@ class URL(object):
 
     @property
     def fragment(self):
+        # type: () -> Text
         """A string, the last part of the URL, indicated by the first "#"
         after the :attr:`~hyperlink.URL.path` or
         :attr:`~hyperlink.URL.query`. Enables indirect identification
@@ -976,6 +983,7 @@ class URL(object):
 
     @property
     def rooted(self):
+        # type: () -> bool
         """Whether or not the path starts with a forward slash (``/``).
 
         This is taken from the terminology in the BNF grammar,
@@ -989,6 +997,7 @@ class URL(object):
 
     @property
     def userinfo(self):
+        # type: () -> Text
         """The colon-separated string forming the username-password
         combination.
         """
@@ -996,18 +1005,21 @@ class URL(object):
 
     @property
     def uses_netloc(self):
+        # type: () -> Optional[bool]
         """
         """
         return self._uses_netloc
 
     @property
     def user(self):
+        # type: () -> Text
         """
         The user portion of :attr:`~hyperlink.URL.userinfo`.
         """
         return self.userinfo.split(u':')[0]
 
     def authority(self, with_password=False, **kw):
+        # type: (bool, Any) -> Text
         """Compute and return the appropriate host/port/userinfo combination.
 
         >>> url = URL.from_text(u'http://user:pass@localhost:8080/a/b?x=y')
@@ -1046,6 +1058,7 @@ class URL(object):
         return u"@".join(authority)
 
     def __eq__(self, other):
+        # type: (Any) -> bool
         if not isinstance(other, self.__class__):
             return NotImplemented
         for attr in ['scheme', 'userinfo', 'host', 'query',
@@ -1060,17 +1073,20 @@ class URL(object):
         return False
 
     def __ne__(self, other):
+        # type: (Any) -> bool
         if not isinstance(other, self.__class__):
             return NotImplemented
         return not self.__eq__(other)
 
     def __hash__(self):
+        # type: () -> int
         return hash((self.__class__, self.scheme, self.userinfo, self.host,
                      self.path, self.query, self.fragment, self.port,
                      self.rooted, self.uses_netloc))
 
     @property
     def absolute(self):
+        # type: () -> bool
         """Whether or not the URL is "absolute". Absolute URLs are complete
         enough to resolve to a network resource without being relative
         to a base URI.
@@ -1084,9 +1100,19 @@ class URL(object):
         """
         return bool(self.scheme and self.host)
 
-    def replace(self, scheme=_UNSET, host=_UNSET, path=_UNSET, query=_UNSET,
-                fragment=_UNSET, port=_UNSET, rooted=_UNSET, userinfo=_UNSET,
-                uses_netloc=_UNSET):
+    def replace(  # type: ignore[assignment] _UNSET is private
+        self,
+        scheme=_UNSET,      # type: Optional[Text]
+        host=_UNSET,        # type: Optional[Text]
+        path=_UNSET,        # type: Iterable[Text]
+        query=_UNSET,       # type: QueryParameter
+        fragment=_UNSET,    # type: Text
+        port=_UNSET,        # type: Optional[int]
+        rooted=_UNSET,      # type: Optional[bool]
+        userinfo=_UNSET,    # type: Text
+        uses_netloc=_UNSET  # type: Optional[bool]
+    ):
+        # type: (...) -> URL
         """:class:`URL` objects are immutable, which means that attributes
         are designed to be set only once, at construction. Instead of
         modifying an existing URL, one simply creates a copy with the
@@ -1114,7 +1140,7 @@ class URL(object):
               ``mailto:e@g.com``)
 
         Returns:
-           URL: a copy of the current :class:`URL`, with new values for
+           a copy of the current :class:`URL`, with new values for
               parameters passed.
 
         """
@@ -1132,6 +1158,7 @@ class URL(object):
 
     @classmethod
     def from_text(cls, text):
+        # type: (Text) -> URL
         """Whereas the :class:`URL` constructor is useful for constructing
         URLs from parts, :meth:`~URL.from_text` supports parsing whole
         URLs from their string form::
@@ -1162,19 +1189,17 @@ class URL(object):
 
         """
         um = _URL_RE.match(_textcheck('text', text))
-        try:
-            gs = um.groupdict()
-        except AttributeError:
+        if um is None:
             raise URLParseError('could not parse url: %r' % text)
+        gs = um.groupdict()
 
         au_text = gs['authority'] or u''
         au_m = _AUTHORITY_RE.match(au_text)
-        try:
-            au_gs = au_m.groupdict()
-        except AttributeError:
+        if au_m is None:
             raise URLParseError(
                 'invalid authority %r in url: %r' % (au_text, text)
             )
+        au_gs = au_m.groupdict()
         if au_gs['bad_host']:
             raise URLParseError(
                 'invalid host %r in url: %r' % (au_gs['bad_host'], text)
@@ -1186,7 +1211,7 @@ class URL(object):
         port = au_gs['port']
         if port is not None:
             try:
-                port = int(port)
+                port = int(port)  # type: ignore[assignment] TODO, also below
             except ValueError:
                 if not port:  # TODO: excessive?
                     raise URLParseError('port must not be empty: %r' % au_text)
@@ -1197,9 +1222,9 @@ class URL(object):
         uses_netloc = bool(gs['_netloc_sep'])
 
         if gs['path']:
-            path = gs['path'].split(u"/")
+            path = tuple(gs['path'].split(u"/"))
             if not path[0]:
-                path.pop(0)
+                path = path[1:]
                 rooted = True
             else:
                 rooted = False
@@ -1207,12 +1232,20 @@ class URL(object):
             path = ()
             rooted = bool(au_text)
         if gs['query']:
-            query = ((qe.split(u"=", 1) if u'=' in qe else (qe, None))
-                     for qe in gs['query'].split(u"&"))
+            query = [
+                (
+                    cast(Tuple[str, str], qe.split(u"=", 1))
+                    if u'=' in qe else
+                    (qe, None)
+                )
+                for qe in gs['query'].split(u"&")
+            ]  # type: Iterable[Tuple[str, Optional[str]]]
         else:
             query = ()
-        return cls(scheme, host, path, query, fragment, port,
-                   rooted, userinfo, uses_netloc)
+        return cls(
+            scheme, host, path, query, fragment,
+            port, rooted, userinfo, uses_netloc,  # type: ignore[arg-type] TODO
+        )
 
     def normalize(self, scheme=True, host=True, path=True, query=True,
                   fragment=True, userinfo=True, percents=True):
