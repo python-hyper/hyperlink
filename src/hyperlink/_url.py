@@ -25,7 +25,7 @@ try:
 except ImportError:
     AddressFamily = int  # type: ignore[assignment,misc] Python 2
 from typing import (
-    Any, Callable, Iterable, Iterator, List, Mapping, Optional,
+    Any, Callable, Dict, Iterable, Iterator, List, Mapping, Optional,
     Sequence, Text, Tuple, Type, TypeVar, Union, cast,
 )
 from unicodedata import normalize
@@ -59,9 +59,9 @@ def make_sentinel(name='_MISSING', var_name=""):
     a value is missing when ``None`` is a valid input.
 
     Args:
-        name (str): Name of the Sentinel
-        var_name (str): Set this name to the name of the variable in
-            its respective module enable pickleability.
+        name: Name of the Sentinel
+        var_name: Set this name to the name of the variable in its respective
+            module enable pickle-ability.
 
     >>> make_sentinel(var_name='_MISSING')
     _MISSING
@@ -74,14 +74,13 @@ def make_sentinel(name='_MISSING', var_name=""):
 
     .. note::
 
-      By design, additional calls to ``make_sentinel`` with the same
-      values will not produce equivalent objects.
+        By design, additional calls to ``make_sentinel`` with the same
+        values will not produce equivalent objects.
 
-      >>> make_sentinel('TEST') == make_sentinel('TEST')
-      False
-      >>> type(make_sentinel('TEST')) == type(make_sentinel('TEST'))
-      False
-
+        >>> make_sentinel('TEST') == make_sentinel('TEST')
+        False
+        >>> type(make_sentinel('TEST')) == type(make_sentinel('TEST'))
+        False
     """
     class Sentinel(object):
         def __init__(self):
@@ -369,14 +368,13 @@ def register_scheme(text, uses_netloc=True, default_port=None):
 
     Args:
         text: Text representing the scheme.
-           (the 'http' in 'http://hatnote.com')
+            (the 'http' in 'http://hatnote.com')
         uses_netloc: Does the scheme support specifying a network host?
-           For instance, "http" does, "mailto" does not.
-           Defaults to True.
+            For instance, "http" does, "mailto" does not.
+            Defaults to True.
         default_port: The default port, if any, for netloc-using schemes.
 
     .. _file an issue: https://github.com/mahmoud/hyperlink/issues
-
     """
     text = text.lower()
     if default_port is not None:
@@ -577,19 +575,18 @@ def _percent_decode(
     u'abc def'
 
     Args:
-       text (unicode): Text with percent-encoding present.
-       normalize_case (bool): Whether undecoded percent segments, such
-          as encoded delimiters, should be uppercased, per RFC 3986
-          Section 2.1. See :func:`_decode_path_part` for an example.
-       subencoding (unicode): The name of the encoding underlying the
-          percent-encoding. Pass `False` to get back raw bytes.
-       raise_subencoding_exc (bool): Whether an error in decoding the bytes
-          underlying the percent-decoding should be raised.
+        text: Text with percent-encoding present.
+        normalize_case: Whether undecoded percent segments, such as encoded
+            delimiters, should be uppercased, per RFC 3986 Section 2.1.
+            See :func:`_decode_path_part` for an example.
+        subencoding: The name of the encoding underlying the percent-encoding.
+            Pass `False` to get back raw bytes.
+        raise_subencoding_exc: Whether an error in decoding the bytes
+            underlying the percent-decoding should be raised.
 
     Returns:
-       unicode: The percent-decoded version of *text*, decoded by
-         *subencoding*, unless `subencoding=False` which returns bytes.
-
+       The percent-decoded version of *text*, decoded by *subencoding*, unless
+           `subencoding=False` which returns bytes.
     """
     try:
         quoted_bytes = text.encode(
@@ -711,8 +708,8 @@ def _resolve_dot_segments(path):
        path: sequence of path segments in text form
 
     Returns:
-       list: a new sequence of path segments with the '.' and '..' elements
-          removed and resolved.
+       A new sequence of path segments with the '.' and '..' elements removed
+           and resolved.
 
     .. _RFC 3986 section 5.2.4, Remove Dot Segments: https://tools.ietf.org/html/rfc3986#section-5.2.4
     """  # noqa: E501
@@ -940,7 +937,6 @@ class URL(object):
 
            Per the standard, when the port is the same as the schemes
            default port, it will be omitted in the text URL.
-
         """
         return self._port
 
@@ -956,7 +952,7 @@ class URL(object):
 
     @property
     def query(self):
-        # type: () -> QueryParameter
+        # type: () -> Tuple[Tuple[Text, Optional[Text]], ...]
         """Tuple of pairs, created by splitting the ampersand-separated
         mapping of keys and optional values representing
         non-hierarchical data used to identify the resource. Keys are
@@ -977,7 +973,6 @@ class URL(object):
         after the :attr:`~hyperlink.URL.path` or
         :attr:`~hyperlink.URL.query`. Enables indirect identification
         of a secondary resource, like an anchor within an HTML page.
-
         """
         return self._fragment
 
@@ -991,7 +986,6 @@ class URL(object):
         and "absolute URI" are somewhat ambiguous. :attr:`path` does
         not contain the implicit prefixed ``"/"`` since that is
         somewhat awkward to work with.
-
         """
         return self._rooted
 
@@ -1029,13 +1023,12 @@ class URL(object):
         u'user:pass@localhost:8080'
 
         Args:
-           with_password (bool): Whether the return value of this
-              method include the password in the URL, if it is
-              set. Defaults to False.
+           with_password: Whether the return value of this method include the
+               password in the URL, if it is set. Defaults to False.
 
         Returns:
-           str: The authority (network location and user information) portion
-              of the URL.
+           The authority (network location and user information) portion of the
+               URL.
         """
         # first, a bit of twisted compat
         with_password = kw.pop('includeSecrets', with_password)
@@ -1122,27 +1115,22 @@ class URL(object):
         the value on the current URL.
 
         Args:
-           scheme (unicode): The text name of the scheme.
-           host (unicode): The host portion of the network location
-           port (int): The port part of the network location.
-           path (tuple): A tuple of strings representing the
-              slash-separated parts of the path.
-           query (tuple): The query parameters, as a tuple of
-              key-value pairs.
-           query (tuple): The query parameters, as a dictionary or
-              as an iterable of key-value pairs.
-           fragment (unicode): The fragment part of the URL.
-           rooted (bool): Whether or not the path begins with a slash.
-           userinfo (unicode): The username or colon-separated
-              username:password pair.
-           uses_netloc (bool): Indicates whether two slashes appear
-              between the scheme and the host (``http://eg.com`` vs
-              ``mailto:e@g.com``)
+            scheme: The text name of the scheme.
+            host: The host portion of the network location
+            path: A tuple of strings representing the slash-separated parts of
+                the path.
+            query: The query parameters, as a dictionary or as an iterable of
+                key-value pairs.
+            fragment: The fragment part of the URL.
+            port: The port part of the network location.
+            rooted: Whether or not the path begins with a slash.
+            userinfo: The username or colon-separated username:password pair.
+            uses_netloc: Indicates whether two slashes appear between the
+                scheme and the host (``http://eg.com`` vs ``mailto:e@g.com``)
 
         Returns:
-           a copy of the current :class:`URL`, with new values for
-              parameters passed.
-
+            A copy of the current :class:`URL`, with new values for
+                parameters passed.
         """
         return self.__class__(
             scheme=_optional(scheme, self.scheme),
@@ -1163,10 +1151,10 @@ class URL(object):
         URLs from parts, :meth:`~URL.from_text` supports parsing whole
         URLs from their string form::
 
-           >>> URL.from_text(u'http://example.com')
-           URL.from_text(u'http://example.com')
-           >>> URL.from_text(u'?a=b&x=y')
-           URL.from_text(u'?a=b&x=y')
+            >>> URL.from_text(u'http://example.com')
+            URL.from_text(u'http://example.com')
+            >>> URL.from_text(u'?a=b&x=y')
+            URL.from_text(u'?a=b&x=y')
 
         As you can see above, it's also used as the :func:`repr` of
         :class:`URL` objects. The natural counterpart to
@@ -1174,10 +1162,10 @@ class URL(object):
         sure to decode those bytestrings.
 
         Args:
-           text (unicode): A valid URL string.
+           text: A valid URL string.
 
         Returns:
-           URL: The structured object version of the parsed string.
+           The structured object version of the parsed string.
 
         .. note::
 
@@ -1186,7 +1174,6 @@ class URL(object):
             look like URLs are still valid URLs. As a result, this
             method only raises :class:`URLParseError` on invalid port
             and IPv6 values in the host portion of the URL.
-
         """
         um = _URL_RE.match(_textcheck('text', text))
         if um is None:
@@ -1211,7 +1198,7 @@ class URL(object):
         port = au_gs['port']
         if port is not None:
             try:
-                port = int(port)  # type: ignore[assignment] TODO, also below
+                port = int(port)  # type: ignore[assignment] FIXME, also below
             except ValueError:
                 if not port:  # TODO: excessive?
                     raise URLParseError('port must not be empty: %r' % au_text)
@@ -1244,11 +1231,13 @@ class URL(object):
             query = ()
         return cls(
             scheme, host, path, query, fragment,
-            port, rooted, userinfo, uses_netloc,  # type: ignore[arg-type] TODO
+            port,  # type: ignore[arg-type] FIXME, also above
+            rooted, userinfo, uses_netloc,
         )
 
     def normalize(self, scheme=True, host=True, path=True, query=True,
                   fragment=True, userinfo=True, percents=True):
+        # type: (bool, bool, bool, bool, bool, bool, bool) -> URL
         """Return a new URL object with several standard normalizations
         applied:
 
@@ -1265,15 +1254,14 @@ class URL(object):
         name.
 
         Args:
-           scheme (bool): Convert the scheme to lowercase
-           host (bool): Convert the host to lowercase
-           path (bool): Normalize the path (see above for details)
-           query (bool): Normalize the query string
-           fragment (bool): Normalize the fragment
-           userinfo (bool): Normalize the userinfo
-           percents (bool): Encode isolated percent signs
-              for any percent-encoded fields which are being
-              normalized (defaults to True).
+           scheme: Convert the scheme to lowercase
+           host: Convert the host to lowercase
+           path: Normalize the path (see above for details)
+           query: Normalize the query string
+           fragment: Normalize the fragment
+           userinfo: Normalize the userinfo
+           percents: Encode isolated percent signs for any percent-encoded
+              fields which are being normalized (defaults to True).
 
         >>> url = URL.from_text(u'Http://example.COM/a/../b/./c%2f?%61%')
         >>> print(url.normalize().to_text())
@@ -1285,9 +1273,8 @@ class URL(object):
         .. _RFC 3986 6.2.2.3: https://tools.ietf.org/html/rfc3986#section-6.2.2.3
         .. _RFC 3986 6.2.3: https://tools.ietf.org/html/rfc3986#section-6.2.3
         .. _RFC 3986 2.4: https://tools.ietf.org/html/rfc3986#section-2.4
-
         """  # noqa: E501
-        kw = {}
+        kw = {}  # type: Dict[str, Any]
         if scheme:
             kw['scheme'] = self.scheme.lower()
         if host:
@@ -1315,6 +1302,7 @@ class URL(object):
         return self.replace(**kw)
 
     def child(self, *segments):
+        # type: (Text) -> URL
         """Make a new :class:`URL` where the given path segments are a child
         of this URL, preserving other parts of the URL, including the
         query string and fragment.
@@ -1327,58 +1315,61 @@ class URL(object):
             u'http://localhost/a/b/c/d?x=y'
 
         Args:
-           segments (unicode): Additional parts to be joined and added to
-              the path, like :func:`os.path.join`. Special characters
-              in segments will be percent encoded.
+            segments: Additional parts to be joined and added to
+                the path, like :func:`os.path.join`. Special characters
+                in segments will be percent encoded.
 
         Returns:
-           URL: A copy of the current URL with the extra path segments.
-
+           A copy of the current URL with the extra path segments.
         """
         if not segments:
             return self
 
-        segments = [_textcheck('path segment', s) for s in segments]
-        new_segs = _encode_path_parts(segments, maximal=False)
-        new_path = self.path[:-1 if (self.path and self.path[-1] == u'')
-                             else None] + new_segs
+        segments = [  # type: ignore[assignment] variable is tuple
+            _textcheck('path segment', s) for s in segments
+        ]
+        new_path = tuple(self.path)
+        if self.path and self.path[-1] == u"":
+            new_path = new_path[:-1]
+        new_path += tuple(_encode_path_parts(segments, maximal=False))
         return self.replace(path=new_path)
 
     def sibling(self, segment):
+        # type: (Text) -> URL
         """Make a new :class:`URL` with a single path segment that is a
         sibling of this URL path.
 
         Args:
-           segment (unicode): A single path segment.
+            segment: A single path segment.
 
         Returns:
-           URL: A copy of the current URL with the last path segment
-              replaced by *segment*. Special characters such as
-              ``/?#`` will be percent encoded.
-
+            A copy of the current URL with the last path segment
+                replaced by *segment*. Special characters such as
+                ``/?#`` will be percent encoded.
         """
         _textcheck('path segment', segment)
-        new_path = self.path[:-1] + (_encode_path_part(segment),)
+        new_path = tuple(self.path)[:-1] + (_encode_path_part(segment),)
         return self.replace(path=new_path)
 
     def click(self, href=u''):
+        # type: (Text) -> URL
         """Resolve the given URL relative to this URL.
 
         The resulting URI should match what a web browser would
         generate if you visited the current URL and clicked on *href*.
 
-           >>> url = URL.from_text(u'http://blog.hatnote.com/')
-           >>> url.click(u'/post/155074058790').to_text()
-           u'http://blog.hatnote.com/post/155074058790'
-           >>> url = URL.from_text(u'http://localhost/a/b/c/')
-           >>> url.click(u'../d/./e').to_text()
-           u'http://localhost/a/b/d/e'
+            >>> url = URL.from_text(u'http://blog.hatnote.com/')
+            >>> url.click(u'/post/155074058790').to_text()
+            u'http://blog.hatnote.com/post/155074058790'
+            >>> url = URL.from_text(u'http://localhost/a/b/c/')
+            >>> url.click(u'../d/./e').to_text()
+            u'http://localhost/a/b/d/e'
 
         Args:
-            href (unicode): A string representing a clicked URL.
+            href: A string representing a clicked URL.
 
         Return:
-            URL: A copy of the current URL with navigation logic applied.
+            A copy of the current URL with navigation logic applied.
 
         For more information, see `RFC 3986 section 5`_.
 
@@ -1386,7 +1377,7 @@ class URL(object):
         """
         if href:
             if isinstance(href, URL):
-                clicked = href
+                clicked = href  # type: ignore[misc] unreachable
             else:
                 # TODO: This error message is not completely accurate,
                 # as URL objects are now also valid, but Twisted's
@@ -1409,7 +1400,7 @@ class URL(object):
             if clicked.rooted:
                 path = clicked.path
             elif clicked.path:
-                path = self.path[:-1] + clicked.path
+                path = tuple(self.path)[:-1] + tuple(clicked.path)
             else:
                 path = self.path
                 if not query:
@@ -1422,6 +1413,7 @@ class URL(object):
                             fragment=clicked.fragment)
 
     def to_uri(self):
+        # type: () -> URL
         u"""Make a new :class:`URL` instance with all non-ASCII characters
         appropriately percent-encoded. This is useful to do in preparation
         for sending a :class:`URL` over a network protocol.
@@ -1457,6 +1449,7 @@ class URL(object):
         )
 
     def to_iri(self):
+        # type: () -> URL
         u"""Make a new :class:`URL` instance with all but a few reserved
         characters decoded into human-readable format.
 
@@ -1479,21 +1472,32 @@ class URL(object):
             URL: A new instance with its path segments, query parameters, and
             hostname decoded for display purposes.
         """  # noqa: E501
-        new_userinfo = u':'.join([_decode_userinfo_part(p) for p in
-                                  self.userinfo.split(':', 1)])
+        new_userinfo = u':'.join([
+            cast(Text, _decode_userinfo_part(p))
+            for p in self.userinfo.split(':', 1)
+        ])
         host_text = _decode_host(self.host)
 
-        return self.replace(userinfo=new_userinfo,
-                            host=host_text,
-                            path=[_decode_path_part(segment)
-                                  for segment in self.path],
-                            query=[(_decode_query_key(k),
-                                    _decode_query_value(v)
-                                    if v is not None else None)
-                                   for k, v in self.query],
-                            fragment=_decode_fragment_part(self.fragment))
+        return self.replace(
+            userinfo=new_userinfo,
+            host=host_text,
+            path=[
+                cast(Text, _decode_path_part(segment))
+                for segment in self.path
+            ],
+            query=[
+                (
+                    cast(Text, _decode_query_key(k)),
+                    cast(Optional[Text], _decode_query_value(v))
+                    if v is not None else None
+                )
+                for k, v in self.query
+            ],
+            fragment=cast(Text, _decode_fragment_part(self.fragment)),
+        )
 
     def to_text(self, with_password=False):
+        # type: (bool) -> Text
         """Render this URL to its textual representation.
 
         By default, the URL text will *not* include a password, if one
@@ -1507,12 +1511,12 @@ class URL(object):
             password)."
 
         Args:
-            with_password (bool): Whether or not to include the
-               password in the URL text. Defaults to False.
+            with_password: Whether or not to include the password in the URL
+                text. Defaults to False.
 
         Returns:
-            str: The serialized textual representation of this URL,
-            such as ``u"http://example.com/some/path?some=query"``.
+            The serialized textual representation of this URL, such as
+                ``u"http://example.com/some/path?some=query"``.
 
         The natural counterpart to :class:`URL.from_text()`.
 
@@ -1540,7 +1544,7 @@ class URL(object):
 
         fragment = self.fragment
 
-        parts = []
+        parts = []  # type: List[Text]
         _add = parts.append
         if scheme:
             _add(scheme)
@@ -1563,6 +1567,7 @@ class URL(object):
         return u''.join(parts)
 
     def __repr__(self):
+        # type: () -> str
         """Convert this URL to an representation that shows all of its
         constituent parts, as well as being a valid argument to
         :func:`eval`.
@@ -1570,6 +1575,7 @@ class URL(object):
         return '%s.from_text(%r)' % (self.__class__.__name__, self.to_text())
 
     def _to_bytes(self):
+        # type: () -> bytes
         """
         Allows for direct usage of URL objects with libraries like
         requests, which automatically stringify URL parameters. See
@@ -1590,12 +1596,15 @@ class URL(object):
 
     @classmethod
     def fromText(cls, s):
+        # type: (Text) -> URL
         return cls.from_text(s)
 
     def asText(self, includeSecrets=False):
+        # type: (bool) -> Text
         return self.to_text(with_password=includeSecrets)
 
     def __dir__(self):
+        # type: () -> Sequence[Text]
         try:
             ret = object.__dir__(self)
         except AttributeError:
@@ -1607,6 +1616,7 @@ class URL(object):
     # # End Twisted Compat Code
 
     def add(self, name, value=None):
+        # type: (Text, Optional[Text]) -> URL
         """Make a new :class:`URL` instance with a given query argument,
         *name*, added to it with the value *value*, like so::
 
@@ -1616,18 +1626,19 @@ class URL(object):
             URL.from_text(u'https://example.com/?x=y&x=z')
 
         Args:
-            name (unicode): The name of the query parameter to add. The
-                part before the ``=``.
-            value (unicode): The value of the query parameter to add. The
-                part after the ``=``. Defaults to ``None``, meaning no
+            name: The name of the query parameter to add.
+                The part before the ``=``.
+            value: The value of the query parameter to add.
+                The part after the ``=``. Defaults to ``None``, meaning no
                 value.
 
         Returns:
-            URL: A new :class:`URL` instance with the parameter added.
+            A new :class:`URL` instance with the parameter added.
         """
         return self.replace(query=self.query + ((name, value),))
 
     def set(self, name, value=None):
+        # type: (Text, Optional[Text]) -> URL
         """Make a new :class:`URL` instance with the query parameter *name*
         set to *value*. All existing occurences, if any are replaced
         by the single name-value pair.
@@ -1638,23 +1649,24 @@ class URL(object):
             URL.from_text(u'https://example.com/?x=z')
 
         Args:
-            name (unicode): The name of the query parameter to set. The
-                part before the ``=``.
-            value (unicode): The value of the query parameter to set. The
-                part after the ``=``. Defaults to ``None``, meaning no
+            name: The name of the query parameter to set.
+                The part before the ``=``.
+            value: The value of the query parameter to set.
+                The part after the ``=``. Defaults to ``None``, meaning no
                 value.
 
         Returns:
-            URL: A new :class:`URL` instance with the parameter set.
+            A new :class:`URL` instance with the parameter set.
         """
         # Preserve the original position of the query key in the list
-        q = [(k, v) for (k, v) in self.query if k != name]
+        q = [(k, v) for (k, v) in self._query if k != name]
         idx = next((i for (i, (k, v)) in enumerate(self.query)
                     if k == name), -1)
         q[idx:idx] = [(name, value)]
         return self.replace(query=q)
 
     def get(self, name):
+        # type: (Text) -> List[Optional[Text]]
         """Get a list of values for the given query parameter, *name*::
 
             >>> url = URL.from_text(u'?x=1&x=2')
@@ -1667,27 +1679,31 @@ class URL(object):
         list is always returned, and this method raises no exceptions.
 
         Args:
-            name (unicode): The name of the query parameter to get.
+            name: The name of the query parameter to get.
 
         Returns:
-            list: A list of all the values associated with the key, in
-                string form.
-
+            A list of all the values associated with the key, in string form.
         """
         return [value for (key, value) in self.query if name == key]
 
-    def remove(self, name, value=_UNSET, limit=None):
+    def remove(  # type: ignore[assignment] _UNSET is private
+        self,
+        name,          # type: Text
+        value=_UNSET,  # type: Text
+        limit=None,    # type: Optional[int]
+    ):
+        # type: (...) -> URL
         """Make a new :class:`URL` instance with occurrences of the query
         parameter *name* removed, or, if *value* is set, parameters
         matching *name* and *value*. No exception is raised if the
         parameter is not already set.
 
         Args:
-            name (unicode): The name of the query parameter to remove.
-            value (unicode): Optional value to additionally filter
-               on. Setting this removes query parameters which match
-               both name and value.
-            limit (int): Optional maximum number of parameters to remove.
+            name: The name of the query parameter to remove.
+            value: Optional value to additionally filter on.
+                Setting this removes query parameters which match both name
+                and value.
+            limit: Optional maximum number of parameters to remove.
 
         Returns:
             URL: A new :class:`URL` instance with the parameter removed.
