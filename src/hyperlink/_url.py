@@ -25,8 +25,8 @@ try:
 except ImportError:
     AddressFamily = int  # type: ignore[assignment,misc] Python 2
 from typing import (
-    Callable, Iterable, Iterator, List, Mapping, Optional,
-    Sequence, Text, Tuple, Type, Union,
+    Any, Callable, Iterable, Iterator, List, Mapping, Optional,
+    Sequence, Text, Tuple, Type, TypeVar, Union, cast,
 )
 from unicodedata import normalize
 from ._socket import inet_pton
@@ -48,6 +48,7 @@ QueryParameter = Union[
     Mapping[Text, Optional[Text]],
     Iterable[Tuple[Text, Optional[Text]]],
 ]
+T = TypeVar('T')
 
 
 # from boltons.typeutils
@@ -160,6 +161,7 @@ _QUERY_KEY_DELIMS = _ALL_DELIMS - _QUERY_KEY_SAFE
 
 
 def _make_decode_map(delims, allow_percent=False):
+    # type: (Iterable[Text], bool) -> Mapping[bytes, bytes]
     ret = dict(_HEX_CHAR_MAP)
     if not allow_percent:
         delims = set(delims) | set([u'%'])
@@ -357,6 +359,7 @@ NO_NETLOC_SCHEMES = set(['urn', 'about', 'bitcoin', 'blob', 'data', 'geo',
 
 
 def register_scheme(text, uses_netloc=True, default_port=None):
+    # type: (Text, bool, Optional[int]) -> None
     """Registers new scheme information, resulting in correct port and
     slash behavior from the URL object. There are dozens of standard
     schemes preregistered, so this function is mostly meant for
@@ -365,13 +368,12 @@ def register_scheme(text, uses_netloc=True, default_port=None):
     `file an issue`_!
 
     Args:
-        text (unicode): Text representing the scheme.
+        text: Text representing the scheme.
            (the 'http' in 'http://hatnote.com')
-        uses_netloc (bool): Does the scheme support specifying a
-           network host? For instance, "http" does, "mailto" does
-           not. Defaults to True.
-        default_port (int): The default port, if any, for netloc-using
-           schemes.
+        uses_netloc: Does the scheme support specifying a network host?
+           For instance, "http" does, "mailto" does not.
+           Defaults to True.
+        default_port: The default port, if any, for netloc-using schemes.
 
     .. _file an issue: https://github.com/mahmoud/hyperlink/issues
 
@@ -437,6 +439,7 @@ class URLParseError(ValueError):
 
 
 def _optional(argument, default):
+    # type: (Any, Any) -> Any
     if argument is _UNSET:
         return default
     else:
@@ -444,6 +447,7 @@ def _optional(argument, default):
 
 
 def _typecheck(name, value, *types):
+    # type: (Text, T, Type) -> T
     """
     Check that the given *value* is one of the given *types*, or raise an
     exception describing the problem using *name*.
@@ -458,9 +462,11 @@ def _typecheck(name, value, *types):
 
 
 def _textcheck(name, value, delims=frozenset(), nullable=False):
+    # type: (Text, T, Iterable[Text], bool) -> T
     if not isinstance(value, Text):
         if nullable and value is None:
-            return value  # used by query string values
+            # used by query string values
+            return value  # type: ignore[misc] unreachable
         else:
             str_name = "unicode" if PY2 else "str"
             exp = str_name + ' or NoneType' if nullable else str_name
@@ -468,7 +474,7 @@ def _textcheck(name, value, delims=frozenset(), nullable=False):
     if delims and set(value) & set(delims):  # TODO: test caching into regexes
         raise ValueError('one or more reserved delimiters %s present in %s: %r'
                          % (''.join(delims), name, value))
-    return value
+    return value  # type: ignore[return-value] T vs. Text
 
 
 def iter_pairs(iterable):
@@ -488,6 +494,7 @@ def iter_pairs(iterable):
 def _decode_unreserved(
     text, normalize_case=False, encode_stray_percents=False
 ):
+    # type: (Text, bool, bool) -> Union[str, bytes]
     return _percent_decode(text, normalize_case=normalize_case,
                            encode_stray_percents=encode_stray_percents,
                            _decode_map=_UNRESERVED_DECODE_MAP)
@@ -496,6 +503,7 @@ def _decode_unreserved(
 def _decode_userinfo_part(
     text, normalize_case=False, encode_stray_percents=False
 ):
+    # type: (Text, bool, bool) -> Union[str, bytes]
     return _percent_decode(text, normalize_case=normalize_case,
                            encode_stray_percents=encode_stray_percents,
                            _decode_map=_USERINFO_DECODE_MAP)
@@ -504,6 +512,7 @@ def _decode_userinfo_part(
 def _decode_path_part(
     text, normalize_case=False, encode_stray_percents=False
 ):
+    # type: (Text, bool, bool) -> Union[str, bytes]
     """
     >>> _decode_path_part(u'%61%77%2f%7a')
     u'aw%2fz'
@@ -518,6 +527,7 @@ def _decode_path_part(
 def _decode_query_key(
     text, normalize_case=False, encode_stray_percents=False
 ):
+    # type: (Text, bool, bool) -> Union[str, bytes]
     return _percent_decode(text, normalize_case=normalize_case,
                            encode_stray_percents=encode_stray_percents,
                            _decode_map=_QUERY_KEY_DECODE_MAP)
@@ -526,6 +536,7 @@ def _decode_query_key(
 def _decode_query_value(
     text, normalize_case=False, encode_stray_percents=False
 ):
+    # type: (Text, bool, bool) -> Union[str, bytes]
     return _percent_decode(text, normalize_case=normalize_case,
                            encode_stray_percents=encode_stray_percents,
                            _decode_map=_QUERY_VALUE_DECODE_MAP)
@@ -534,14 +545,21 @@ def _decode_query_value(
 def _decode_fragment_part(
     text, normalize_case=False, encode_stray_percents=False
 ):
+    # type: (Text, bool, bool) -> Union[str, bytes]
     return _percent_decode(text, normalize_case=normalize_case,
                            encode_stray_percents=encode_stray_percents,
                            _decode_map=_FRAGMENT_DECODE_MAP)
 
 
-def _percent_decode(text, normalize_case=False, subencoding='utf-8',
-                    raise_subencoding_exc=False, encode_stray_percents=False,
-                    _decode_map=_HEX_CHAR_MAP):
+def _percent_decode(
+    text,                         # type: Text
+    normalize_case=False,         # type: bool
+    subencoding="utf-8",          # type: Union[bool, Text]
+    raise_subencoding_exc=False,  # type: bool
+    encode_stray_percents=False,  # type: bool
+    _decode_map=_HEX_CHAR_MAP     # type: Mapping[bytes, bytes]
+):
+    # type: (...) -> Union[str, bytes]
     """Convert percent-encoded text characters to their normal,
     human-readable equivalents.
 
@@ -575,7 +593,7 @@ def _percent_decode(text, normalize_case=False, subencoding='utf-8',
     """
     try:
         quoted_bytes = text.encode(
-            'utf-8' if subencoding is False else subencoding
+            'utf-8' if subencoding is False else cast(Text, subencoding)
         )
     except UnicodeEncodeError:
         return text
@@ -613,7 +631,7 @@ def _percent_decode(text, normalize_case=False, subencoding='utf-8',
     if subencoding is False:
         return unquoted_bytes
     try:
-        return unquoted_bytes.decode(subencoding)
+        return unquoted_bytes.decode(cast(Text, subencoding))
     except UnicodeDecodeError:
         if raise_subencoding_exc:
             raise
