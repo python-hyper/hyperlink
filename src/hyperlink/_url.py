@@ -1652,7 +1652,7 @@ class URL(object):
             A new :class:`URL` instance with the parameter set.
         """
         # Preserve the original position of the query key in the list
-        q = [(k, v) for (k, v) in self._query if k != name]
+        q = [(k, v) for (k, v) in self.query if k != name]
         idx = next((i for (i, (k, v)) in enumerate(self.query)
                     if k == name), -1)
         q[idx:idx] = [(name, value)]
