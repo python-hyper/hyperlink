@@ -494,7 +494,7 @@ def iter_pairs(iterable):
 def _decode_unreserved(
     text, normalize_case=False, encode_stray_percents=False
 ):
-    # type: (Text, bool, bool) -> Union[str, bytes]
+    # type: (Text, bool, bool) -> Text
     return _percent_decode(text, normalize_case=normalize_case,
                            encode_stray_percents=encode_stray_percents,
                            _decode_map=_UNRESERVED_DECODE_MAP)
@@ -503,7 +503,7 @@ def _decode_unreserved(
 def _decode_userinfo_part(
     text, normalize_case=False, encode_stray_percents=False
 ):
-    # type: (Text, bool, bool) -> Union[str, bytes]
+    # type: (Text, bool, bool) -> Text
     return _percent_decode(text, normalize_case=normalize_case,
                            encode_stray_percents=encode_stray_percents,
                            _decode_map=_USERINFO_DECODE_MAP)
@@ -512,7 +512,7 @@ def _decode_userinfo_part(
 def _decode_path_part(
     text, normalize_case=False, encode_stray_percents=False
 ):
-    # type: (Text, bool, bool) -> Union[str, bytes]
+    # type: (Text, bool, bool) -> Text
     """
     >>> _decode_path_part(u'%61%77%2f%7a')
     u'aw%2fz'
@@ -527,7 +527,7 @@ def _decode_path_part(
 def _decode_query_key(
     text, normalize_case=False, encode_stray_percents=False
 ):
-    # type: (Text, bool, bool) -> Union[str, bytes]
+    # type: (Text, bool, bool) -> Text
     return _percent_decode(text, normalize_case=normalize_case,
                            encode_stray_percents=encode_stray_percents,
                            _decode_map=_QUERY_KEY_DECODE_MAP)
@@ -536,7 +536,7 @@ def _decode_query_key(
 def _decode_query_value(
     text, normalize_case=False, encode_stray_percents=False
 ):
-    # type: (Text, bool, bool) -> Union[str, bytes]
+    # type: (Text, bool, bool) -> Text
     return _percent_decode(text, normalize_case=normalize_case,
                            encode_stray_percents=encode_stray_percents,
                            _decode_map=_QUERY_VALUE_DECODE_MAP)
@@ -545,7 +545,7 @@ def _decode_query_value(
 def _decode_fragment_part(
     text, normalize_case=False, encode_stray_percents=False
 ):
-    # type: (Text, bool, bool) -> Union[str, bytes]
+    # type: (Text, bool, bool) -> Text
     return _percent_decode(text, normalize_case=normalize_case,
                            encode_stray_percents=encode_stray_percents,
                            _decode_map=_FRAGMENT_DECODE_MAP)
@@ -554,12 +554,12 @@ def _decode_fragment_part(
 def _percent_decode(
     text,                         # type: Text
     normalize_case=False,         # type: bool
-    subencoding="utf-8",          # type: Union[bool, Text]
+    subencoding="utf-8",          # type: Text
     raise_subencoding_exc=False,  # type: bool
     encode_stray_percents=False,  # type: bool
     _decode_map=_HEX_CHAR_MAP     # type: Mapping[bytes, bytes]
 ):
-    # type: (...) -> Union[str, bytes]
+    # type: (...) -> Text
     """Convert percent-encoded text characters to their normal,
     human-readable equivalents.
 
@@ -582,18 +582,14 @@ def _percent_decode(
             delimiters, should be uppercased, per RFC 3986 Section 2.1.
             See :func:`_decode_path_part` for an example.
         subencoding: The name of the encoding underlying the percent-encoding.
-            Pass `False` to get back raw bytes.
         raise_subencoding_exc: Whether an error in decoding the bytes
             underlying the percent-decoding should be raised.
 
     Returns:
-       The percent-decoded version of *text*, decoded by *subencoding*, unless
-           `subencoding=False` which returns bytes.
+        The percent-decoded version of *text*, decoded by *subencoding*.
     """
     try:
-        quoted_bytes = text.encode(
-            'utf-8' if subencoding is False else cast(Text, subencoding)
-        )
+        quoted_bytes = text.encode(subencoding)
     except UnicodeEncodeError:
         return text
 
@@ -627,10 +623,8 @@ def _percent_decode(
 
     unquoted_bytes = b''.join(res)
 
-    if subencoding is False:
-        return unquoted_bytes
     try:
-        return unquoted_bytes.decode(cast(Text, subencoding))
+        return unquoted_bytes.decode(subencoding)
     except UnicodeDecodeError:
         if raise_subencoding_exc:
             raise
@@ -1284,8 +1278,8 @@ class URL(object):
 
         def _dec_unres(target):
             # type: (Text) -> Union[Text]
-            return cast(Text, _decode_unreserved(
-                target, normalize_case=True, encode_stray_percents=percents)
+            return _decode_unreserved(
+                target, normalize_case=True, encode_stray_percents=percents
             )
         if path:
             if self.path:
@@ -1477,27 +1471,22 @@ class URL(object):
             hostname decoded for display purposes.
         """  # noqa: E501
         new_userinfo = u':'.join([
-            cast(Text, _decode_userinfo_part(p))
-            for p in self.userinfo.split(':', 1)
+            _decode_userinfo_part(p) for p in self.userinfo.split(':', 1)
         ])
         host_text = _decode_host(self.host)
 
         return self.replace(
             userinfo=new_userinfo,
             host=host_text,
-            path=[
-                cast(Text, _decode_path_part(segment))
-                for segment in self.path
-            ],
+            path=[_decode_path_part(segment) for segment in self.path],
             query=tuple(
                 (
-                    cast(Text, _decode_query_key(k)),
-                    cast(Optional[Text], _decode_query_value(v))
+                    _decode_query_key(k), _decode_query_value(v)
                     if v is not None else None
                 )
                 for k, v in self.query
             ),
-            fragment=cast(Text, _decode_fragment_part(self.fragment)),
+            fragment=_decode_fragment_part(self.fragment),
         )
 
     def to_text(self, with_password=False):
@@ -1879,7 +1868,7 @@ class DecodedURL(object):
         except AttributeError:
             pass
         self._path = tuple([
-            cast(Text, _percent_decode(p, raise_subencoding_exc=True))
+            _percent_decode(p, raise_subencoding_exc=True)
             for p in self._url.path
         ])
         return self._path
@@ -1896,7 +1885,7 @@ class DecodedURL(object):
             pass
         self._query = cast(QueryPairs, tuple(
             tuple(
-                cast(Text, _percent_decode(x, raise_subencoding_exc=True))
+                _percent_decode(x, raise_subencoding_exc=True)
                 if x is not None else None
                 for x in (k, v)
             )
@@ -1915,9 +1904,7 @@ class DecodedURL(object):
         except AttributeError:
             pass
         frag = self._url.fragment
-        self._fragment = cast(
-            Text, _percent_decode(frag, raise_subencoding_exc=True)
-        )
+        self._fragment = _percent_decode(frag, raise_subencoding_exc=True)
         return self._fragment
 
     @property
@@ -1934,7 +1921,7 @@ class DecodedURL(object):
             Union[Tuple[str], Tuple[str, str]],
             tuple(
                 tuple(
-                    cast(Text, _percent_decode(p, raise_subencoding_exc=True))
+                    _percent_decode(p, raise_subencoding_exc=True)
                     for p in self._url.userinfo.split(':', 1)
                 )
             )

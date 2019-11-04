@@ -185,10 +185,6 @@ class TestURL(HyperlinkTestCase):
         assert 'asText' not in dir(durl)
         assert durl.to_text() == durl.asText()
 
-    def test_percent_decode_bytes(self):
-        # type: () -> None
-        assert _percent_decode('%00', subencoding=False) == b'\0'
-
     def test_percent_decode_mixed(self):
         # type: () -> None
 
@@ -202,9 +198,6 @@ class TestURL(HyperlinkTestCase):
         # ...unless explicitly told otherwise
         with self.assertRaises(UnicodeDecodeError):
             _percent_decode('abcdé%C3éfg', raise_subencoding_exc=True)
-
-        # check that getting raw bytes works ok
-        assert _percent_decode('a%00b', subencoding=False) == b'a\x00b'
 
         # when not encodable as subencoding
         assert _percent_decode('é%25é', subencoding='ascii') == 'é%25é'
