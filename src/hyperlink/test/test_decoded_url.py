@@ -207,7 +207,7 @@ class TestURL(HyperlinkTestCase):
         durl = DecodedURL.from_text(TOTAL_URL)
         durl_dest = DecodedURL.from_text('/tëst')
 
-        clicked = durl.click(durl_dest)  # type: ignore[arg-type] URL vs Text
+        clicked = durl.click(durl_dest)
         assert clicked.host == durl.host
         assert clicked.path == durl_dest.path
         assert clicked.path == ('tëst',)

@@ -430,7 +430,7 @@ class TestURL(HyperlinkTestCase):
         # test click on a URL instance
         u = URL.fromText('http://localhost/foo/?abc=def')
         u2 = URL.from_text('bar')
-        u3 = u.click(u2)  # type: ignore[arg-type] URL vs Text
+        u3 = u.click(u2)
         self.assertEqual(u3.to_text(), 'http://localhost/foo/bar')
 
     def test_clickRFC3986(self):

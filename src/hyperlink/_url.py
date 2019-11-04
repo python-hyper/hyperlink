@@ -1350,7 +1350,7 @@ class URL(object):
         return self.replace(path=new_path)
 
     def click(self, href=u''):
-        # type: (Text) -> URL
+        # type: (Union[Text, URL]) -> URL
         """Resolve the given URL relative to this URL.
 
         The resulting URI should match what a web browser would
@@ -1375,7 +1375,7 @@ class URL(object):
         """
         if href:
             if isinstance(href, URL):
-                clicked = href  # type: ignore[misc] unreachable
+                clicked = href
             else:
                 # TODO: This error message is not completely accurate,
                 # as URL objects are now also valid, but Twisted's
@@ -1795,12 +1795,12 @@ class DecodedURL(object):
         return self._url.to_iri()
 
     def click(self, href=u''):
-        # type: (Text) -> DecodedURL
+        # type: (Union[Text, URL, DecodedURL]) -> DecodedURL
         """Return a new DecodedURL wrapping the result of
         :meth:`~hyperlink.URL.click()`
         """
         if isinstance(href, DecodedURL):
-            href = href._url  # type: ignore[misc] unreachable
+            href = href._url
         return self.__class__(self._url.click(href=href))
 
     def sibling(self, segment):
