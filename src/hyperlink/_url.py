@@ -1277,7 +1277,7 @@ class URL(object):
             kw['host'] = self.host.lower()
 
         def _dec_unres(target):
-            # type: (Text) -> Union[Text]
+            # type: (Text) -> Text
             return _decode_unreserved(
                 target, normalize_case=True, encode_stray_percents=percents
             )
