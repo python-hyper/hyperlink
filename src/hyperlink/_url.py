@@ -44,9 +44,10 @@ try:
 except NameError:  # Py3
     unichr = chr  # type: Callable[[int], Text]
 NoneType = type(None)  # type: Type[None]
-QueryParameter = Union[
-    Mapping[Text, Optional[Text]],
-    Iterable[Tuple[Text, Optional[Text]]],
+QueryPairs = Tuple[Tuple[Text, Optional[Text]], ...]  # internal representation
+QueryParameters = Union[
+    Mapping[Text, Optional[Text]], QueryPairs,
+    Sequence[Tuple[Text, Optional[Text]]],
 ]
 T = TypeVar('T')
 
@@ -174,7 +175,8 @@ def _make_decode_map(delims, allow_percent=False):
 
 
 def _make_quote_map(safe_chars):
-    ret = {}
+    # type: (Iterable[Text]) -> Mapping[Union[int, Text], Text]
+    ret = {}  # type: Dict[Union[int, Text], Text]
     # v is included in the dict for py3 mostly, because bytestrings
     # are iterables of ints, of course!
     for i, v in zip(range(256), range(256)):
@@ -830,7 +832,7 @@ class URL(object):
         scheme=None,       # type: Optional[Text]
         host=None,         # type: Optional[Text]
         path=(),           # type: Iterable[Text]
-        query=(),          # type: QueryParameter
+        query=(),          # type: QueryParameters
         fragment=u"",      # type: Text
         port=None,         # type: Optional[int]
         rooted=None,       # type: Optional[bool]
@@ -952,7 +954,7 @@ class URL(object):
 
     @property
     def query(self):
-        # type: () -> Tuple[Tuple[Text, Optional[Text]], ...]
+        # type: () -> QueryPairs
         """Tuple of pairs, created by splitting the ampersand-separated
         mapping of keys and optional values representing
         non-hierarchical data used to identify the resource. Keys are
@@ -1098,7 +1100,7 @@ class URL(object):
         scheme=_UNSET,      # type: Optional[Text]
         host=_UNSET,        # type: Optional[Text]
         path=_UNSET,        # type: Iterable[Text]
-        query=_UNSET,       # type: QueryParameter
+        query=_UNSET,       # type: QueryParameters
         fragment=_UNSET,    # type: Text
         port=_UNSET,        # type: Optional[int]
         rooted=_UNSET,      # type: Optional[bool]
@@ -1219,14 +1221,14 @@ class URL(object):
             path = ()
             rooted = bool(au_text)
         if gs['query']:
-            query = [
+            query = tuple(
                 (
                     cast(Tuple[str, str], qe.split(u"=", 1))
                     if u'=' in qe else
                     (qe, None)
                 )
                 for qe in gs['query'].split(u"&")
-            ]  # type: Iterable[Tuple[str, Optional[str]]]
+            )  # type: QueryPairs
         else:
             query = ()
         return cls(
@@ -1281,8 +1283,10 @@ class URL(object):
             kw['host'] = self.host.lower()
 
         def _dec_unres(target):
-            return _decode_unreserved(target, normalize_case=True,
-                                      encode_stray_percents=percents)
+            # type: (Text) -> Union[Text]
+            return cast(Text, _decode_unreserved(
+                target, normalize_case=True, encode_stray_percents=percents)
+            )
         if path:
             if self.path:
                 kw['path'] = [
@@ -1485,14 +1489,14 @@ class URL(object):
                 cast(Text, _decode_path_part(segment))
                 for segment in self.path
             ],
-            query=[
+            query=tuple(
                 (
                     cast(Text, _decode_query_key(k)),
                     cast(Optional[Text], _decode_query_value(v))
                     if v is not None else None
                 )
                 for k, v in self.query
-            ],
+            ),
             fragment=cast(Text, _decode_fragment_part(self.fragment)),
         )
 
@@ -1750,12 +1754,13 @@ class DecodedURL(object):
     special characters encoded with codecs other than UTF-8.
 
     Args:
-       url (URL): A :class:`URL` object to wrap.
-       lazy (bool): Set to True to avoid pre-decode all parts of the
-           URL to check for validity. Defaults to False.
+       url: A :class:`URL` object to wrap.
+       lazy: Set to True to avoid pre-decode all parts of the URL to check for
+           validity. Defaults to False.
 
     """
     def __init__(self, url, lazy=False):
+        # type: (URL, bool) -> None
         self._url = url
         if not lazy:
             # cache the following, while triggering any decoding
@@ -1765,45 +1770,52 @@ class DecodedURL(object):
 
     @classmethod
     def from_text(cls, text, lazy=False):
+        # type: (Text, bool) -> DecodedURL
         """\
         Make a `DecodedURL` instance from any text string containing a URL.
 
         Args:
-          text (unicode): Text containing the URL
-          lazy (bool): Whether to pre-decode all parts of the URL to
-              check for validity. Defaults to True.
+          text: Text containing the URL
+          lazy: Whether to pre-decode all parts of the URL to check for
+              validity. Defaults to True.
         """
         _url = URL.from_text(text)
         return cls(_url, lazy=lazy)
 
     @property
     def encoded_url(self):
+        # type: () -> URL
         """Access the underlying :class:`URL` object, which has any special
         characters encoded.
         """
         return self._url
 
-    def to_text(self, *a, **kw):
+    def to_text(self, with_password=False):
+        # type: (bool) -> Text
         "Passthrough to :meth:`~hyperlink.URL.to_text()`"
-        return self._url.to_text(*a, **kw)
+        return self._url.to_text(with_password)
 
-    def to_uri(self, *a, **kw):
+    def to_uri(self):
+        # type: () -> URL
         "Passthrough to :meth:`~hyperlink.URL.to_uri()`"
-        return self._url.to_uri(*a, **kw)
+        return self._url.to_uri()
 
-    def to_iri(self, *a, **kw):
+    def to_iri(self):
+        # type: () -> URL
         "Passthrough to :meth:`~hyperlink.URL.to_iri()`"
-        return self._url.to_iri(*a, **kw)
+        return self._url.to_iri()
 
     def click(self, href=u''):
+        # type: (Text) -> DecodedURL
         """Return a new DecodedURL wrapping the result of
         :meth:`~hyperlink.URL.click()`
         """
         if isinstance(href, DecodedURL):
-            href = href._url
+            href = href._url  # type: ignore[misc] unreachable
         return self.__class__(self._url.click(href=href))
 
     def sibling(self, segment):
+        # type: (Text) -> DecodedURL
         """Automatically encode any reserved characters in *segment* and
         return a new `DecodedURL` wrapping the result of
         :meth:`~hyperlink.URL.sibling()`
@@ -1811,6 +1823,7 @@ class DecodedURL(object):
         return self.__class__(self._url.sibling(_encode_reserved(segment)))
 
     def child(self, *segments):
+        # type: (Text) -> DecodedURL
         """Automatically encode any reserved characters in *segments* and
         return a new `DecodedURL` wrapping the result of
         :meth:`~hyperlink.URL.child()`.
@@ -1820,86 +1833,137 @@ class DecodedURL(object):
         new_segs = [_encode_reserved(s) for s in segments]
         return self.__class__(self._url.child(*new_segs))
 
-    def normalize(self, *a, **kw):
+    def normalize(self, scheme=True, host=True, path=True, query=True,
+                  fragment=True, userinfo=True, percents=True):
+        # type: (bool, bool, bool, bool, bool, bool, bool) -> DecodedURL
         """Return a new `DecodedURL` wrapping the result of
         :meth:`~hyperlink.URL.normalize()`
         """
-        return self.__class__(self._url.normalize(*a, **kw))
+        return self.__class__(self._url.normalize(
+            scheme, host, path, query, fragment, userinfo, percents
+        ))
 
     @property
     def absolute(self):
+        # type: () -> bool
         return self._url.absolute
 
     @property
     def scheme(self):
+        # type: () -> Text
         return self._url.scheme
 
     @property
     def host(self):
+        # type: () -> Text
         return _decode_host(self._url.host)
 
     @property
     def port(self):
+        # type: () -> Optional[int]
         return self._url.port
 
     @property
     def rooted(self):
+        # type: () -> bool
         return self._url.rooted
 
     @property
     def path(self):
+        # type: () -> Sequence[Text]
         try:
-            return self._path
+            return cast(
+                Tuple[Text, ...],
+                self._path  # type: ignore[has-type] can't determine
+            )
         except AttributeError:
             pass
-        self._path = tuple([_percent_decode(p, raise_subencoding_exc=True)
-                            for p in self._url.path])
+        self._path = tuple([
+            cast(Text, _percent_decode(p, raise_subencoding_exc=True))
+            for p in self._url.path
+        ])
         return self._path
 
     @property
     def query(self):
+        # type: () -> QueryPairs
         try:
-            return self._query
+            return cast(
+                QueryPairs,
+                self._query  # type: ignore[has-type] can't determine
+            )
         except AttributeError:
             pass
-        _q = [tuple(_percent_decode(x, raise_subencoding_exc=True)
-                    if x is not None else None
-                    for x in (k, v))
-              for k, v in self._url.query]
-        self._query = tuple(_q)
+        self._query = cast(QueryPairs, tuple(
+            tuple(
+                cast(Text, _percent_decode(x, raise_subencoding_exc=True))
+                if x is not None else None
+                for x in (k, v)
+            )
+            for k, v in self._url.query
+        ))
         return self._query
 
     @property
     def fragment(self):
+        # type: () -> Text
         try:
-            return self._fragment
+            return cast(
+                Text,
+                self._fragment  # type: ignore[has-type] can't determine
+            )
         except AttributeError:
             pass
         frag = self._url.fragment
-        self._fragment = _percent_decode(frag, raise_subencoding_exc=True)
+        self._fragment = cast(
+            Text, _percent_decode(frag, raise_subencoding_exc=True)
+        )
         return self._fragment
 
     @property
     def userinfo(self):
+        # type: () -> Union[Tuple[str], Tuple[str, str]]
         try:
-            return self._userinfo
+            return cast(
+                Union[Tuple[str], Tuple[str, str]],
+                self._userinfo  # type: ignore[has-type] can't determine
+            )
         except AttributeError:
             pass
-        self._userinfo = tuple([_percent_decode(p, raise_subencoding_exc=True)
-                                for p in self._url.userinfo.split(':', 1)])
+        self._userinfo = cast(
+            Union[Tuple[str], Tuple[str, str]],
+            tuple(
+                tuple(
+                    cast(Text, _percent_decode(p, raise_subencoding_exc=True))
+                    for p in self._url.userinfo.split(':', 1)
+                )
+            )
+        )
         return self._userinfo
 
     @property
     def user(self):
+        # type: () -> Text
         return self.userinfo[0]
 
     @property
     def uses_netloc(self):
-        return self._url.uses_netloc
+        # type: () -> bool
+        return cast(bool, self._url.uses_netloc)
 
-    def replace(self, scheme=_UNSET, host=_UNSET, path=_UNSET, query=_UNSET,
-                fragment=_UNSET, port=_UNSET, rooted=_UNSET, userinfo=_UNSET,
-                uses_netloc=_UNSET):
+    def replace(  # type: ignore[assignment] _UNSET is private
+        self,
+        scheme=_UNSET,      # type: Optional[Text]
+        host=_UNSET,        # type: Optional[Text]
+        path=_UNSET,        # type: Iterable[Text]
+        query=_UNSET,       # type: QueryParameters
+        fragment=_UNSET,    # type: Text
+        port=_UNSET,        # type: Optional[int]
+        rooted=_UNSET,      # type: Optional[bool]
+        userinfo=_UNSET,    # type: Union[Tuple[str], Tuple[str, str]]
+        uses_netloc=_UNSET  # type: Optional[bool]
+    ):
+        # type: (...) -> DecodedURL
         """While the signature is the same, this `replace()` differs a little
         from URL.replace. For instance, it accepts userinfo as a
         tuple, not as a string, handling the case of having a username
@@ -1908,17 +1972,23 @@ class DecodedURL(object):
         automatically encoded instead of an error being raised.
         """
         if path is not _UNSET:
-            path = [_encode_reserved(p) for p in path]
+            path = tuple(_encode_reserved(p) for p in path)
         if query is not _UNSET:
-            query = [[_encode_reserved(x)
-                      if x is not None else None
-                      for x in (k, v)]
-                     for k, v in iter_pairs(query)]
+            query = cast(QueryPairs, tuple(
+                tuple(
+                    _encode_reserved(x)
+                    if x is not None else None
+                    for x in (k, v)
+                )
+                for k, v in iter_pairs(query)
+            ))
         if userinfo is not _UNSET:
             if len(userinfo) > 2:
                 raise ValueError('userinfo expected sequence of ["user"] or'
-                                 ' ["user", "password"], got %r' % userinfo)
-            userinfo = u':'.join([_encode_reserved(p) for p in userinfo])
+                                 ' ["user", "password"], got %r' % (userinfo,))
+            userinfo_text = u':'.join([_encode_reserved(p) for p in userinfo])
+        else:
+            userinfo_text = cast(Text, _UNSET)
         new_url = self._url.replace(scheme=scheme,
                                     host=host,
                                     path=path,
@@ -1926,20 +1996,23 @@ class DecodedURL(object):
                                     fragment=fragment,
                                     port=port,
                                     rooted=rooted,
-                                    userinfo=userinfo,
+                                    userinfo=userinfo_text,
                                     uses_netloc=uses_netloc)
         return self.__class__(url=new_url)
 
     def get(self, name):
+        # type: (Text) -> List[Optional[Text]]
         "Get the value of all query parameters whose name matches *name*"
         return [v for (k, v) in self.query if name == k]
 
     def add(self, name, value=None):
+        # type: (Text, Optional[Text]) -> DecodedURL
         """Return a new DecodedURL with the query parameter *name* and *value*
         added."""
         return self.replace(query=self.query + ((name, value),))
 
     def set(self, name, value=None):
+        # type: (Text, Optional[Text]) -> DecodedURL
         "Return a new DecodedURL with query parameter *name* set to *value*"
         query = self.query
         q = [(k, v) for (k, v) in query if k != name]
@@ -1947,7 +2020,13 @@ class DecodedURL(object):
         q[idx:idx] = [(name, value)]
         return self.replace(query=q)
 
-    def remove(self, name, value=_UNSET, limit=None):
+    def remove(  # type: ignore[assignment] _UNSET is private
+        self,
+        name,          # type: Text
+        value=_UNSET,  # type: Text
+        limit=None,    # type: Optional[int]
+    ):
+        # type: (...) -> DecodedURL
         """Return a new DecodedURL with query parameter *name* removed.
 
         Optionally also filter for *value*, as well as cap the number
@@ -1976,25 +2055,30 @@ class DecodedURL(object):
         return self.replace(query=nq)
 
     def __repr__(self):
+        # type: () -> str
         cn = self.__class__.__name__
         return '%s(url=%r)' % (cn, self._url)
 
     def __str__(self):
+        # type: () -> str
         # TODO: the underlying URL's __str__ needs to change to make
         # this work as the URL, see #55
         return str(self._url)
 
     def __eq__(self, other):
+        # type: (Any) -> bool
         if not isinstance(other, self.__class__):
             return NotImplemented
         return self.normalize().to_uri() == other.normalize().to_uri()
 
     def __ne__(self, other):
+        # type: (Any) -> bool
         if not isinstance(other, self.__class__):
             return NotImplemented
         return not self.__eq__(other)
 
     def __hash__(self):
+        # type: () -> int
         return hash((self.__class__, self.scheme, self.userinfo, self.host,
                      self.path, self.query, self.fragment, self.port,
                      self.rooted, self.uses_netloc))
@@ -2005,12 +2089,15 @@ class DecodedURL(object):
 
     @classmethod
     def fromText(cls, s, lazy=False):
+        # type: (Text, bool) -> DecodedURL
         return cls.from_text(s, lazy=lazy)
 
     def asText(self, includeSecrets=False):
+        # type: (bool) -> Text
         return self.to_text(with_password=includeSecrets)
 
     def __dir__(self):
+        # type: () -> Sequence[Text]
         try:
             ret = object.__dir__(self)
         except AttributeError:
@@ -2023,21 +2110,22 @@ class DecodedURL(object):
 
 
 def parse(url, decoded=True, lazy=False):
+    # type: (Text, bool, bool) -> Union[URL, DecodedURL]
     """Automatically turn text into a structured URL object.
 
     Args:
 
-       decoded (bool): Whether or not to return a :class:`DecodedURL`,
-          which automatically handles all
-          encoding/decoding/quoting/unquoting for all the various
-          accessors of parts of the URL, or an :class:`EncodedURL`,
-          which has the same API, but requires handling of special
-          characters for different parts of the URL.
+        decoded: Whether or not to return a :class:`DecodedURL`,
+            which automatically handles all
+            encoding/decoding/quoting/unquoting for all the various
+            accessors of parts of the URL, or an :class:`EncodedURL`,
+            which has the same API, but requires handling of special
+            characters for different parts of the URL.
 
-       lazy (bool): In the case of `decoded=True`, this controls
-          whether the URL is decoded immediately or as accessed. The
-          default, `lazy=False`, checks all encoded parts of the URL
-          for decodability.
+        lazy: In the case of `decoded=True`, this controls
+            whether the URL is decoded immediately or as accessed. The
+            default, `lazy=False`, checks all encoded parts of the URL
+            for decodability.
     """
     enc_url = EncodedURL.from_text(url)
     if not decoded:

@@ -2,7 +2,8 @@
 
 from __future__ import unicode_literals
 
-from .. import DecodedURL
+from typing import Dict, Union
+from .. import DecodedURL, URL
 from .._url import _percent_decode
 from .common import HyperlinkTestCase
 
@@ -132,7 +133,9 @@ class TestURL(HyperlinkTestCase):
         assert durl is not None
         assert durl != durl._url
 
-        durl_map = {}
+        AnyURL = Union[URL, DecodedURL]
+
+        durl_map = {}  # type: Dict[AnyURL, AnyURL]
         durl_map[durl] = durl
         durl_map[durl2] = durl2
 
@@ -166,7 +169,11 @@ class TestURL(HyperlinkTestCase):
         # type: () -> None
         durl = DecodedURL.from_text(TOTAL_URL)
         with self.assertRaises(ValueError):
-            durl.replace(userinfo=['user', 'pw', 'thiswillcauseafailure'])
+            durl.replace(
+                userinfo=(  # type: ignore[arg-type] intentional
+                    'user', 'pw', 'thiswillcauseafailure'
+                )
+            )
         return
 
     def test_twisted_compat(self):
@@ -207,7 +214,7 @@ class TestURL(HyperlinkTestCase):
         durl = DecodedURL.from_text(TOTAL_URL)
         durl_dest = DecodedURL.from_text('/tëst')
 
-        clicked = durl.click(durl_dest)
+        clicked = durl.click(durl_dest)  # type: ignore[arg-type] URL vs Text
         assert clicked.host == durl.host
         assert clicked.path == durl_dest.path
         assert clicked.path == ('tëst',)
