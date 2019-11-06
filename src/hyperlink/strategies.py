@@ -19,7 +19,15 @@ from hypothesis.strategies import (
 from idna import IDNAError, check_label, encode as idna_encode
 
 
-__all__ = ()
+__all__ = (
+    "decoded_urls",
+    "encoded_urls",
+    "hostname_labels",
+    "hostnames",
+    "idna_text",
+    "paths",
+    "port_numbers",
+)
 
 
 T = TypeVar('T')
