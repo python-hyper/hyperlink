@@ -3,14 +3,13 @@
 try:
     from socket import inet_pton
 except ImportError:
-    inet_pton = None  # type: ignore[assignment]
+    inet_pton = None  # type: ignore[assignment] not optional
 
 if not inet_pton:
     import socket
 
     from .common import HyperlinkTestCase
     from .._socket import inet_pton
-
 
     class TestSocket(HyperlinkTestCase):
         def test_inet_pton_ipv4_valid(self):

@@ -3,7 +3,7 @@ tmp.py
 htmlcov/
 .coverage.*
 *.py[cod]
-.mypy_cache
+/.hypothesis/
 
 # emacs
 *~
