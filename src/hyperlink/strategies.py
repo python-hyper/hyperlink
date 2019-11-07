@@ -78,7 +78,8 @@ else:
                     start, end = (int(i, 16) for i in startEnd)
 
                     for i in range(start, end + 1):
-                        assert i <= maxunicode
+                        if i > maxunicode:  # Happens using Py2 on Windows
+                            break
                         result.append(unichr(i))
 
             _idnaCharacters = u"".join(result)
