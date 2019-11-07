@@ -11,7 +11,10 @@ def _init_hypothesis():
     from os import environ
 
     if "CI" in environ:
-        from hypothesis import HealthCheck, settings
+        try:
+            from hypothesis import HealthCheck, settings
+        except ImportError:
+            return
 
         settings.register_profile(
             "patience", settings(suppress_health_check=[HealthCheck.too_slow])
