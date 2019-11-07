@@ -4,7 +4,8 @@ Hypothesis strategies.
 """
 
 try:
-    from hypothesis import assume
+    import hypothesis
+    del(hypothesis)
 except ImportError:
     from typing import Tuple
     __all__ = ()  # type: Tuple[str, ...]
@@ -19,6 +20,7 @@ else:
 
     from . import DecodedURL, EncodedURL
 
+    from hypothesis import assume
     from hypothesis.strategies import (
         composite, integers, lists, sampled_from, text
     )
@@ -160,7 +162,7 @@ else:
                 # the xn-- prefix.
                 while (
                     len(label.encode("punycode")) > 63 - len("xn--")
-                ):  # pragma: no cover  (not always drawn)
+                ):
                     # Rather than bombing out, just trim from the end until it
                     # is short enough, so hypothesis doesn't have to generate
                     # new data.

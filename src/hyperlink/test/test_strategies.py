@@ -4,22 +4,25 @@ Tests for hyperlink.strategies.
 """
 
 try:
-    from hypothesis import given
+    import hypothesis
+    del(hypothesis)
 except ImportError:
     pass
 else:
     from string import digits
-    from typing import Any, Sequence, Text
+    from typing import Sequence, Text
+    from unittest.mock import patch
 
-    from hypothesis.strategies import data
+    from hypothesis import given, settings
+    from hypothesis.strategies import SearchStrategy, data
 
     from idna import IDNAError, check_label, encode as idna_encode
 
     from .common import HyperlinkTestCase
     from .. import DecodedURL, EncodedURL
     from ..strategies import (
-        decoded_urls, encoded_urls, hostname_labels, hostnames,
-        idna_text, paths, port_numbers,
+        DrawCallable, composite, decoded_urls, encoded_urls,
+        hostname_labels, hostnames, idna_text, paths, port_numbers,
     )
 
     class TestHyperlink(HyperlinkTestCase):
@@ -42,7 +45,7 @@ else:
 
         @given(data())
         def test_idna_text_min_max(self, data):
-            # type: (Any) -> None
+            # type: (SearchStrategy) -> None
             """
             idna_text() raises AssertionError if min_size is < 1.
             """
@@ -81,6 +84,34 @@ else:
                 raise AssertionError(
                     "Invalid IDN label: {!r}".format(label)
                 )
+
+        @given(data())
+        @settings(max_examples=10)
+        def test_hostname_labels_long_idn_punycode(self, data):
+            # type: (SearchStrategy) -> None
+            """
+            hostname_labels() handles case where idna_text() generates text
+            that encoded to punycode ends up as longer than allowed.
+            """
+            @composite
+            def mock_idna_text(draw, min_size, max_size):
+                # type: (DrawCallable, int, int) -> Text
+                # We want a string that does not exceed max_size, but when
+                # encoded to punycode, does exceed max_size.
+                # So use a unicode character that is larger when encoded,
+                # "á" being a great example, and use it max_size times, which
+                # will be max_size * 3 in size when encoded.
+                return u"\N{LATIN SMALL LETTER A WITH ACUTE}" * max_size
+
+            with patch("hyperlink.strategies.idna_text", mock_idna_text):
+                label = data.draw(hostname_labels())
+                try:
+                    check_label(label)
+                    idna_encode(label)
+                except UnicodeError:  # pragma: no cover
+                    raise AssertionError(
+                        "Invalid IDN label: {!r}".format(label)
+                    )
 
         @given(hostname_labels(allow_idn=False))
         def test_hostname_labels_valid_ascii(self, label):
