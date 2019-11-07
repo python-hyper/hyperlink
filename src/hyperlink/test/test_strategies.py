@@ -5,7 +5,7 @@ Tests for hyperlink.strategies.
 
 try:
     import hypothesis
-    del(hypothesis)
+    del hypothesis
 except ImportError:
     pass
 else:

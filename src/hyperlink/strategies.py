@@ -5,7 +5,7 @@ Hypothesis strategies.
 
 try:
     import hypothesis
-    del(hypothesis)
+    del hypothesis
 except ImportError:
     from typing import Tuple
     __all__ = ()  # type: Tuple[str, ...]
