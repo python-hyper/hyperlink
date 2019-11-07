@@ -11,7 +11,10 @@ except ImportError:
 else:
     from string import digits
     from typing import Sequence, Text
-    from unittest.mock import patch
+    try:
+        from unittest.mock import patch
+    except ImportError:
+        from mock import patch  # type: ignore[misc]
 
     from hypothesis import given, settings
     from hypothesis.strategies import SearchStrategy, data
