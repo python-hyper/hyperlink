@@ -8,6 +8,10 @@ language: python
 
 matrix:
   include:
+    - python: "3.8"
+      env: TOXENV=flake8
+    - python: "3.8"
+      env: TOXENV=mypy
     - python: "2.7"
       env: TOXENV=test-py27,codecov
     - python: "3.4"
