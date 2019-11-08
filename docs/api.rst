@@ -61,7 +61,6 @@ URLs have many parts, and URL objects have many attributes to represent them.
 .. autoattribute:: hyperlink.URL.userinfo
 .. autoattribute:: hyperlink.URL.user
 .. autoattribute:: hyperlink.URL.rooted
-.. autoattribute:: hyperlink.URL.family
 
 Low-level functions
 -------------------
