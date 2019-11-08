@@ -69,7 +69,6 @@ A couple of notable helpers used by the :class:`~hyperlink.URL` type.
 
 .. autoclass:: hyperlink.URLParseError
 .. autofunction:: hyperlink.register_scheme
-.. autofunction:: hyperlink.parse_host
 .. autofunction:: hyperlink.parse
 
 .. TODO: run doctests in docs?

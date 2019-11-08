@@ -1,6 +1,5 @@
 from ._url import (
     parse,
-    parse_host,
     register_scheme,
     URL,
     EncodedURL,
@@ -10,7 +9,6 @@ from ._url import (
 
 __all__ = (
     "parse",
-    "parse_host",
     "register_scheme",
     "URL",
     "EncodedURL",
