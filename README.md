@@ -17,9 +17,6 @@
 <a href="https://https://codecov.io/github/python-hyper/hyperlink?branch=master">
     <img src="https://codecov.io/github/python-hyper/hyperlink/coverage.svg?branch=master" alt="Code Coverage">
 </a>
-<a href="http://travis-ci.org/python-hyper/hyperlink">
-    <img src="https://travis-ci.org/python-hyper/hyperlink.svg?branch=master" alt="Build Status">
-</a>
 <a href="https://requires.io/github/python-hyper/hyperlink/requirements/?branch=master">
     <img src="https://requires.io/github/python-hyper/hyperlink/requirements.svg?branch=master" alt="Requirements Status">
 </a>
