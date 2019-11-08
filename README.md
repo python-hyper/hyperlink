@@ -11,11 +11,11 @@
 <a href="http://travis-ci.org/python-hyper/hyperlink">
     <img src="https://travis-ci.org/python-hyper/hyperlink?branch=master" alt="Build Status">
 </a>
-<a href="https://codecov.io/github/twisted/klein/coverage.svg?branch=master">
-    <img src="https://codecov.io/github/twisted/klein?branch=master" alt="Code Coverage">
+<a href="https://codecov.io/github/python-hyper/hyperlink/coverage.svg?branch=master">
+    <img src="https://codecov.io/github/python-hyper/hyperlink?branch=master" alt="Code Coverage">
 </a>
-<a href="https://requires.io/github/twisted/klein/requirements.svg?branch=master">
-    <img src="https://requires.io/github/twisted/klein/requirements/?branch=master" alt="Requirements Status">
+<a href="https://requires.io/github/python-hyper/hyperlink/requirements.svg?branch=master">
+    <img src="https://requires.io/github/python-hyper/hyperlink/requirements/?branch=master" alt="Requirements Status">
 </a>
 <a href="https://pypi.org/project/hyperlink/">
     <img src="https://img.shields.io/pypi/v/boltons.svg" alt="Python Version Compatibility">
