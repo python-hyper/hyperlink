@@ -5,6 +5,9 @@
 <a href="https://hyperlink.readthedocs.io/en/latest/">
     <img src="https://img.shields.io/badge/docs-latest-brightgreen.svg?style=flat" alt="Documentation">
 </a>
+<a href="https://pypi.org/project/hyperlink/">
+    <img src="https://img.shields.io/pypi/v/boltons.svg" alt="PyPI">
+</a>
 <a href="http://calver.org">
     <img src="https://img.shields.io/badge/calver-YY.MINOR.MICRO-22bfda.svg" alt="Calendar Versioning">
 </a>
@@ -16,9 +19,6 @@
 </a>
 <a href="https://requires.io/github/python-hyper/hyperlink/requirements/?branch=master">
     <img src="https://requires.io/github/python-hyper/hyperlink/requirements.svg?branch=master" alt="Requirements Status">
-</a>
-<a href="https://pypi.org/project/hyperlink/">
-    <img src="https://img.shields.io/pypi/v/boltons.svg" alt="Python Version Compatibility">
 </a>
 
 Hyperlink provides a pure-Python implementation of immutable
