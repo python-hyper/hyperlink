@@ -2,9 +2,24 @@
 
 *Cool URLs that don't change.*
 
-<a href="https://hyperlink.readthedocs.io/en/latest/"><img src="https://img.shields.io/badge/docs-latest-brightgreen.svg?style=flat"></a>
-<a href="https://pypi.python.org/pypi/hyperlink"><img src="https://img.shields.io/pypi/v/boltons.svg"></a>
-<a href="http://calver.org"><img src="https://img.shields.io/badge/calver-YY.MINOR.MICRO-22bfda.svg"></a>
+<a href="https://hyperlink.readthedocs.io/en/latest/">
+    <img src="https://img.shields.io/badge/docs-latest-brightgreen.svg?style=flat" alt="Documentation">
+</a>
+<a href="http://calver.org">
+    <img src="https://img.shields.io/badge/calver-YY.MINOR.MICRO-22bfda.svg" alt="Calendar Versioning">
+</a>
+<a href="http://travis-ci.org/python-hyper/hyperlink">
+    <img src="https://travis-ci.org/python-hyper/hyperlink?branch=master" alt="Build Status">
+</a>
+<a href="https://codecov.io/github/twisted/klein/coverage.svg?branch=master">
+    <img src="https://codecov.io/github/twisted/klein?branch=master" alt="Code Coverage">
+</a>
+<a href="https://requires.io/github/twisted/klein/requirements.svg?branch=master">
+    <img src="https://requires.io/github/twisted/klein/requirements/?branch=master" alt="Requirements Status">
+</a>
+<a href="https://pypi.org/project/hyperlink/">
+    <img src="https://img.shields.io/pypi/v/boltons.svg" alt="Python Version Compatibility">
+</a>
 
 Hyperlink provides a pure-Python implementation of immutable
 URLs. Based on [RFC 3986][rfc3986] and [3987][rfc3987], the Hyperlink URL
