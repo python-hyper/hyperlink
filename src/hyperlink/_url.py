@@ -1217,9 +1217,8 @@ class URL(object):
         if gs['query']:
             query = tuple(
                 (
-                    cast(Tuple[str, str], qe.split(u"=", 1))
-                    if u'=' in qe else
-                    (qe, None)
+                    qe.split(u"=", 1)  # type: ignore[misc]
+                    if u'=' in qe else (qe, None)
                 )
                 for qe in gs['query'].split(u"&")
             )  # type: QueryPairs
@@ -1860,72 +1859,48 @@ class DecodedURL(object):
     @property
     def path(self):
         # type: () -> Sequence[Text]
-        try:
-            return cast(
-                Tuple[Text, ...],
-                self._path  # type: ignore[has-type] # can't determine
-            )
-        except AttributeError:
-            pass
-        self._path = tuple([
-            _percent_decode(p, raise_subencoding_exc=True)
-            for p in self._url.path
-        ])
+        if not hasattr(self, "_path"):
+            self._path = tuple([
+                _percent_decode(p, raise_subencoding_exc=True)
+                for p in self._url.path
+            ])
         return self._path
 
     @property
     def query(self):
         # type: () -> QueryPairs
-        try:
-            return cast(
-                QueryPairs,
-                self._query  # type: ignore[has-type] # can't determine
-            )
-        except AttributeError:
-            pass
-        self._query = cast(QueryPairs, tuple(
-            tuple(
-                _percent_decode(x, raise_subencoding_exc=True)
-                if x is not None else None
-                for x in (k, v)
-            )
-            for k, v in self._url.query
-        ))
+        if not hasattr(self, "_query"):
+            self._query = cast(QueryPairs, tuple(
+                tuple(
+                    _percent_decode(x, raise_subencoding_exc=True)
+                    if x is not None else None
+                    for x in (k, v)
+                )
+                for k, v in self._url.query
+            ))
         return self._query
 
     @property
     def fragment(self):
         # type: () -> Text
-        try:
-            return cast(
-                Text,
-                self._fragment  # type: ignore[has-type] # can't determine
-            )
-        except AttributeError:
-            pass
-        frag = self._url.fragment
-        self._fragment = _percent_decode(frag, raise_subencoding_exc=True)
+        if not hasattr(self, "_fragment"):
+            frag = self._url.fragment
+            self._fragment = _percent_decode(frag, raise_subencoding_exc=True)
         return self._fragment
 
     @property
     def userinfo(self):
         # type: () -> Union[Tuple[str], Tuple[str, str]]
-        try:
-            return cast(
+        if not hasattr(self, "_userinfo"):
+            self._userinfo = cast(
                 Union[Tuple[str], Tuple[str, str]],
-                self._userinfo  # type: ignore[has-type] # can't determine
-            )
-        except AttributeError:
-            pass
-        self._userinfo = cast(
-            Union[Tuple[str], Tuple[str, str]],
-            tuple(
                 tuple(
-                    _percent_decode(p, raise_subencoding_exc=True)
-                    for p in self._url.userinfo.split(':', 1)
+                    tuple(
+                        _percent_decode(p, raise_subencoding_exc=True)
+                        for p in self._url.userinfo.split(':', 1)
+                    )
                 )
             )
-        )
         return self._userinfo
 
     @property
@@ -1935,8 +1910,8 @@ class DecodedURL(object):
 
     @property
     def uses_netloc(self):
-        # type: () -> bool
-        return cast(bool, self._url.uses_netloc)
+        # type: () -> Optional[bool]
+        return self._url.uses_netloc
 
     def replace(
         self,
@@ -1975,7 +1950,7 @@ class DecodedURL(object):
                                  ' ["user", "password"], got %r' % (userinfo,))
             userinfo_text = u':'.join([_encode_reserved(p) for p in userinfo])
         else:
-            userinfo_text = cast(Text, _UNSET)
+            userinfo_text = _UNSET
         new_url = self._url.replace(scheme=scheme,
                                     host=host,
                                     path=path,
