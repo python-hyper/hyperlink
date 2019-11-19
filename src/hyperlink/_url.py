@@ -23,7 +23,7 @@ from socket import AF_INET, AF_INET6
 try:
     from socket import AddressFamily
 except ImportError:
-    AddressFamily = int  # type: ignore[assignment,misc] Python 2
+    AddressFamily = int  # type: ignore[assignment,misc]
 from typing import (
     Any, Callable, Dict, Iterable, Iterator, List, Mapping, Optional,
     Sequence, Text, Tuple, Type, TypeVar, Union, cast,
@@ -97,7 +97,7 @@ def make_sentinel(name='_MISSING', var_name=""):
         if var_name:
             # superclass type hints don't allow str return type, but it is
             # allowed in the docs, hence the ignore[override] below
-            def __reduce__(self):  # type: ignore[override] intentional
+            def __reduce__(self):  # type: ignore[override]
                 # type: () -> str
                 return self.var_name
 
@@ -110,7 +110,7 @@ def make_sentinel(name='_MISSING', var_name=""):
     return Sentinel()
 
 
-_unspecified = _UNSET = make_sentinel('_UNSET')
+_unspecified = _UNSET = make_sentinel('_UNSET')  # type: Any
 
 
 # RFC 3986 Section 2.3, Unreserved URI Characters
@@ -466,7 +466,7 @@ def _textcheck(name, value, delims=frozenset(), nullable=False):
     if not isinstance(value, Text):
         if nullable and value is None:
             # used by query string values
-            return value  # type: ignore[misc] unreachable
+            return value  # type: ignore[misc] # unreachable
         else:
             str_name = "unicode" if PY2 else "str"
             exp = str_name + ' or NoneType' if nullable else str_name
@@ -474,7 +474,7 @@ def _textcheck(name, value, delims=frozenset(), nullable=False):
     if delims and set(value) & set(delims):  # TODO: test caching into regexes
         raise ValueError('one or more reserved delimiters %s present in %s: %r'
                          % (''.join(delims), name, value))
-    return value  # type: ignore[return-value] T vs. Text
+    return value  # type: ignore[return-value] # T vs. Text
 
 
 def iter_pairs(iterable):
@@ -1089,7 +1089,7 @@ class URL(object):
         """
         return bool(self.scheme and self.host)
 
-    def replace(  # type: ignore[assignment] _UNSET is private
+    def replace(
         self,
         scheme=_UNSET,      # type: Optional[Text]
         host=_UNSET,        # type: Optional[Text]
@@ -1194,7 +1194,7 @@ class URL(object):
         port = au_gs['port']
         if port is not None:
             try:
-                port = int(port)  # type: ignore[assignment] FIXME, also below
+                port = int(port)  # type: ignore[assignment] # FIXME, see below
             except ValueError:
                 if not port:  # TODO: excessive?
                     raise URLParseError('port must not be empty: %r' % au_text)
@@ -1227,7 +1227,7 @@ class URL(object):
             query = ()
         return cls(
             scheme, host, path, query, fragment,
-            port,  # type: ignore[arg-type] FIXME, also above
+            port,  # type: ignore[arg-type] # FIXME, see above
             rooted, userinfo, uses_netloc,
         )
 
@@ -1323,7 +1323,7 @@ class URL(object):
         if not segments:
             return self
 
-        segments = [  # type: ignore[assignment] variable is tuple
+        segments = [  # type: ignore[assignment] # variable is tuple
             _textcheck('path segment', s) for s in segments
         ]
         new_path = tuple(self.path)
@@ -1679,7 +1679,7 @@ class URL(object):
         """
         return [value for (key, value) in self.query if name == key]
 
-    def remove(  # type: ignore[assignment] _UNSET is private
+    def remove(
         self,
         name,          # type: Text
         value=_UNSET,  # type: Text
@@ -1863,7 +1863,7 @@ class DecodedURL(object):
         try:
             return cast(
                 Tuple[Text, ...],
-                self._path  # type: ignore[has-type] can't determine
+                self._path  # type: ignore[has-type] # can't determine
             )
         except AttributeError:
             pass
@@ -1879,7 +1879,7 @@ class DecodedURL(object):
         try:
             return cast(
                 QueryPairs,
-                self._query  # type: ignore[has-type] can't determine
+                self._query  # type: ignore[has-type] # can't determine
             )
         except AttributeError:
             pass
@@ -1899,7 +1899,7 @@ class DecodedURL(object):
         try:
             return cast(
                 Text,
-                self._fragment  # type: ignore[has-type] can't determine
+                self._fragment  # type: ignore[has-type] # can't determine
             )
         except AttributeError:
             pass
@@ -1913,7 +1913,7 @@ class DecodedURL(object):
         try:
             return cast(
                 Union[Tuple[str], Tuple[str, str]],
-                self._userinfo  # type: ignore[has-type] can't determine
+                self._userinfo  # type: ignore[has-type] # can't determine
             )
         except AttributeError:
             pass
@@ -1938,7 +1938,7 @@ class DecodedURL(object):
         # type: () -> bool
         return cast(bool, self._url.uses_netloc)
 
-    def replace(  # type: ignore[assignment] _UNSET is private
+    def replace(
         self,
         scheme=_UNSET,      # type: Optional[Text]
         host=_UNSET,        # type: Optional[Text]
@@ -2007,7 +2007,7 @@ class DecodedURL(object):
         q[idx:idx] = [(name, value)]
         return self.replace(query=q)
 
-    def remove(  # type: ignore[assignment] _UNSET is private
+    def remove(
         self,
         name,          # type: Text
         value=_UNSET,  # type: Text

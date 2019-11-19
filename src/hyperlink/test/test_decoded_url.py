@@ -170,7 +170,7 @@ class TestURL(HyperlinkTestCase):
         durl = DecodedURL.from_text(TOTAL_URL)
         with self.assertRaises(ValueError):
             durl.replace(
-                userinfo=(  # type: ignore[arg-type] intentional
+                userinfo=(  # type: ignore[arg-type]
                     'user', 'pw', 'thiswillcauseafailure'
                 )
             )

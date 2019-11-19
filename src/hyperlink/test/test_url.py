@@ -871,7 +871,7 @@ class TestURL(HyperlinkTestCase):
         def check(param, expectation=defaultExpectation):
             # type: (Any, str) -> None
             with self.assertRaises(TypeError) as raised:
-                URL(**{param: Unexpected()})  # type: ignore[arg-type] ok
+                URL(**{param: Unexpected()})  # type: ignore[arg-type]
 
             assertRaised(raised, expectation, param)
 
