@@ -808,7 +808,9 @@ class URL(object):
         query: The query parameters, as a dictionary or as an iterable of
             key-value pairs.
         fragment: The fragment part of the URL.
-        rooted: Whether or not the path begins with a slash.
+       rooted: A rooted URL is one which indicates an absolute path.
+          This is True on any URL that includes a host, or any relative URL
+          that starts with a slash.
         userinfo: The username or colon-separated username:password pair.
         uses_netloc: Indicates whether two slashes appear between the scheme
             and the host (``http://eg.com`` vs. ``mailto:e@g.com``).
@@ -880,8 +882,12 @@ class URL(object):
         uses_netloc = scheme_uses_netloc(self._scheme, uses_netloc)
         self._uses_netloc = _typecheck("uses_netloc",
                                        uses_netloc, bool, NoneType)
-
-        return
+        # fixup for rooted consistency
+        if self._host:
+            self._rooted = True
+        if (not self._rooted) and self._path and self._path[0] == '':
+            self._rooted = True
+            self._path = self._path[1:]
 
     def get_decoded_url(self, lazy=False):
         # type: (bool) -> DecodedURL
@@ -1051,7 +1057,7 @@ class URL(object):
         if not isinstance(other, self.__class__):
             return NotImplemented
         for attr in ['scheme', 'userinfo', 'host', 'query',
-                     'fragment', 'port', 'uses_netloc']:
+                     'fragment', 'port', 'uses_netloc', 'rooted']:
             if getattr(self, attr) != getattr(other, attr):
                 return False
         if (
