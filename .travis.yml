@@ -26,6 +26,8 @@ matrix:
       env: TOXENV=test-pypy3,codecov
     - python: "2.7"
       env: TOXENV=packaging-py27
+    - python: "3.8"
+      env: TOXENV=docs
 
 
 install:

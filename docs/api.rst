@@ -61,7 +61,6 @@ URLs have many parts, and URL objects have many attributes to represent them.
 .. autoattribute:: hyperlink.URL.userinfo
 .. autoattribute:: hyperlink.URL.user
 .. autoattribute:: hyperlink.URL.rooted
-.. autoattribute:: hyperlink.URL.family
 
 Low-level functions
 -------------------
@@ -70,6 +69,6 @@ A couple of notable helpers used by the :class:`~hyperlink.URL` type.
 
 .. autoclass:: hyperlink.URLParseError
 .. autofunction:: hyperlink.register_scheme
-.. autofunction:: hyperlink.parse_host
+.. autofunction:: hyperlink.parse
 
 .. TODO: run doctests in docs?
