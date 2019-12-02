@@ -1112,6 +1112,7 @@ class TestURL(HyperlinkTestCase):
 
         attempt_unrooted_absolute = URL(host="foo", path=['bar'], rooted=False)
         normal_absolute = URL(host="foo", path=["bar"])
+        attempted_rooted_replacement = normal_absolute.replace(rooted=True)
         self.assertEqual(attempt_unrooted_absolute, normal_absolute)
         self.assertEqual(normal_absolute.rooted, True)
         self.assertEqual(attempt_unrooted_absolute.rooted, True)
