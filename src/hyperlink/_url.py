@@ -371,9 +371,9 @@ def register_scheme(text, uses_netloc=True, default_port=None):
     Args:
         text (Text): A string representation of the scheme.
             (the 'http' in 'http://hatnote.com')
-        uses_netloc (bool): Does the scheme support specifying a network host?
-            For instance, "http" does, "mailto" does not.
-            Defaults to True.
+        uses_netloc (bool): Does the scheme support specifying a
+            network host? For instance, "http" does, "mailto" does
+            not. Defaults to True.
         default_port (Optional[int]): The default port, if any, for
             netloc-using schemes.
 
@@ -587,7 +587,7 @@ def _percent_decode(
             underlying the percent-decoding should be raised.
 
     Returns:
-        The percent-decoded version of *text*, decoded by *subencoding*.
+        Text: The percent-decoded version of *text*, decoded by *subencoding*.
     """
     try:
         quoted_bytes = text.encode(subencoding)
@@ -736,7 +736,7 @@ def parse_host(host):
     Will raise :class:`URLParseError` on invalid IPv6 constants.
 
     Returns:
-      tuple: family (socket constant or None), host (string)
+        family (socket constant or None), host (string)
 
     >>> import socket
     >>> parse_host('googlewebsite.com') == (None, 'googlewebsite.com')
@@ -808,7 +808,7 @@ class URL(object):
        path (Iterable[Text]): A tuple of strings representing the
           slash-separated parts of the path.
        query (Sequence[Tuple[Text, Optional[Text]]]): The query parameters, as
-           a dictionary or as an iterable of key-value pairs.
+           a dictionary or as an sequence of key-value pairs.
        fragment (Text): The fragment part of the URL.
        rooted (bool): A rooted URL is one which indicates an absolute path.
           This is True on any URL that includes a host, or any relative URL
@@ -1028,13 +1028,13 @@ class URL(object):
         u'user:pass@localhost:8080'
 
         Args:
-            with_password (bool): Whether the return value of this method
-                include the password in the URL, if it is set.
-                Defaults to False.
+            with_password (bool): Whether the return value of this
+                method include the password in the URL, if it is
+                set. Defaults to False.
 
         Returns:
-            The authority (network location and user information) portion of
-            the URL.
+            Text: The authority (network location and user information) portion
+                of the URL.
         """
         # first, a bit of twisted compat
         with_password = kw.pop('includeSecrets', with_password)
@@ -1126,7 +1126,7 @@ class URL(object):
             path (Iterable[Text]): A tuple of strings representing the
                 slash-separated parts of the path.
             query (Sequence[Tuple[Text, Optional[Text]]]): The query
-                parameters, as a dictionary or as an iterable of key-value
+                parameters, as a dictionary or as an sequence of key-value
                 pairs.
             fragment (Text): The fragment part of the URL.
             port (Optional[int]): The port part of the network location.
@@ -1139,7 +1139,7 @@ class URL(object):
                 (``http://eg.com`` vs ``mailto:e@g.com``)
 
         Returns:
-            A copy of the current :class:`URL`, with new values for
+            URL: A copy of the current :class:`URL`, with new values for
                 parameters passed.
         """
         return self.__class__(
@@ -1175,7 +1175,7 @@ class URL(object):
            text (Text): A valid URL string.
 
         Returns:
-           The structured object version of the parsed string.
+           URL: The structured object version of the parsed string.
 
         .. note::
 
@@ -1332,7 +1332,7 @@ class URL(object):
                 in segments will be percent encoded.
 
         Returns:
-           A copy of the current URL with the extra path segments.
+           URL: A copy of the current URL with the extra path segments.
         """
         if not segments:
             return self
@@ -1355,7 +1355,7 @@ class URL(object):
             segment (Text): A single path segment.
 
         Returns:
-            A copy of the current URL with the last path segment
+            URL: A copy of the current URL with the last path segment
                 replaced by *segment*. Special characters such as
                 ``/?#`` will be percent encoded.
         """
@@ -1437,8 +1437,8 @@ class URL(object):
 
         Returns:
             URL: A new instance with its path segments, query parameters, and
-            hostname encoded, so that they are all in the standard
-            US-ASCII range.
+                hostname encoded, so that they are all in the standard
+                US-ASCII range.
         """
         new_userinfo = u':'.join([_encode_userinfo_part(p) for p in
                                   self.userinfo.split(':', 1)])
@@ -1482,7 +1482,7 @@ class URL(object):
 
         Returns:
             URL: A new instance with its path segments, query parameters, and
-            hostname decoded for display purposes.
+                hostname decoded for display purposes.
         """  # noqa: E501
         new_userinfo = u':'.join([
             _decode_userinfo_part(p) for p in self.userinfo.split(':', 1)
@@ -1522,7 +1522,7 @@ class URL(object):
                 text. Defaults to False.
 
         Returns:
-            The serialized textual representation of this URL, such as
+            Text: The serialized textual representation of this URL, such as
                 ``u"http://example.com/some/path?some=query"``.
 
         The natural counterpart to :class:`URL.from_text()`.
@@ -1640,7 +1640,7 @@ class URL(object):
                 value.
 
         Returns:
-            A new :class:`URL` instance with the parameter added.
+            URL: A new :class:`URL` instance with the parameter added.
         """
         return self.replace(query=self.query + ((name, value),))
 
@@ -1663,7 +1663,7 @@ class URL(object):
                 value.
 
         Returns:
-            A new :class:`URL` instance with the parameter set.
+            URL: A new :class:`URL` instance with the parameter set.
         """
         # Preserve the original position of the query key in the list
         q = [(k, v) for (k, v) in self.query if k != name]
@@ -1689,7 +1689,8 @@ class URL(object):
             name (Text): The name of the query parameter to get.
 
         Returns:
-            A list of all the values associated with the key, in string form.
+            List[Optional[Text]]: A list of all the values associated with the
+                key, in string form.
         """
         return [value for (key, value) in self.query if name == key]
 
