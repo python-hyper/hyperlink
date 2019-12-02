@@ -15,7 +15,7 @@ else:
     from string import ascii_letters, digits
     from sys import maxunicode
     from typing import (
-        Callable, Iterable, Optional, Sequence, Text, TypeVar, cast
+        Callable, Iterable, List, Optional, Sequence, Text, TypeVar, cast
     )
 
     from . import DecodedURL, EncodedURL
@@ -199,20 +199,30 @@ else:
         @param allow_idn: Whether to allow non-ASCII characters as allowed by
             internationalized domain names (IDNs).
         """
-        labels = cast(
-            Sequence[Text],
-            draw(
-                lists(
-                    hostname_labels(allow_idn=allow_idn),
-                    min_size=1, max_size=5,
-                ).filter(
-                    lambda ls: sum(len(l) for l in ls) + len(ls) - 1 <= 252
-                )
+        # Draw first label, filtering out labels with leading digits if needed
+        labels = [
+            cast(
+                Text,
+                draw(hostname_labels(allow_idn=allow_idn).filter(
+                    lambda l: (
+                        True if allow_leading_digit else l[0] not in digits
+                    )
+                ))
             )
+        ]
+        # Draw remaining labels
+        labels += cast(
+            List[Text],
+            draw(lists(
+                hostname_labels(allow_idn=allow_idn),
+                min_size=1, max_size=4,
+            ))
         )
 
-        if not allow_leading_digit:
-            assume(labels[0][0] not in digits)
+        # Trim off labels until the total host name length fits in 252
+        # characters.  This avoids having to filter the data.
+        while sum(len(label) for label in labels) + len(labels) - 1 > 252:
+            labels = labels[:-1]
 
         return u".".join(labels)
 
@@ -251,7 +261,7 @@ else:
     def paths(draw):
         # type: (DrawCallable) -> Sequence[Text]
         return cast(
-            Sequence[Text],
+            List[Text],
             draw(
                 lists(
                     text(min_size=1, alphabet=path_characters()), max_size=10
