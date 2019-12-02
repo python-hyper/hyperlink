@@ -17,7 +17,11 @@ def _init_hypothesis():
             return
 
         settings.register_profile(
-            "patience", settings(suppress_health_check=[HealthCheck.too_slow])
+            "patience", settings(
+                suppress_health_check=[
+                    HealthCheck.too_slow, HealthCheck.filter_too_much
+                ]
+            )
         )
         settings.load_profile("patience")
 
