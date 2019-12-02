@@ -3,7 +3,7 @@
 try:
     from socket import inet_pton
 except ImportError:
-    inet_pton = None  # type: ignore[assignment] intentional
+    inet_pton = None  # type: ignore[assignment]
 
 if not inet_pton:
     import socket
