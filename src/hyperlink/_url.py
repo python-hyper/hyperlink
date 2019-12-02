@@ -797,25 +797,29 @@ class URL(object):
     constructor arguments is below.
 
     Args:
-        scheme: The text name of the scheme.
-        host: The host portion of the network location
-        port: The port part of the network location. If ``None`` or no port is
-            passed, the port will default to the default port of the scheme, if
-            it is known. See the ``SCHEME_PORT_MAP`` and
-            :func:`register_default_port` for more info.
-        path: A tuple of strings representing the slash-separated parts of the
-            path.
-        query: The query parameters, as a dictionary or as an iterable of
-            key-value pairs.
-        fragment: The fragment part of the URL.
-        rooted: Whether or not the path begins with a slash.
-        userinfo: The username or colon-separated username:password pair.
-        uses_netloc: Indicates whether two slashes appear between the scheme
-            and the host (``http://eg.com`` vs. ``mailto:e@g.com``).
-            Set automatically based on scheme.
+       scheme: The text name of the scheme.
+       host: The host portion of the network location
+       port: The port part of the network location. If
+          ``None`` or no port is passed, the port will default to
+          the default port of the scheme, if it is known. See the
+          ``SCHEME_PORT_MAP`` and :func:`register_default_port`
+          for more info.
+       path: A tuple of strings representing the
+          slash-separated parts of the path.
+       query: The query parameters, as a dictionary or
+          as an iterable of key-value pairs.
+       fragment: The fragment part of the URL.
+       rooted: A rooted URL is one which indicates an absolute path.
+          This is True on any URL that includes a host, or any relative URL
+          that starts with a slash.
+       userinfo: The username or colon-separated
+          username:password pair.
+       uses_netloc: Indicates whether two slashes appear
+          between the scheme and the host (``http://eg.com`` vs
+          ``mailto:e@g.com``). Set automatically based on scheme.
 
-    All of these parts are also exposed as read-only attributes of URL
-    instances, along with several useful methods.
+    All of these parts are also exposed as read-only attributes of
+    URL instances, along with several useful methods.
 
     .. _RFC 3986: https://tools.ietf.org/html/rfc3986
     .. _RFC 3987: https://tools.ietf.org/html/rfc3987
@@ -880,8 +884,12 @@ class URL(object):
         uses_netloc = scheme_uses_netloc(self._scheme, uses_netloc)
         self._uses_netloc = _typecheck("uses_netloc",
                                        uses_netloc, bool, NoneType)
-
-        return
+        # fixup for rooted consistency
+        if self._host:
+            self._rooted = True
+        if (not self._rooted) and self._path and self._path[0] == '':
+            self._rooted = True
+            self._path = self._path[1:]
 
     def get_decoded_url(self, lazy=False):
         # type: (bool) -> DecodedURL
@@ -1051,7 +1059,7 @@ class URL(object):
         if not isinstance(other, self.__class__):
             return NotImplemented
         for attr in ['scheme', 'userinfo', 'host', 'query',
-                     'fragment', 'port', 'uses_netloc']:
+                     'fragment', 'port', 'uses_netloc', 'rooted']:
             if getattr(self, attr) != getattr(other, attr):
                 return False
         if (
