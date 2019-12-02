@@ -28,7 +28,7 @@ else:
         hostname_labels, hostnames, idna_text, paths, port_numbers,
     )
 
-    class TestHyperlink(HyperlinkTestCase):
+    class TestHypothesisStrategies(HyperlinkTestCase):
         """
         Tests for hyperlink.hypothesis.
         """
