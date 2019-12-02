@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-Tests for hyperlink.strategies.
+Tests for hyperlink.hypothesis.
 """
 
 try:
@@ -23,14 +23,14 @@ else:
 
     from .common import HyperlinkTestCase
     from .. import DecodedURL, EncodedURL
-    from ..strategies import (
+    from ..hypothesis import (
         DrawCallable, composite, decoded_urls, encoded_urls,
         hostname_labels, hostnames, idna_text, paths, port_numbers,
     )
 
     class TestHyperlink(HyperlinkTestCase):
         """
-        Tests for hyperlink.strategies.
+        Tests for hyperlink.hypothesis.
         """
 
         @given(idna_text())
@@ -106,7 +106,7 @@ else:
                 # will be max_size * 3 in size when encoded.
                 return u"\N{LATIN SMALL LETTER A WITH ACUTE}" * max_size
 
-            with patch("hyperlink.strategies.idna_text", mock_idna_text):
+            with patch("hyperlink.hypothesis.idna_text", mock_idna_text):
                 label = data.draw(hostname_labels())
                 try:
                     check_label(label)
