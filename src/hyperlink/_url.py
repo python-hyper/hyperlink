@@ -369,12 +369,13 @@ def register_scheme(text, uses_netloc=True, default_port=None):
     `file an issue`_!
 
     Args:
-        text: Text representing the scheme.
+        text (Text): A string representation of the scheme.
             (the 'http' in 'http://hatnote.com')
-        uses_netloc: Does the scheme support specifying a network host?
+        uses_netloc (bool): Does the scheme support specifying a network host?
             For instance, "http" does, "mailto" does not.
             Defaults to True.
-        default_port: The default port, if any, for netloc-using schemes.
+        default_port (Optional[int]): The default port, if any, for
+            netloc-using schemes.
 
     .. _file an issue: https://github.com/mahmoud/hyperlink/issues
     """
@@ -797,24 +798,24 @@ class URL(object):
     constructor arguments is below.
 
     Args:
-       scheme: The text name of the scheme.
-       host: The host portion of the network location
-       port: The port part of the network location. If
+       scheme (Optional[Text]): The text name of the scheme.
+       host (Optional[Text]): The host portion of the network location
+       port (Optional[int]): The port part of the network location. If
           ``None`` or no port is passed, the port will default to
           the default port of the scheme, if it is known. See the
           ``SCHEME_PORT_MAP`` and :func:`register_default_port`
           for more info.
-       path: A tuple of strings representing the
+       path (Iterable[Text]): A tuple of strings representing the
           slash-separated parts of the path.
-       query: The query parameters, as a dictionary or
-          as an iterable of key-value pairs.
-       fragment: The fragment part of the URL.
-       rooted: A rooted URL is one which indicates an absolute path.
+       query (Sequence[Tuple[Text, Optional[Text]]]): The query parameters, as
+           a dictionary or as an iterable of key-value pairs.
+       fragment (Text): The fragment part of the URL.
+       rooted (bool): A rooted URL is one which indicates an absolute path.
           This is True on any URL that includes a host, or any relative URL
           that starts with a slash.
-       userinfo: The username or colon-separated
+       userinfo (Text): The username or colon-separated
           username:password pair.
-       uses_netloc: Indicates whether two slashes appear
+       uses_netloc (bool): Indicates whether two slashes appear
           between the scheme and the host (``http://eg.com`` vs
           ``mailto:e@g.com``). Set automatically based on scheme.
 
@@ -1027,12 +1028,13 @@ class URL(object):
         u'user:pass@localhost:8080'
 
         Args:
-           with_password: Whether the return value of this method include the
-               password in the URL, if it is set. Defaults to False.
+            with_password (bool): Whether the return value of this method
+                include the password in the URL, if it is set.
+                Defaults to False.
 
         Returns:
-           The authority (network location and user information) portion of the
-               URL.
+            The authority (network location and user information) portion of
+            the URL.
         """
         # first, a bit of twisted compat
         with_password = kw.pop('includeSecrets', with_password)
@@ -1119,18 +1121,22 @@ class URL(object):
         the value on the current URL.
 
         Args:
-            scheme: The text name of the scheme.
-            host: The host portion of the network location
-            path: A tuple of strings representing the slash-separated parts of
-                the path.
-            query: The query parameters, as a dictionary or as an iterable of
-                key-value pairs.
-            fragment: The fragment part of the URL.
-            port: The port part of the network location.
-            rooted: Whether or not the path begins with a slash.
-            userinfo: The username or colon-separated username:password pair.
-            uses_netloc: Indicates whether two slashes appear between the
-                scheme and the host (``http://eg.com`` vs ``mailto:e@g.com``)
+            scheme (Optional[Text]): The text name of the scheme.
+            host (Optional[Text]): The host portion of the network location.
+            path (Iterable[Text]): A tuple of strings representing the
+                slash-separated parts of the path.
+            query (Sequence[Tuple[Text, Optional[Text]]]): The query
+                parameters, as a dictionary or as an iterable of key-value
+                pairs.
+            fragment (Text): The fragment part of the URL.
+            port (Optional[int]): The port part of the network location.
+            rooted (Optional[bool]): Whether or not the path begins with a
+                slash.
+            userinfo (Text): The username or colon-separated username:password
+                pair.
+            uses_netloc (bool): Indicates whether two slashes appear between
+                the scheme and the host
+                (``http://eg.com`` vs ``mailto:e@g.com``)
 
         Returns:
             A copy of the current :class:`URL`, with new values for
@@ -1166,7 +1172,7 @@ class URL(object):
         sure to decode those bytestrings.
 
         Args:
-           text: A valid URL string.
+           text (Text): A valid URL string.
 
         Returns:
            The structured object version of the parsed string.
@@ -1257,14 +1263,15 @@ class URL(object):
         name.
 
         Args:
-           scheme: Convert the scheme to lowercase
-           host: Convert the host to lowercase
-           path: Normalize the path (see above for details)
-           query: Normalize the query string
-           fragment: Normalize the fragment
-           userinfo: Normalize the userinfo
-           percents: Encode isolated percent signs for any percent-encoded
-              fields which are being normalized (defaults to True).
+            scheme (bool): Convert the scheme to lowercase
+            host (bool): Convert the host to lowercase
+            path (bool): Normalize the path (see above for details)
+            query (bool): Normalize the query string
+            fragment (bool): Normalize the fragment
+            userinfo (bool): Normalize the userinfo
+            percents (bool): Encode isolated percent signs for any
+                percent-encoded fields which are being normalized
+                (defaults to True).
 
         >>> url = URL.from_text(u'Http://example.COM/a/../b/./c%2f?%61%')
         >>> print(url.normalize().to_text())
@@ -1320,7 +1327,7 @@ class URL(object):
             u'http://localhost/a/b/c/d?x=y'
 
         Args:
-            segments: Additional parts to be joined and added to
+            segments (Text): Additional parts to be joined and added to
                 the path, like :func:`os.path.join`. Special characters
                 in segments will be percent encoded.
 
@@ -1345,7 +1352,7 @@ class URL(object):
         sibling of this URL path.
 
         Args:
-            segment: A single path segment.
+            segment (Text): A single path segment.
 
         Returns:
             A copy of the current URL with the last path segment
@@ -1370,7 +1377,7 @@ class URL(object):
             >>> url.click(u'../d/./e').to_text()
             u'http://localhost/a/b/d/e'
 
-        Args:
+        Args (Text):
             href: A string representing a clicked URL.
 
         Return:
@@ -1510,7 +1517,7 @@ class URL(object):
             unless the data after the colon is the empty string (indicating no
             password)."
 
-        Args:
+        Args (bool):
             with_password: Whether or not to include the password in the URL
                 text. Defaults to False.
 
@@ -1626,9 +1633,9 @@ class URL(object):
             URL.from_text(u'https://example.com/?x=y&x=z')
 
         Args:
-            name: The name of the query parameter to add.
+            name (Text): The name of the query parameter to add.
                 The part before the ``=``.
-            value: The value of the query parameter to add.
+            value (Optional[Text]): The value of the query parameter to add.
                 The part after the ``=``. Defaults to ``None``, meaning no
                 value.
 
@@ -1649,9 +1656,9 @@ class URL(object):
             URL.from_text(u'https://example.com/?x=z')
 
         Args:
-            name: The name of the query parameter to set.
+            name (Text): The name of the query parameter to set.
                 The part before the ``=``.
-            value: The value of the query parameter to set.
+            value (Optional[Text]): The value of the query parameter to set.
                 The part after the ``=``. Defaults to ``None``, meaning no
                 value.
 
@@ -1679,7 +1686,7 @@ class URL(object):
         list is always returned, and this method raises no exceptions.
 
         Args:
-            name: The name of the query parameter to get.
+            name (Text): The name of the query parameter to get.
 
         Returns:
             A list of all the values associated with the key, in string form.
@@ -1699,11 +1706,12 @@ class URL(object):
         parameter is not already set.
 
         Args:
-            name: The name of the query parameter to remove.
-            value: Optional value to additionally filter on.
+            name (Text): The name of the query parameter to remove.
+            value (Text): Optional value to additionally filter on.
                 Setting this removes query parameters which match both name
                 and value.
-            limit: Optional maximum number of parameters to remove.
+            limit (Optional[int]): Optional maximum number of parameters to
+                remove.
 
         Returns:
             URL: A new :class:`URL` instance with the parameter removed.
@@ -1750,9 +1758,9 @@ class DecodedURL(object):
     special characters encoded with codecs other than UTF-8.
 
     Args:
-       url: A :class:`URL` object to wrap.
-       lazy: Set to True to avoid pre-decode all parts of the URL to check for
-           validity. Defaults to False.
+        url (URL): A :class:`URL` object to wrap.
+        lazy (bool): Set to True to avoid pre-decode all parts of the URL to
+            check for validity. Defaults to False.
 
     """
     def __init__(self, url, lazy=False):
@@ -1771,8 +1779,8 @@ class DecodedURL(object):
         Make a `DecodedURL` instance from any text string containing a URL.
 
         Args:
-          text: Text containing the URL
-          lazy: Whether to pre-decode all parts of the URL to check for
+          text (Text): Text containing the URL
+          lazy (bool): Whether to pre-decode all parts of the URL to check for
               validity. Defaults to True.
         """
         _url = URL.from_text(text)
@@ -2084,15 +2092,16 @@ def parse(url, decoded=True, lazy=False):
     """Automatically turn text into a structured URL object.
 
     Args:
+        url (Text): A string representation of a URL.
 
-        decoded: Whether or not to return a :class:`DecodedURL`,
+        decoded (bool): Whether or not to return a :class:`DecodedURL`,
             which automatically handles all
             encoding/decoding/quoting/unquoting for all the various
             accessors of parts of the URL, or an :class:`EncodedURL`,
             which has the same API, but requires handling of special
             characters for different parts of the URL.
 
-        lazy: In the case of `decoded=True`, this controls
+        lazy (bool): In the case of `decoded=True`, this controls
             whether the URL is decoded immediately or as accessed. The
             default, `lazy=False`, checks all encoded parts of the URL
             for decodability.
