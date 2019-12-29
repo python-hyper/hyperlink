@@ -34,6 +34,7 @@ setup(name='hyperlink',
           'idna>=2.5',
           'typing ; python_version<"3.5"',
       ],
+      python_requires='>=2.6, !=3.0.*, !=3.1.*, !=3.2.*, !=3.3.*',
       classifiers=[
           'Topic :: Utilities',
           'Intended Audience :: Developers',
