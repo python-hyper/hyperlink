@@ -25,7 +25,7 @@ Hyperlink provides a pure-Python implementation of immutable
 URLs. Based on [RFC 3986][rfc3986] and [3987][rfc3987], the Hyperlink URL
 makes working with both URIs and IRIs easy.
 
-Hyperlink is tested against Python 2.7, 3.4, 3.5, 3.6, and PyPy.
+Hyperlink is tested against Python 2.7, 3.4, 3.5, 3.6, 3.7, 3.8, and PyPy.
 
 Full documentation is available on [Read the Docs][docs].
 
