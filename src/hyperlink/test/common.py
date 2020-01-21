@@ -7,9 +7,13 @@ class HyperlinkTestCase(TestCase):
     assertRaises method for Python 2.6 testing.
     """
     def assertRaises(  # type: ignore[override]
-        self, expected_exception, callableObj=None, *args, **kwargs
+        self,
+        expected_exception,  # type: Type[BaseException]
+        callableObj=None,    # type: Optional[Callable[..., Any]]
+        *args,               # type: Any
+        **kwargs             # type: Any
     ):
-        # type: (Type[BaseException], Optional[Callable], Any, Any) -> Any
+        # type: (...) -> Any
         """Fail unless an exception of class expected_exception is raised
            by callableObj when invoked with arguments args and keyword
            arguments kwargs. If a different type of exception is

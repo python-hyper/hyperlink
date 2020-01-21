@@ -97,7 +97,7 @@ def make_sentinel(name='_MISSING', var_name=""):
         if var_name:
             # superclass type hints don't allow str return type, but it is
             # allowed in the docs, hence the ignore[override] below
-            def __reduce__(self):  # type: ignore[override]
+            def __reduce__(self):
                 # type: () -> str
                 return self.var_name
 
@@ -448,7 +448,7 @@ def _optional(argument, default):
 
 
 def _typecheck(name, value, *types):
-    # type: (Text, T, Type) -> T
+    # type: (Text, T, Type[Any]) -> T
     """
     Check that the given *value* is one of the given *types*, or raise an
     exception describing the problem using *name*.
@@ -479,7 +479,7 @@ def _textcheck(name, value, delims=frozenset(), nullable=False):
 
 
 def iter_pairs(iterable):
-    # type: (Iterable) -> Iterator
+    # type: (Iterable[Any]) -> Iterator[Any]
     """
     Iterate over the (key, value) pairs in ``iterable``.
 
