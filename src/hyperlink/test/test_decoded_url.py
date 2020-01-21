@@ -2,7 +2,8 @@
 
 from __future__ import unicode_literals
 
-from .. import DecodedURL
+from typing import Dict, Union
+from .. import DecodedURL, URL
 from .._url import _percent_decode
 from .common import HyperlinkTestCase
 
@@ -132,7 +133,9 @@ class TestURL(HyperlinkTestCase):
         assert durl is not None
         assert durl != durl._url
 
-        durl_map = {}
+        AnyURL = Union[URL, DecodedURL]
+
+        durl_map = {}  # type: Dict[AnyURL, AnyURL]
         durl_map[durl] = durl
         durl_map[durl2] = durl2
 
@@ -166,7 +169,11 @@ class TestURL(HyperlinkTestCase):
         # type: () -> None
         durl = DecodedURL.from_text(TOTAL_URL)
         with self.assertRaises(ValueError):
-            durl.replace(userinfo=['user', 'pw', 'thiswillcauseafailure'])
+            durl.replace(
+                userinfo=(  # type: ignore[arg-type]
+                    'user', 'pw', 'thiswillcauseafailure'
+                )
+            )
         return
 
     def test_twisted_compat(self):
@@ -177,10 +184,6 @@ class TestURL(HyperlinkTestCase):
         assert 'to_text' in dir(durl)
         assert 'asText' not in dir(durl)
         assert durl.to_text() == durl.asText()
-
-    def test_percent_decode_bytes(self):
-        # type: () -> None
-        assert _percent_decode('%00', subencoding=False) == b'\0'
 
     def test_percent_decode_mixed(self):
         # type: () -> None
@@ -195,9 +198,6 @@ class TestURL(HyperlinkTestCase):
         # ...unless explicitly told otherwise
         with self.assertRaises(UnicodeDecodeError):
             _percent_decode('abcdé%C3éfg', raise_subencoding_exc=True)
-
-        # check that getting raw bytes works ok
-        assert _percent_decode('a%00b', subencoding=False) == b'a\x00b'
 
         # when not encodable as subencoding
         assert _percent_decode('é%25é', subencoding='ascii') == 'é%25é'

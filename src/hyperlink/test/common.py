@@ -9,7 +9,7 @@ class HyperlinkTestCase(TestCase):
     def assertRaises(  # type: ignore[override]
         self, expected_exception, callableObj=None, *args, **kwargs
     ):
-        # type: (Type[BaseException], Optional[Callable], Any, Any) -> Any
+        # type: (Type[BaseException], Optional[Callable[..., Any]], Any, Any) -> Any
         """Fail unless an exception of class expected_exception is raised
            by callableObj when invoked with arguments args and keyword
            arguments kwargs. If a different type of exception is
