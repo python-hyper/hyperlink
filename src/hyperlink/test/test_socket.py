@@ -11,7 +11,6 @@ if not inet_pton:
     from .common import HyperlinkTestCase
     from .._socket import inet_pton
 
-
     class TestSocket(HyperlinkTestCase):
         def test_inet_pton_ipv4_valid(self):
             # type: () -> None

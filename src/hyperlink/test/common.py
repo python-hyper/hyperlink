@@ -6,7 +6,7 @@ class HyperlinkTestCase(TestCase):
     """This type mostly exists to provide a backwards-compatible
     assertRaises method for Python 2.6 testing.
     """
-    def assertRaises(  # type: ignore[override] Doesn't match superclass, meh
+    def assertRaises(  # type: ignore[override]
         self, expected_exception, callableObj=None, *args, **kwargs
     ):
         # type: (Type[BaseException], Optional[Callable], Any, Any) -> Any
