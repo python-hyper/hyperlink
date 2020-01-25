@@ -1,6 +1,7 @@
-docs/_build
+/docs/_build
 tmp.py
-htmlcov/
+/htmlcov/
+/htmldocs/
 .coverage.*
 *.py[cod]
 .mypy_cache
@@ -34,7 +35,7 @@ pip-log.txt
 
 # Unit test / coverage reports
 .coverage
-.tox/
+/.tox/
 nosetests.xml
 
 # Translations
