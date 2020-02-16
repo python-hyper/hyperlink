@@ -1148,7 +1148,8 @@ class TestURL(HyperlinkTestCase):
         """
         directly_constructed = URL(scheme='udp', port=4900, rooted=False)
         directly_constructed_implict = URL(scheme='udp', port=4900)
-        directly_constructed_rooted = URL(scheme=u'udp', port=4900, rooted=True)
+        directly_constructed_rooted = URL(scheme=u'udp', port=4900,
+                                          rooted=True)
         self.assertEqual(directly_constructed.rooted, True)
         self.assertEqual(directly_constructed_implict.rooted, True)
         self.assertEqual(directly_constructed_rooted.rooted, True)
