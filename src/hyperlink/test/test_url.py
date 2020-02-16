@@ -1138,17 +1138,29 @@ class TestURL(HyperlinkTestCase):
         self.assertEqual(normal_absolute.rooted, True)
         self.assertEqual(attempt_unrooted_absolute.rooted, True)
 
-    def test_rooted_with_empty_non_none_host(self):
+    def test_rooted_with_port_but_no_host(self):
         # type: () -> None
         """
-        The C{rooted} constructor argument will be ignored on URLs that include
-        a scheme.
+        URLs which include a netloc separator are inherently rooted, regardless
+        of whether they include one because they specify an explicit host or
+        port, whether they are parsed or directly constructed, and whether the
+        ``rooted`` constructor argument is supplied or not.
         """
-        directly_constructed = URL(scheme='udp', port=4900)
+        directly_constructed = URL(scheme='udp', port=4900, rooted=False)
+        directly_constructed_implict = URL(scheme='udp', port=4900)
+        directly_constructed_rooted = URL(scheme=u'udp', port=4900, rooted=True)
+        self.assertEqual(directly_constructed.rooted, True)
+        self.assertEqual(directly_constructed_implict.rooted, True)
+        self.assertEqual(directly_constructed_rooted.rooted, True)
         parsed = URL.from_text('udp://:4900')
         self.assertEqual(str(directly_constructed), str(parsed))
+        self.assertEqual(str(directly_constructed_implict), str(parsed))
         self.assertEqual(directly_constructed.asText(), parsed.asText())
         self.assertEqual(directly_constructed, parsed)
+        self.assertEqual(directly_constructed, directly_constructed_implict)
+        self.assertEqual(directly_constructed, directly_constructed_rooted)
+        self.assertEqual(directly_constructed_implict, parsed)
+        self.assertEqual(directly_constructed_rooted, parsed)
 
     def test_wrong_constructor(self):
         # type: () -> None
