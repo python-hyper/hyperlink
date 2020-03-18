@@ -467,7 +467,7 @@ def _textcheck(name, value, delims=frozenset(), nullable=False):
     if not isinstance(value, Text):
         if nullable and value is None:
             # used by query string values
-            return value  # type: ignore[misc] # unreachable
+            return value  # type: ignore[unreachable]
         else:
             str_name = "unicode" if PY2 else "str"
             exp = str_name + ' or NoneType' if nullable else str_name
