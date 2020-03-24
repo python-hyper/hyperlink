@@ -26,7 +26,11 @@ setup(name='hyperlink',
       url=__url__,
       packages=find_packages(where="src"),
       package_dir={"": "src"},
-      include_package_data=True,
+      package_data=dict(
+          hyperlink=[
+              "py.typed",
+          ],
+      ),
       zip_safe=False,
       license=__license__,
       platforms='any',
