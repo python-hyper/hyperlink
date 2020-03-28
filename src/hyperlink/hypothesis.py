@@ -285,12 +285,12 @@ else:
         if port == 0:
             port = None
 
-        args = dict(
+        return EncodedURL(
             scheme=cast(Text, draw(sampled_from((u"http", u"https")))),
-            host=host, port=port, path=path,
+            host=host,
+            port=port,
+            path=path,
         )
-
-        return EncodedURL(**args)
 
     @composite
     def decoded_urls(draw):
