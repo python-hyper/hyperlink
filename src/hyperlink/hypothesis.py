@@ -18,6 +18,7 @@ else:
     from typing import (
         Callable, Iterable, List, Optional, Sequence, Text, TypeVar, cast
     )
+    from gzip import open as open_gzip
 
     from . import DecodedURL, EncodedURL
 
@@ -60,9 +61,9 @@ else:
             # https://www.iana.org/assignments/idna-tables-6.3.0/
             #   idna-tables-6.3.0.xhtml#idna-tables-properties
             dataFileName = join(
-                dirname(__file__), "idna-tables-properties.csv"
+                dirname(__file__), "idna-tables-properties.csv.gz"
             )
-            with open(dataFileName) as dataFile:
+            with open_gzip(dataFileName, "rt") as dataFile:
                 reader = csv_reader(dataFile, delimiter=",")
                 next(reader)  # Skip header row
                 for row in reader:
