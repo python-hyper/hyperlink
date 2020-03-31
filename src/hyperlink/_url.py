@@ -1028,8 +1028,8 @@ class URL(object):
     def uses_netloc(self):
         # type: () -> Optional[bool]
         """
-        Whether the textual URL representation will contain a ``://`` netloc
-        separator.
+        Indicates whether ``://`` (the "netloc separator") will appear to
+        separate the scheme from the *path* in cases where no host is present.
         """
         return self._uses_netloc
 
