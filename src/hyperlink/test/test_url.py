@@ -951,7 +951,11 @@ class TestURL(HyperlinkTestCase):
         url = URL(scheme='https')
         self.assertEqual(url.uses_netloc, True)
         self.assertEqual(url.to_text(), u'https://')
+        # scheme, no host, no path, no netloc hack
         self.assertEqual(URL.from_text('https:').uses_netloc, False)
+        # scheme, no host, absolute path, no netloc hack
+        self.assertEqual(URL.from_text('https:/').uses_netloc, False)
+        # scheme, no host, no path, netloc hack to indicate :// syntax
         self.assertEqual(URL.from_text('https://').uses_netloc, True)
 
         url = URL(scheme='https', uses_netloc=False)
