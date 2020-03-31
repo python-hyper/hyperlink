@@ -1158,8 +1158,19 @@ class URL(object):
                 slash.
             userinfo (Text): The username or colon-separated username:password
                 pair.
-            uses_netloc (bool): Indicates whether rooted paths should include a
-                scheme-separator by default.
+            uses_netloc (bool): Indicates whether ``://`` (the "netloc
+                separator") will appear to separate the scheme from the *path*
+                in cases where no host is present.  Setting this to ``True`` is
+                a non-spec-compliant affordance for the common practice of
+                having URIs that are *not* URLs (cannot have a 'host' part) but
+                nevertheless use the common ``://`` idiom that most people
+                associate with URLs; e.g. ``message:`` URIs like
+                ``message://message-id`` being equivalent to
+                ``message:message-id``.  This may be inferred based on the
+                scheme depending on whether :func:`register_scheme` has been
+                used to register the scheme and should not be passed directly
+                unless you know the scheme works like this and you know it has
+                not been registered.
 
         Returns:
             URL: A copy of the current :class:`URL`, with new values for
