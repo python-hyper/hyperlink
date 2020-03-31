@@ -63,8 +63,11 @@ else:
             dataFileName = join(
                 dirname(__file__), "idna-tables-properties.csv.gz"
             )
-            with open_gzip(dataFileName, "rt") as dataFile:
-                reader = csv_reader(dataFile, delimiter=",")
+            with open_gzip(dataFileName) as dataFile:
+                reader = csv_reader(
+                    (line.decode("utf-8") for line in dataFile),
+                    delimiter=",",
+                )
                 next(reader)  # Skip header row
                 for row in reader:
                     codes, prop, description = row
