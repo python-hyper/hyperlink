@@ -1145,10 +1145,13 @@ class TestURL(HyperlinkTestCase):
     def test_rooted_with_port_but_no_host(self):
         # type: () -> None
         """
-        URLs which include a netloc separator are inherently rooted, regardless
-        of whether they include one because they specify an explicit host or
-        port, whether they are parsed or directly constructed, and whether the
-        ``rooted`` constructor argument is supplied or not.
+        URLs which include a ``://`` netloc-separator for any reason are
+        inherently rooted, regardless of the value or presence of the
+        ``rooted`` constructor argument.
+
+        They may include a netloc-separator because their constructor was
+        directly invoked with an explicit host or port, or because they were
+        parsed from a string which included the literal ``://`` separator.
         """
         directly_constructed = URL(scheme='udp', port=4900, rooted=False)
         directly_constructed_implict = URL(scheme='udp', port=4900)
