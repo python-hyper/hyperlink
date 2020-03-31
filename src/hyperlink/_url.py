@@ -815,9 +815,18 @@ class URL(object):
           that starts with a slash.
        userinfo (Text): The username or colon-separated
           username:password pair.
-       uses_netloc (bool): Indicates whether two slashes appear
-          between the scheme and the host (``http://eg.com`` vs
-          ``mailto:e@g.com``). Set automatically based on scheme.
+       uses_netloc (Optional[bool]): Indicates whether ``://`` (the "netloc
+           separator") will appear to separate the scheme from the *path* in
+           cases where no host is present.  Setting this to ``True`` is a
+           non-spec-compliant affordance for the common practice of having URIs
+           that are *not* URLs (cannot have a 'host' part) but nevertheless use
+           the common ``://`` idiom that most people associate with URLs;
+           e.g. ``message:`` URIs like ``message://message-id`` being
+           equivalent to ``message:message-id``.  This may be inferred based on
+           the scheme depending on whether :func:`register_scheme` has been
+           used to register the scheme and should not be passed directly unless
+           you know the scheme works like this and you know it has not been
+           registered.
 
     All of these parts are also exposed as read-only attributes of
     URL instances, along with several useful methods.
@@ -882,15 +891,28 @@ class URL(object):
         self._rooted = _typecheck("rooted", rooted, bool)
         self._userinfo = _textcheck("userinfo", userinfo, '/?#@')
 
-        uses_netloc = scheme_uses_netloc(self._scheme, uses_netloc)
+        if uses_netloc is None:
+            uses_netloc = scheme_uses_netloc(self._scheme, uses_netloc)
         self._uses_netloc = _typecheck("uses_netloc",
                                        uses_netloc, bool, NoneType)
-        # fixup for rooted consistency
-        if self._host:
+        will_have_authority = (
+            self._host or
+            (self._port and self._port != SCHEME_PORT_MAP.get(scheme))
+        )
+        if will_have_authority:
+            # fixup for rooted consistency; if there's any 'authority'
+            # represented in the textual URL, then the path must be rooted, and
+            # we're definitely using a netloc (there must be a ://).
             self._rooted = True
-        if (not self._rooted) and self._path and self._path[0] == '':
+            self._uses_netloc = True
+        if (not self._rooted) and self.path[:1] == (u'',):
             self._rooted = True
             self._path = self._path[1:]
+        if not will_have_authority and self._path and not self._rooted:
+            # If, after fixing up the path, there *is* a path and it *isn't*
+            # rooted, then we are definitely not using a netloc; if we did, it
+            # would make the path (erroneously) look like a hostname.
+            self._uses_netloc = False
 
     def get_decoded_url(self, lazy=False):
         # type: (bool) -> DecodedURL
@@ -1006,6 +1028,8 @@ class URL(object):
     def uses_netloc(self):
         # type: () -> Optional[bool]
         """
+        Indicates whether ``://`` (the "netloc separator") will appear to
+        separate the scheme from the *path* in cases where no host is present.
         """
         return self._uses_netloc
 
@@ -1134,14 +1158,28 @@ class URL(object):
                 slash.
             userinfo (Text): The username or colon-separated username:password
                 pair.
-            uses_netloc (bool): Indicates whether two slashes appear between
-                the scheme and the host
-                (``http://eg.com`` vs ``mailto:e@g.com``)
+            uses_netloc (bool): Indicates whether ``://`` (the "netloc
+                separator") will appear to separate the scheme from the *path*
+                in cases where no host is present.  Setting this to ``True`` is
+                a non-spec-compliant affordance for the common practice of
+                having URIs that are *not* URLs (cannot have a 'host' part) but
+                nevertheless use the common ``://`` idiom that most people
+                associate with URLs; e.g. ``message:`` URIs like
+                ``message://message-id`` being equivalent to
+                ``message:message-id``.  This may be inferred based on the
+                scheme depending on whether :func:`register_scheme` has been
+                used to register the scheme and should not be passed directly
+                unless you know the scheme works like this and you know it has
+                not been registered.
 
         Returns:
             URL: A copy of the current :class:`URL`, with new values for
                 parameters passed.
         """
+        if scheme is not _UNSET and scheme != self.scheme:
+            # when changing schemes, reset the explicit uses_netloc preference
+            # to honor the new scheme.
+            uses_netloc = None
         return self.__class__(
             scheme=_optional(scheme, self.scheme),
             host=_optional(host, self.host),
