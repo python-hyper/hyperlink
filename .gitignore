@@ -39,6 +39,9 @@ nosetests.xml
 /htmlcov/
 /.mypy_cache
 
+# Documentation
+/htmldocs/
+
 # Translations
 *.mo
 
