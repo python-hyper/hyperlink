@@ -39,8 +39,9 @@ class TestHyperlink(TestCase):
             called_with.append((args, kwargs))
             raise _ExpectedException
 
-        self.hyperlink_test.assertRaises(_ExpectedException,
-                                         raisesExpected, 1, keyword=True)
+        self.hyperlink_test.assertRaises(
+            _ExpectedException, raisesExpected, 1, keyword=True
+        )
         self.assertEqual(called_with, [((1,), {"keyword": True})])
 
     def test_assertRaisesWithCallableUnexpectedException(self):
@@ -55,8 +56,9 @@ class TestHyperlink(TestCase):
             raise _UnexpectedException
 
         try:
-            self.hyperlink_test.assertRaises(_ExpectedException,
-                                             doesNotRaiseExpected)
+            self.hyperlink_test.assertRaises(
+                _ExpectedException, doesNotRaiseExpected
+            )
         except _UnexpectedException:
             pass
 
@@ -72,8 +74,7 @@ class TestHyperlink(TestCase):
             pass
 
         try:
-            self.hyperlink_test.assertRaises(_ExpectedException,
-                                             doesNotRaise)
+            self.hyperlink_test.assertRaises(_ExpectedException, doesNotRaise)
         except AssertionError:
             pass
 
