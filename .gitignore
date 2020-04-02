@@ -1,10 +1,6 @@
 /docs/_build
 tmp.py
-/htmlcov/
-/htmldocs/
-.coverage.*
 *.py[cod]
-.mypy_cache
 
 # emacs
 *~
@@ -33,10 +29,15 @@ lib64
 # Installer logs
 pip-log.txt
 
-# Unit test / coverage reports
-.coverage
+# Testing
 /.tox/
 nosetests.xml
+
+# Coverage
+/.coverage
+/.coverage.*
+/htmlcov/
+/.mypy_cache
 
 # Translations
 *.mo

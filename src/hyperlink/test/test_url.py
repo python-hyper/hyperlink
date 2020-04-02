@@ -817,6 +817,18 @@ class TestURL(HyperlinkTestCase):
         self.assertEqual(URL.from_text(u"mailto:user@example.com").to_text(),
                          u"mailto:user@example.com")
 
+    def test_httpWithoutHost(self):
+        # type: () -> None
+        """
+        An HTTP URL without a hostname, but with a path, should also round-trip
+        cleanly.
+        """
+        without_host = URL.from_text(u"http:relative-path")
+        self.assertEqual(without_host.host, u'')
+        self.assertEqual(without_host.path, (u'relative-path',))
+        self.assertEqual(without_host.uses_netloc, False)
+        self.assertEqual(without_host.to_text(), u"http:relative-path")
+
     def test_queryIterable(self):
         # type: () -> None
         """
@@ -938,15 +950,29 @@ class TestURL(HyperlinkTestCase):
         # type: () -> None
         url = URL(scheme='https')
         self.assertEqual(url.uses_netloc, True)
+        self.assertEqual(url.to_text(), u'https://')
+        # scheme, no host, no path, no netloc hack
+        self.assertEqual(URL.from_text('https:').uses_netloc, False)
+        # scheme, no host, absolute path, no netloc hack
+        self.assertEqual(URL.from_text('https:/').uses_netloc, False)
+        # scheme, no host, no path, netloc hack to indicate :// syntax
+        self.assertEqual(URL.from_text('https://').uses_netloc, True)
+
+        url = URL(scheme='https', uses_netloc=False)
+        self.assertEqual(url.uses_netloc, False)
+        self.assertEqual(url.to_text(), u'https:')
 
         url = URL(scheme='git+https')
         self.assertEqual(url.uses_netloc, True)
+        self.assertEqual(url.to_text(), u'git+https://')
 
         url = URL(scheme='mailto')
         self.assertEqual(url.uses_netloc, False)
+        self.assertEqual(url.to_text(), u'mailto:')
 
         url = URL(scheme='ztp')
         self.assertEqual(url.uses_netloc, None)
+        self.assertEqual(url.to_text(), u'ztp:')
 
         url = URL.from_text('ztp://test.com')
         self.assertEqual(url.uses_netloc, True)
@@ -1115,6 +1141,34 @@ class TestURL(HyperlinkTestCase):
         self.assertEqual(attempt_unrooted_absolute, normal_absolute)
         self.assertEqual(normal_absolute.rooted, True)
         self.assertEqual(attempt_unrooted_absolute.rooted, True)
+
+    def test_rooted_with_port_but_no_host(self):
+        # type: () -> None
+        """
+        URLs which include a ``://`` netloc-separator for any reason are
+        inherently rooted, regardless of the value or presence of the
+        ``rooted`` constructor argument.
+
+        They may include a netloc-separator because their constructor was
+        directly invoked with an explicit host or port, or because they were
+        parsed from a string which included the literal ``://`` separator.
+        """
+        directly_constructed = URL(scheme='udp', port=4900, rooted=False)
+        directly_constructed_implict = URL(scheme='udp', port=4900)
+        directly_constructed_rooted = URL(scheme=u'udp', port=4900,
+                                          rooted=True)
+        self.assertEqual(directly_constructed.rooted, True)
+        self.assertEqual(directly_constructed_implict.rooted, True)
+        self.assertEqual(directly_constructed_rooted.rooted, True)
+        parsed = URL.from_text('udp://:4900')
+        self.assertEqual(str(directly_constructed), str(parsed))
+        self.assertEqual(str(directly_constructed_implict), str(parsed))
+        self.assertEqual(directly_constructed.asText(), parsed.asText())
+        self.assertEqual(directly_constructed, parsed)
+        self.assertEqual(directly_constructed, directly_constructed_implict)
+        self.assertEqual(directly_constructed, directly_constructed_rooted)
+        self.assertEqual(directly_constructed_implict, parsed)
+        self.assertEqual(directly_constructed_rooted, parsed)
 
     def test_wrong_constructor(self):
         # type: () -> None
