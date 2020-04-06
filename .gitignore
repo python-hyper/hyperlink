@@ -1,4 +1,4 @@
-/docs/_build
+/docs/_build/
 tmp.py
 *.py[cod]
 
@@ -37,7 +37,10 @@ nosetests.xml
 /.coverage
 /.coverage.*
 /htmlcov/
-/.mypy_cache
+/.mypy_cache/
+
+# Documentation
+/htmldocs/
 
 # Translations
 *.mo
