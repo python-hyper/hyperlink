@@ -5,6 +5,11 @@
 * CPython 3.7 and 3.8 and PyPy3 added to test matrix
 * Hyperlink now has type hints and they are now exported per
   [PEP 561](https://www.python.org/dev/peps/pep-0561/).
+* Several bugs related to hidden state were fixed, making it so that all data
+  on a `URL` object (including `rooted` and `uses_netloc`) is reflected by and
+  consistent with its textual representation.
+  This does mean that sometimes these constructor arguments are ignored, if it
+  would create invalid or unparseable URL text.
 
 ## 19.0.0
 
