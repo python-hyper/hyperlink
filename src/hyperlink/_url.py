@@ -1748,7 +1748,8 @@ EncodedURL = URL  # An alias better describing what the URL really is
 _EMPTY_URL = URL()
 
 class DecodedURL(object):
-    """:class:`DecodedURL` is a type designed to act as a higher-level
+    """
+    :class:`DecodedURL` is a type designed to act as a higher-level
     interface to :class:`URL` and the recommended type for most
     operations. By analogy, :class:`DecodedURL` is the
     :class:`unicode` to URL's :class:`bytes`.
@@ -1784,7 +1785,7 @@ class DecodedURL(object):
         >>>  DecodedURL().replace(host='pypi.org', path=('projects', 'hyperlink').to_text()
         "http://pypi.org/projects/hyperlink"
 
-
+    *(New in 18.0.0)*
     """
     def __init__(self, url=_EMPTY_URL, lazy=False):
         # type: (URL, bool) -> None
@@ -2112,10 +2113,15 @@ class DecodedURL(object):
 
 def parse(url, decoded=True, lazy=False):
     # type: (Text, bool, bool) -> Union[URL, DecodedURL]
-    """Automatically turn text into a structured URL object.
+    """
+    Automatically turn text into a structured URL object.
+
+    >>> url = parse("https://github.com/python-hyper/hyperlink")
+    >>> print(url.to_text())
+    "https://github.com/python-hyper/hyperlink"
 
     Args:
-        url (Text): A string representation of a URL.
+        url (str): A text string representation of a URL.
 
         decoded (bool): Whether or not to return a :class:`DecodedURL`,
             which automatically handles all
@@ -2128,6 +2134,8 @@ def parse(url, decoded=True, lazy=False):
             whether the URL is decoded immediately or as accessed. The
             default, `lazy=False`, checks all encoded parts of the URL
             for decodability.
+
+    *(New in 18.0.0)*
     """
     enc_url = EncodedURL.from_text(url)
     if not decoded:
