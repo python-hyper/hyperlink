@@ -5,11 +5,43 @@ Hyperlink API
 
 .. automodule:: hyperlink._url
 
+.. contents::
+   :local:
+
 Creation
 --------
 
-Before you can work with URLs, you must create URLs. There are two
-ways to create URLs, from parts and from text.
+Before you can work with URLs, you must create URLs.
+
+Parsing Text
+^^^^^^^^^^^^
+
+If you already have a textual URL, the easiest way to get URL objects
+is with the :func:`parse()` function:
+
+.. autofunction:: hyperlink.parse
+
+By default, :func:`~hyperlink.parse()` returns an instance of
+:class:`DecodedURL`, a URL type that handles all encoding for you, by
+wrapping the lower-level :class:`URL`.
+
+DecodedURL
+^^^^^^^^^^
+
+.. autoclass:: hyperlink.DecodedURL
+.. automethod:: hyperlink.DecodedURL.from_text
+
+The Encoded URL
+^^^^^^^^^^^^^^^
+
+The lower-level :class:`URL` looks very similar to the
+:class:`DecodedURL`, but does not handle all encoding cases for
+you. Use with caution.
+
+.. note::
+
+   :class:`URL` is also available as an alias,
+   ``hyperlink.EncodedURL`` for more explicit usage.
 
 .. autoclass:: hyperlink.URL
 .. automethod:: hyperlink.URL.from_text
