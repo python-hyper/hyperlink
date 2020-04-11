@@ -1787,7 +1787,7 @@ class DecodedURL(object):
         ... host=u'pypi.org', path=(u'projects', u'hyperlink')).to_text())
         https://pypi.org/projects/hyperlink
 
-    *(New in 18.0.0)*
+    .. versionadded:: 18.0.0
     """
     def __init__(self, url=_EMPTY_URL, lazy=False):
         # type: (URL, bool) -> None
@@ -2137,7 +2137,7 @@ def parse(url, decoded=True, lazy=False):
             default, `lazy=False`, checks all encoded parts of the URL
             for decodability.
 
-    *(New in 18.0.0)*
+    .. versionadded:: 18.0.0
     """
     enc_url = EncodedURL.from_text(url)
     if not decoded:
