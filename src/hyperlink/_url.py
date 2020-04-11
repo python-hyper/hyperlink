@@ -1782,8 +1782,9 @@ class DecodedURL(object):
       not URL components, like :class:`URL`. To programmatically
       construct a :class:`DecodedURL`, you can use this pattern:
 
-        >>> DecodedURL().replace(host='pypi.org', path=('projects', 'hyperlink').to_text()
-        "http://pypi.org/projects/hyperlink"
+        >>> print(DecodedURL().replace(scheme=u'https',
+        ... host=u'pypi.org', path=(u'projects', u'hyperlink')).to_text())
+        https://pypi.org/projects/hyperlink
 
     *(New in 18.0.0)*
     """
@@ -2116,9 +2117,9 @@ def parse(url, decoded=True, lazy=False):
     """
     Automatically turn text into a structured URL object.
 
-    >>> url = parse("https://github.com/python-hyper/hyperlink")
+    >>> url = parse(u"https://github.com/python-hyper/hyperlink")
     >>> print(url.to_text())
-    "https://github.com/python-hyper/hyperlink"
+    https://github.com/python-hyper/hyperlink
 
     Args:
         url (str): A text string representation of a URL.
