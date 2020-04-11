@@ -1747,6 +1747,7 @@ EncodedURL = URL  # An alias better describing what the URL really is
 
 _EMPTY_URL = URL()
 
+
 class DecodedURL(object):
     """
     :class:`DecodedURL` is a type designed to act as a higher-level
