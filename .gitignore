@@ -42,6 +42,9 @@ nosetests.xml
 # Documentation
 /htmldocs/
 
+# Documentation
+/htmldocs/
+
 # Translations
 *.mo
 
