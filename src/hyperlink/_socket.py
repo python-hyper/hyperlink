@@ -2,6 +2,7 @@ try:
     from socket import inet_pton
 except ImportError:
     from typing import TYPE_CHECKING
+
     if TYPE_CHECKING:  # pragma: no cover
         pass
     else:
@@ -25,7 +26,7 @@ except ImportError:
         def inet_pton(address_family, ip_string):
             # type: (int, str) -> bytes
             addr = SockAddr()
-            ip_string_bytes = ip_string.encode('ascii')
+            ip_string_bytes = ip_string.encode("ascii")
             addr.sa_family = address_family
             addr_size = ctypes.c_int(ctypes.sizeof(addr))
 
@@ -37,10 +38,16 @@ except ImportError:
             except KeyError:
                 raise socket.error("unknown address family")
 
-            if WSAStringToAddressA(
-                ip_string_bytes, address_family, None,
-                ctypes.byref(addr), ctypes.byref(addr_size)
-            ) != 0:
+            if (
+                WSAStringToAddressA(
+                    ip_string_bytes,
+                    address_family,
+                    None,
+                    ctypes.byref(addr),
+                    ctypes.byref(addr_size),
+                )
+                != 0
+            ):
                 raise socket.error(ctypes.FormatError())
 
             return ctypes.string_at(getattr(addr, attribute), size)

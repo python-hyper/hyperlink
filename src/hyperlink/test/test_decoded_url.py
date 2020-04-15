@@ -7,7 +7,7 @@ from .. import DecodedURL, URL
 from .._url import _percent_decode
 from .common import HyperlinkTestCase
 
-BASIC_URL = 'http://example.com/#'
+BASIC_URL = "http://example.com/#"
 TOTAL_URL = (
     "https://%75%73%65%72:%00%00%00%00@xn--bcher-kva.ch:8080/"
     "a/nice%20nice/./path/?zot=23%25&zut#frég"
@@ -15,27 +15,26 @@ TOTAL_URL = (
 
 
 class TestURL(HyperlinkTestCase):
-
     def test_durl_basic(self):
         # type: () -> None
         bdurl = DecodedURL.from_text(BASIC_URL)
-        assert bdurl.scheme == 'http'
-        assert bdurl.host == 'example.com'
+        assert bdurl.scheme == "http"
+        assert bdurl.host == "example.com"
         assert bdurl.port == 80
-        assert bdurl.path == ('',)
-        assert bdurl.fragment == ''
+        assert bdurl.path == ("",)
+        assert bdurl.fragment == ""
 
         durl = DecodedURL.from_text(TOTAL_URL)
 
-        assert durl.scheme == 'https'
-        assert durl.host == 'bücher.ch'
+        assert durl.scheme == "https"
+        assert durl.host == "bücher.ch"
         assert durl.port == 8080
-        assert durl.path == ('a', 'nice nice', '.', 'path', '')
-        assert durl.fragment == 'frég'
-        assert durl.get('zot') == ['23%']
+        assert durl.path == ("a", "nice nice", ".", "path", "")
+        assert durl.fragment == "frég"
+        assert durl.get("zot") == ["23%"]
 
-        assert durl.user == 'user'
-        assert durl.userinfo == ('user', '\0\0\0\0')
+        assert durl.user == "user"
+        assert durl.userinfo == ("user", "\0\0\0\0")
 
     def test_passthroughs(self):
         # type: () -> None
@@ -44,18 +43,18 @@ class TestURL(HyperlinkTestCase):
         # through to the underlying URL
 
         durl = DecodedURL.from_text(TOTAL_URL)
-        assert durl.sibling('te%t').path[-1] == 'te%t'
-        assert durl.child('../test2%').path[-1] == '../test2%'
+        assert durl.sibling("te%t").path[-1] == "te%t"
+        assert durl.child("../test2%").path[-1] == "../test2%"
         assert durl.child() == durl
         assert durl.child() is durl
-        assert durl.click('/').path[-1] == ''
-        assert durl.user == 'user'
+        assert durl.click("/").path[-1] == ""
+        assert durl.user == "user"
 
-        assert '.' in durl.path
-        assert '.' not in durl.normalize().path
+        assert "." in durl.path
+        assert "." not in durl.normalize().path
 
-        assert durl.to_uri().fragment == 'fr%C3%A9g'
-        assert ' ' in durl.to_iri().path[1]
+        assert durl.to_uri().fragment == "fr%C3%A9g"
+        assert " " in durl.to_iri().path[1]
 
         assert durl.to_text(with_password=True) == TOTAL_URL
 
@@ -68,8 +67,8 @@ class TestURL(HyperlinkTestCase):
         assert durl2 == durl2.encoded_url.get_decoded_url(lazy=True)
 
         assert (
-            str(DecodedURL.from_text(BASIC_URL).child(' ')) ==
-            'http://example.com/%20'
+            str(DecodedURL.from_text(BASIC_URL).child(" "))
+            == "http://example.com/%20"
         )
 
         assert not (durl == 1)
@@ -78,46 +77,42 @@ class TestURL(HyperlinkTestCase):
     def test_repr(self):
         # type: () -> None
         durl = DecodedURL.from_text(TOTAL_URL)
-        assert repr(durl) == 'DecodedURL(url=' + repr(durl._url) + ')'
+        assert repr(durl) == "DecodedURL(url=" + repr(durl._url) + ")"
 
     def test_query_manipulation(self):
         # type: () -> None
         durl = DecodedURL.from_text(TOTAL_URL)
 
-        assert durl.get('zot') == ['23%']
-        durl = durl.add(' ', 'space')
-        assert durl.get(' ') == ['space']
-        durl = durl.set(' ', 'spa%ed')
-        assert durl.get(' ') == ['spa%ed']
+        assert durl.get("zot") == ["23%"]
+        durl = durl.add(" ", "space")
+        assert durl.get(" ") == ["space"]
+        durl = durl.set(" ", "spa%ed")
+        assert durl.get(" ") == ["spa%ed"]
 
         durl = DecodedURL(url=durl.to_uri())
-        assert durl.get(' ') == ['spa%ed']
-        durl = durl.remove(' ')
-        assert durl.get(' ') == []
+        assert durl.get(" ") == ["spa%ed"]
+        durl = durl.remove(" ")
+        assert durl.get(" ") == []
 
-        durl = DecodedURL.from_text('/?%61rg=b&arg=c')
-        assert durl.get('arg') == ['b', 'c']
+        durl = DecodedURL.from_text("/?%61rg=b&arg=c")
+        assert durl.get("arg") == ["b", "c"]
 
-        assert durl.set('arg', 'd').get('arg') == ['d']
+        assert durl.set("arg", "d").get("arg") == ["d"]
 
         durl = DecodedURL.from_text(
-            u"https://example.com/a/b/?fóó=1&bar=2&fóó=3"
+            "https://example.com/a/b/?fóó=1&bar=2&fóó=3"
         )
-        assert (
-            durl.remove("fóó") ==
-            DecodedURL.from_text("https://example.com/a/b/?bar=2")
+        assert durl.remove("fóó") == DecodedURL.from_text(
+            "https://example.com/a/b/?bar=2"
         )
-        assert (
-            durl.remove("fóó", value="1") ==
-            DecodedURL.from_text("https://example.com/a/b/?bar=2&fóó=3")
+        assert durl.remove("fóó", value="1") == DecodedURL.from_text(
+            "https://example.com/a/b/?bar=2&fóó=3"
         )
-        assert (
-            durl.remove("fóó", limit=1) ==
-            DecodedURL.from_text("https://example.com/a/b/?bar=2&fóó=3")
+        assert durl.remove("fóó", limit=1) == DecodedURL.from_text(
+            "https://example.com/a/b/?bar=2&fóó=3"
         )
-        assert (
-            durl.remove("fóó", value="1", limit=0) ==
-            DecodedURL.from_text("https://example.com/a/b/?fóó=1&bar=2&fóó=3")
+        assert durl.remove("fóó", value="1", limit=0) == DecodedURL.from_text(
+            "https://example.com/a/b/?fóó=1&bar=2&fóó=3"
         )
 
     def test_equality_and_hashability(self):
@@ -153,15 +148,17 @@ class TestURL(HyperlinkTestCase):
         # type: () -> None
         durl = DecodedURL.from_text(TOTAL_URL)
 
-        durl2 = durl.replace(scheme=durl.scheme,
-                             host=durl.host,
-                             path=durl.path,
-                             query=durl.query,
-                             fragment=durl.fragment,
-                             port=durl.port,
-                             rooted=durl.rooted,
-                             userinfo=durl.userinfo,
-                             uses_netloc=durl.uses_netloc)
+        durl2 = durl.replace(
+            scheme=durl.scheme,
+            host=durl.host,
+            path=durl.path,
+            query=durl.query,
+            fragment=durl.fragment,
+            port=durl.port,
+            rooted=durl.rooted,
+            userinfo=durl.userinfo,
+            uses_netloc=durl.uses_netloc,
+        )
 
         assert durl == durl2
 
@@ -171,7 +168,9 @@ class TestURL(HyperlinkTestCase):
         with self.assertRaises(ValueError):
             durl.replace(
                 userinfo=(  # type: ignore[arg-type]
-                    'user', 'pw', 'thiswillcauseafailure'
+                    "user",
+                    "pw",
+                    "thiswillcauseafailure",
                 )
             )
         return
@@ -181,8 +180,8 @@ class TestURL(HyperlinkTestCase):
         durl = DecodedURL.from_text(TOTAL_URL)
 
         assert durl == DecodedURL.fromText(TOTAL_URL)
-        assert 'to_text' in dir(durl)
-        assert 'asText' not in dir(durl)
+        assert "to_text" in dir(durl)
+        assert "asText" not in dir(durl)
         assert durl.to_text() == durl.asText()
 
     def test_percent_decode_mixed(self):
@@ -190,24 +189,24 @@ class TestURL(HyperlinkTestCase):
 
         # See https://github.com/python-hyper/hyperlink/pull/59 for a
         # nice discussion of the possibilities
-        assert _percent_decode('abcdé%C3%A9éfg') == 'abcdéééfg'
+        assert _percent_decode("abcdé%C3%A9éfg") == "abcdéééfg"
 
         # still allow percent encoding in the case of an error
-        assert _percent_decode('abcdé%C3éfg') == 'abcdé%C3éfg'
+        assert _percent_decode("abcdé%C3éfg") == "abcdé%C3éfg"
 
         # ...unless explicitly told otherwise
         with self.assertRaises(UnicodeDecodeError):
-            _percent_decode('abcdé%C3éfg', raise_subencoding_exc=True)
+            _percent_decode("abcdé%C3éfg", raise_subencoding_exc=True)
 
         # when not encodable as subencoding
-        assert _percent_decode('é%25é', subencoding='ascii') == 'é%25é'
+        assert _percent_decode("é%25é", subencoding="ascii") == "é%25é"
 
     def test_click_decoded_url(self):
         # type: () -> None
         durl = DecodedURL.from_text(TOTAL_URL)
-        durl_dest = DecodedURL.from_text('/tëst')
+        durl_dest = DecodedURL.from_text("/tëst")
 
         clicked = durl.click(durl_dest)
         assert clicked.host == durl.host
         assert clicked.path == durl_dest.path
-        assert clicked.path == ('tëst',)
+        assert clicked.path == ("tëst",)
