@@ -6,9 +6,11 @@ from __future__ import absolute_import
 
 try:
     import hypothesis
+
     del hypothesis
 except ImportError:
     from typing import Tuple
+
     __all__ = ()  # type: Tuple[str, ...]
 else:
     from csv import reader as csv_reader
@@ -16,7 +18,14 @@ else:
     from string import ascii_letters, digits
     from sys import maxunicode
     from typing import (
-        Callable, Iterable, List, Optional, Sequence, Text, TypeVar, cast
+        Callable,
+        Iterable,
+        List,
+        Optional,
+        Sequence,
+        Text,
+        TypeVar,
+        cast,
     )
     from gzip import open as open_gzip
 
@@ -24,7 +33,11 @@ else:
 
     from hypothesis import assume
     from hypothesis.strategies import (
-        composite, integers, lists, sampled_from, text
+        composite,
+        integers,
+        lists,
+        sampled_from,
+        text,
     )
 
     from idna import IDNAError, check_label, encode as idna_encode
@@ -39,7 +52,7 @@ else:
         "port_numbers",
     )
 
-    T = TypeVar('T')
+    T = TypeVar("T")
     DrawCallable = Callable[[Callable[..., T]], T]
 
     try:
@@ -65,8 +78,7 @@ else:
             )
             with open_gzip(dataFileName) as dataFile:
                 reader = csv_reader(
-                    (line.decode("utf-8") for line in dataFile),
-                    delimiter=",",
+                    (line.decode("utf-8") for line in dataFile), delimiter=",",
                 )
                 next(reader)  # Skip header row
                 for row in reader:
@@ -116,9 +128,7 @@ else:
 
         result = cast(
             Text,
-            draw(text(
-                min_size=min_size, max_size=max_size, alphabet=alphabet
-            ))
+            draw(text(min_size=min_size, max_size=max_size, alphabet=alphabet)),
         )
 
         # FIXME: There should be a more efficient way to ensure we produce
@@ -143,9 +153,7 @@ else:
         else:
             min_value = 1
 
-        return cast(
-            int, draw(integers(min_value=min_value, max_value=65535))
-        )
+        return cast(int, draw(integers(min_value=min_value, max_value=65535)))
 
     @composite
     def hostname_labels(draw, allow_idn=True):
@@ -165,9 +173,7 @@ else:
                 # If the label doesn't encode to ASCII, then we need to check
                 # the length of the label after encoding to punycode and adding
                 # the xn-- prefix.
-                while (
-                    len(label.encode("punycode")) > 63 - len("xn--")
-                ):
+                while len(label.encode("punycode")) > 63 - len("xn--"):
                     # Rather than bombing out, just trim from the end until it
                     # is short enough, so hypothesis doesn't have to generate
                     # new data.
@@ -176,10 +182,13 @@ else:
         else:
             label = cast(
                 Text,
-                draw(text(
-                    min_size=1, max_size=63,
-                    alphabet=Text(ascii_letters + digits + u"-")
-                ))
+                draw(
+                    text(
+                        min_size=1,
+                        max_size=63,
+                        alphabet=Text(ascii_letters + digits + u"-"),
+                    )
+                ),
             )
 
         # Filter invalid labels.
@@ -208,20 +217,25 @@ else:
         labels = [
             cast(
                 Text,
-                draw(hostname_labels(allow_idn=allow_idn).filter(
-                    lambda l: (
-                        True if allow_leading_digit else l[0] not in digits
+                draw(
+                    hostname_labels(allow_idn=allow_idn).filter(
+                        lambda l: (
+                            True if allow_leading_digit else l[0] not in digits
+                        )
                     )
-                ))
+                ),
             )
         ]
         # Draw remaining labels
         labels += cast(
             List[Text],
-            draw(lists(
-                hostname_labels(allow_idn=allow_idn),
-                min_size=1, max_size=4,
-            ))
+            draw(
+                lists(
+                    hostname_labels(allow_idn=allow_idn),
+                    min_size=1,
+                    max_size=4,
+                )
+            ),
         )
 
         # Trim off labels until the total host name length fits in 252
@@ -239,6 +253,7 @@ else:
         global _path_characters
 
         if _path_characters is None:
+
             def chars():
                 # type: () -> Iterable[Text]
                 for i in range(maxunicode):
@@ -268,10 +283,8 @@ else:
         return cast(
             List[Text],
             draw(
-                lists(
-                    text(min_size=1, alphabet=path_characters()), max_size=10
-                )
-            )
+                lists(text(min_size=1, alphabet=path_characters()), max_size=10)
+            ),
         )
 
     @composite

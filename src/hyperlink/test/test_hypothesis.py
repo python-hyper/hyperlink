@@ -5,12 +5,14 @@ Tests for hyperlink.hypothesis.
 
 try:
     import hypothesis
+
     del hypothesis
 except ImportError:
     pass
 else:
     from string import digits
     from typing import Sequence, Text
+
     try:
         from unittest.mock import patch
     except ImportError:
@@ -24,8 +26,15 @@ else:
     from .common import HyperlinkTestCase
     from .. import DecodedURL, EncodedURL
     from ..hypothesis import (
-        DrawCallable, composite, decoded_urls, encoded_urls,
-        hostname_labels, hostnames, idna_text, paths, port_numbers,
+        DrawCallable,
+        composite,
+        decoded_urls,
+        encoded_urls,
+        hostname_labels,
+        hostnames,
+        idna_text,
+        paths,
+        port_numbers,
     )
 
     class TestHypothesisStrategies(HyperlinkTestCase):
@@ -42,9 +51,7 @@ else:
             try:
                 idna_encode(text)
             except IDNAError:  # pragma: no cover
-                raise AssertionError(
-                    "Invalid IDNA text: {!r}".format(text)
-                )
+                raise AssertionError("Invalid IDNA text: {!r}".format(text))
 
         @given(data())
         def test_idna_text_min_max(self, data):
@@ -84,9 +91,7 @@ else:
                 check_label(label)
                 idna_encode(label)
             except UnicodeError:  # pragma: no cover
-                raise AssertionError(
-                    "Invalid IDN label: {!r}".format(label)
-                )
+                raise AssertionError("Invalid IDN label: {!r}".format(label))
 
         @given(data())
         @settings(max_examples=10)
@@ -96,6 +101,7 @@ else:
             hostname_labels() handles case where idna_text() generates text
             that encoded to punycode ends up as longer than allowed.
             """
+
             @composite
             def mock_idna_text(draw, min_size, max_size):
                 # type: (DrawCallable, int, int) -> Text
@@ -126,9 +132,7 @@ else:
                 check_label(label)
                 label.encode("ascii")
             except UnicodeError:  # pragma: no cover
-                raise AssertionError(
-                    "Invalid ASCII label: {!r}".format(label)
-                )
+                raise AssertionError("Invalid ASCII label: {!r}".format(label))
 
         @given(hostnames())
         def test_hostnames_idn(self, hostname):
