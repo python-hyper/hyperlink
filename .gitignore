@@ -1,9 +1,6 @@
-docs/_build
+/docs/_build/
 tmp.py
-htmlcov/
-.coverage.*
 *.py[cod]
-/.hypothesis/
 
 # emacs
 *~
@@ -32,10 +29,22 @@ lib64
 # Installer logs
 pip-log.txt
 
-# Unit test / coverage reports
-.coverage
-.tox/
+# Testing
+/.tox/
+/.hypothesis/
 nosetests.xml
+
+# Coverage
+/.coverage
+/.coverage.*
+/htmlcov/
+/.mypy_cache/
+
+# Documentation
+/htmldocs/
+
+# Documentation
+/htmldocs/
 
 # Translations
 *.mo
