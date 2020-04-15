@@ -2017,7 +2017,7 @@ class DecodedURL(object):
 
     .. versionadded:: 18.0.0
     """
-    
+
     def __init__(self, url=_EMPTY_URL, lazy=False):
         # type: (URL, bool) -> None
         self._url = url
