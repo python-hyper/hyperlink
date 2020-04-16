@@ -3,16 +3,18 @@ u"""Hyperlink provides Pythonic URL parsing, construction, and rendering.
 
 Usage is straightforward::
 
-   >>> from hyperlink import URL
-   >>> url = URL.from_text(u'http://github.com/mahmoud/hyperlink?utm_source=docs')
+   >>> import hyperlink
+   >>> url = hyperlink.parse(u'http://github.com/mahmoud/hyperlink?utm_source=docs')
    >>> url.host
    u'github.com'
    >>> secure_url = url.replace(scheme=u'https')
    >>> secure_url.get('utm_source')[0]
    u'docs'
 
-As seen here, the API revolves around the lightweight and immutable
-:class:`URL` type, documented below.
+Hyperlink's API centers on the :class:`DecodedURL` type, which wraps
+the lower-level :class:`URL`, both of which can be returned by the
+:func:`parse()` convenience function.
+
 """  # noqa: E501
 
 import re
@@ -1971,13 +1973,25 @@ class URL(object):
 
 EncodedURL = URL  # An alias better describing what the URL really is
 
+_EMPTY_URL = URL()
+
 
 class DecodedURL(object):
-    """DecodedURL is a type meant to act as a higher-level interface to
-    the URL. It is the `unicode` to URL's `bytes`. `DecodedURL` has
-    almost exactly the same API as `URL`, but everything going in and
-    out is in its maximally decoded state. All percent decoding is
-    handled automatically.
+    """
+    :class:`DecodedURL` is a type designed to act as a higher-level
+    interface to :class:`URL` and the recommended type for most
+    operations. By analogy, :class:`DecodedURL` is the
+    :class:`unicode` to URL's :class:`bytes`.
+
+    :class:`DecodedURL` automatically handles encoding and decoding
+    all its components, such that all inputs and outputs are in a
+    maximally-decoded state.  Note that this means, for some special
+    cases, a URL may not "roundtrip" character-for-character, but this
+    is considered a good tradeoff for the safety of automatic
+    encoding.
+
+    Otherwise, :class:`DecodedURL` has almost exactly the same API as
+    :class:`URL`.
 
     Where applicable, a UTF-8 encoding is presumed. Be advised that
     some interactions can raise :exc:`UnicodeEncodeErrors` and
@@ -1991,9 +2005,20 @@ class DecodedURL(object):
         lazy (bool): Set to True to avoid pre-decode all parts of the URL to
             check for validity. Defaults to False.
 
+    .. note::
+
+      The :class:`DecodedURL` initializer takes a :class:`URL` object,
+      not URL components, like :class:`URL`. To programmatically
+      construct a :class:`DecodedURL`, you can use this pattern:
+
+        >>> print(DecodedURL().replace(scheme=u'https',
+        ... host=u'pypi.org', path=(u'projects', u'hyperlink')).to_text())
+        https://pypi.org/projects/hyperlink
+
+    .. versionadded:: 18.0.0
     """
 
-    def __init__(self, url, lazy=False):
+    def __init__(self, url=_EMPTY_URL, lazy=False):
         # type: (URL, bool) -> None
         self._url = url
         if not lazy:
@@ -2353,15 +2378,20 @@ class DecodedURL(object):
 
 def parse(url, decoded=True, lazy=False):
     # type: (Text, bool, bool) -> Union[URL, DecodedURL]
-    """Automatically turn text into a structured URL object.
+    """
+    Automatically turn text into a structured URL object.
+
+    >>> url = parse(u"https://github.com/python-hyper/hyperlink")
+    >>> print(url.to_text())
+    https://github.com/python-hyper/hyperlink
 
     Args:
-        url (Text): A string representation of a URL.
+        url (str): A text string representation of a URL.
 
         decoded (bool): Whether or not to return a :class:`DecodedURL`,
             which automatically handles all
             encoding/decoding/quoting/unquoting for all the various
-            accessors of parts of the URL, or an :class:`EncodedURL`,
+            accessors of parts of the URL, or a :class:`URL`,
             which has the same API, but requires handling of special
             characters for different parts of the URL.
 
@@ -2369,6 +2399,8 @@ def parse(url, decoded=True, lazy=False):
             whether the URL is decoded immediately or as accessed. The
             default, `lazy=False`, checks all encoded parts of the URL
             for decodability.
+
+    .. versionadded:: 18.0.0
     """
     enc_url = EncodedURL.from_text(url)
     if not decoded:
