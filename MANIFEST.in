@@ -1,5 +1,9 @@
-include README.md LICENSE CHANGELOG.md tox.ini pyproject.toml .coveragerc Makefile pytest.ini .tox-coveragerc
-exclude TODO.md .appveyor.yml
+include README.md LICENSE CHANGELOG.md
+include tox.ini pytest.ini .coveragerc
+exclude TODO.md
+exclude .appveyor.yml
+
+include src/hyperlink/idna-tables-properties.csv.gz
 
 graft docs
 prune docs/_build
