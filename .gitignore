@@ -31,6 +31,7 @@ pip-log.txt
 
 # Testing
 /.tox/
+/.hypothesis/
 nosetests.xml
 
 # Coverage
