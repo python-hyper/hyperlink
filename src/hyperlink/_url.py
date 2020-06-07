@@ -478,12 +478,12 @@ def register_scheme(text, uses_netloc=True, default_port=None):
     `file an issue`_!
 
     Args:
-        text (Text): A string representation of the scheme.
+        text: A string representation of the scheme.
             (the 'http' in 'http://hatnote.com')
-        uses_netloc (bool): Does the scheme support specifying a
+        uses_netloc: Does the scheme support specifying a
             network host? For instance, "http" does, "mailto" does
             not. Defaults to True.
-        default_port (Optional[int]): The default port, if any, for
+        default_port: The default port, if any, for
             netloc-using schemes.
 
     .. _file an issue: https://github.com/mahmoud/hyperlink/issues
@@ -927,38 +927,36 @@ class URL(object):
     constructor arguments is below.
 
     Args:
-       scheme (Optional[Text]): The text name of the scheme.
-       host (Optional[Text]): The host portion of the network location
-       port (Optional[int]): The port part of the network location. If
-          ``None`` or no port is passed, the port will default to
-          the default port of the scheme, if it is known. See the
-          ``SCHEME_PORT_MAP`` and :func:`register_default_port`
-          for more info.
-       path (Iterable[Text]): A tuple of strings representing the
-          slash-separated parts of the path.
-       query (Sequence[Tuple[Text, Optional[Text]]]): The query parameters, as
-           a dictionary or as an sequence of key-value pairs.
-       fragment (Text): The fragment part of the URL.
-       rooted (bool): A rooted URL is one which indicates an absolute path.
-          This is True on any URL that includes a host, or any relative URL
-          that starts with a slash.
-       userinfo (Text): The username or colon-separated
-          username:password pair.
-       uses_netloc (Optional[bool]): Indicates whether ``://`` (the "netloc
-           separator") will appear to separate the scheme from the *path* in
-           cases where no host is present.  Setting this to ``True`` is a
-           non-spec-compliant affordance for the common practice of having URIs
-           that are *not* URLs (cannot have a 'host' part) but nevertheless use
-           the common ``://`` idiom that most people associate with URLs;
-           e.g. ``message:`` URIs like ``message://message-id`` being
-           equivalent to ``message:message-id``.  This may be inferred based on
-           the scheme depending on whether :func:`register_scheme` has been
-           used to register the scheme and should not be passed directly unless
-           you know the scheme works like this and you know it has not been
-           registered.
+        scheme: The text name of the scheme.
+        host: The host portion of the network location
+        port: The port part of the network location. If ``None`` or no port is
+            passed, the port will default to the default port of the scheme, if
+            it is known. See the ``SCHEME_PORT_MAP`` and
+            :func:`register_default_port` for more info.
+        path: A tuple of strings representing the slash-separated parts of the
+            path.
+        query: The query parameters, as a dictionary or as an sequence of
+            key-value pairs.
+        fragment: The fragment part of the URL.
+        rooted: A rooted URL is one which indicates an absolute path.
+            This is True on any URL that includes a host, or any relative URL
+            that starts with a slash.
+        userinfo: The username or colon-separated username:password pair.
+        uses_netloc: Indicates whether ``://`` (the "netloc separator") will
+            appear to separate the scheme from the *path* in cases where no
+            host is present.
+            Setting this to ``True`` is a non-spec-compliant affordance for the
+            common practice of having URIs that are *not* URLs (cannot have a
+            'host' part) but nevertheless use the common ``://`` idiom that
+            most people associate with URLs; e.g. ``message:`` URIs like
+            ``message://message-id`` being equivalent to ``message:message-id``.
+            This may be inferred based on the scheme depending on whether
+            :func:`register_scheme` has been used to register the scheme and
+            should not be passed directly unless you know the scheme works like
+            this and you know it has not been registered.
 
-    All of these parts are also exposed as read-only attributes of
-    URL instances, along with several useful methods.
+    All of these parts are also exposed as read-only attributes of :class:`URL`
+    instances, along with several useful methods.
 
     .. _RFC 3986: https://tools.ietf.org/html/rfc3986
     .. _RFC 3987: https://tools.ietf.org/html/rfc3987
@@ -1187,9 +1185,9 @@ class URL(object):
         u'user:pass@localhost:8080'
 
         Args:
-            with_password (bool): Whether the return value of this
-                method include the password in the URL, if it is
-                set. Defaults to False.
+            with_password: Whether the return value of this method include the
+            password in the URL, if it is set.
+            Defaults to False.
 
         Returns:
             Text: The authority (network location and user information) portion
@@ -1298,32 +1296,29 @@ class URL(object):
         the value on the current URL.
 
         Args:
-            scheme (Optional[Text]): The text name of the scheme.
-            host (Optional[Text]): The host portion of the network location.
-            path (Iterable[Text]): A tuple of strings representing the
-                slash-separated parts of the path.
-            query (Sequence[Tuple[Text, Optional[Text]]]): The query
-                parameters, as a dictionary or as an sequence of key-value
-                pairs.
-            fragment (Text): The fragment part of the URL.
-            port (Optional[int]): The port part of the network location.
-            rooted (Optional[bool]): Whether or not the path begins with a
-                slash.
-            userinfo (Text): The username or colon-separated username:password
-                pair.
-            uses_netloc (bool): Indicates whether ``://`` (the "netloc
-                separator") will appear to separate the scheme from the *path*
-                in cases where no host is present.  Setting this to ``True`` is
-                a non-spec-compliant affordance for the common practice of
-                having URIs that are *not* URLs (cannot have a 'host' part) but
-                nevertheless use the common ``://`` idiom that most people
-                associate with URLs; e.g. ``message:`` URIs like
-                ``message://message-id`` being equivalent to
-                ``message:message-id``.  This may be inferred based on the
-                scheme depending on whether :func:`register_scheme` has been
-                used to register the scheme and should not be passed directly
-                unless you know the scheme works like this and you know it has
-                not been registered.
+            scheme: The text name of the scheme.
+            host: The host portion of the network location.
+            path: A tuple of strings representing the slash-separated parts of
+                the path.
+            query: The query parameters, as a dictionary or as an sequence of
+                key-value pairs.
+            fragment: The fragment part of the URL.
+            port: The port part of the network location.
+            rooted: Whether or not the path begins with a slash.
+            userinfo: The username or colon-separated username:password pair.
+            uses_netloc: Indicates whether ``://`` (the "netloc separator")
+                will appear to separate the scheme from the *path* in cases
+                where no host is present.
+                Setting this to ``True`` is a non-spec-compliant affordance for
+                the common practice of having URIs that are *not* URLs (cannot
+                have a 'host' part) but nevertheless use the common ``://``
+                idiom that most people associate with URLs; e.g. ``message:``
+                URIs like ``message://message-id`` being equivalent to
+                ``message:message-id``.
+                This may be inferred based on the scheme depending on whether
+                :func:`register_scheme` has been used to register the scheme
+                and should not be passed directly unless you know the scheme
+                works like this and you know it has not been registered.
 
         Returns:
             URL: A copy of the current :class:`URL`, with new values for
@@ -1363,7 +1358,7 @@ class URL(object):
         sure to decode those bytestrings.
 
         Args:
-           text (Text): A valid URL string.
+           text: A valid URL string.
 
         Returns:
            URL: The structured object version of the parsed string.
@@ -1469,15 +1464,14 @@ class URL(object):
         name.
 
         Args:
-            scheme (bool): Convert the scheme to lowercase
-            host (bool): Convert the host to lowercase
-            path (bool): Normalize the path (see above for details)
-            query (bool): Normalize the query string
-            fragment (bool): Normalize the fragment
-            userinfo (bool): Normalize the userinfo
-            percents (bool): Encode isolated percent signs for any
-                percent-encoded fields which are being normalized
-                (defaults to True).
+            scheme: Convert the scheme to lowercase
+            host: Convert the host to lowercase
+            path: Normalize the path (see above for details)
+            query: Normalize the query string
+            fragment: Normalize the fragment
+            userinfo: Normalize the userinfo
+            percents: Encode isolated percent signs for any percent-encoded
+                fields which are being normalized (defaults to `True`).
 
         >>> url = URL.from_text(u'Http://example.COM/a/../b/./c%2f?%61%')
         >>> print(url.normalize().to_text())
@@ -1537,9 +1531,9 @@ class URL(object):
             u'http://localhost/a/b/c/d?x=y'
 
         Args:
-            segments (Text): Additional parts to be joined and added to
-                the path, like :func:`os.path.join`. Special characters
-                in segments will be percent encoded.
+            segments: Additional parts to be joined and added to the path, like
+            :func:`os.path.join`. Special characters in segments will be
+            percent encoded.
 
         Returns:
            URL: A copy of the current URL with the extra path segments.
@@ -1562,7 +1556,7 @@ class URL(object):
         sibling of this URL path.
 
         Args:
-            segment (Text): A single path segment.
+            segment: A single path segment.
 
         Returns:
             URL: A copy of the current URL with the last path segment
@@ -1861,11 +1855,11 @@ class URL(object):
             URL.from_text(u'https://example.com/?x=y&x=z')
 
         Args:
-            name (Text): The name of the query parameter to add.
+            name: The name of the query parameter to add.
                 The part before the ``=``.
-            value (Optional[Text]): The value of the query parameter to add.
-                The part after the ``=``. Defaults to ``None``, meaning no
-                value.
+            value: The value of the query parameter to add.
+                The part after the ``=``.
+                Defaults to ``None``, meaning no value.
 
         Returns:
             URL: A new :class:`URL` instance with the parameter added.
@@ -1884,11 +1878,11 @@ class URL(object):
             URL.from_text(u'https://example.com/?x=z')
 
         Args:
-            name (Text): The name of the query parameter to set.
+            name: The name of the query parameter to set.
                 The part before the ``=``.
-            value (Optional[Text]): The value of the query parameter to set.
-                The part after the ``=``. Defaults to ``None``, meaning no
-                value.
+            value: The value of the query parameter to set.
+                The part after the ``=``.
+                Defaults to ``None``, meaning no value.
 
         Returns:
             URL: A new :class:`URL` instance with the parameter set.
@@ -1915,7 +1909,7 @@ class URL(object):
         list is always returned, and this method raises no exceptions.
 
         Args:
-            name (Text): The name of the query parameter to get.
+            name: The name of the query parameter to get.
 
         Returns:
             List[Optional[Text]]: A list of all the values associated with the
@@ -1936,12 +1930,11 @@ class URL(object):
         parameter is not already set.
 
         Args:
-            name (Text): The name of the query parameter to remove.
-            value (Text): Optional value to additionally filter on.
+            name: The name of the query parameter to remove.
+            value: Optional value to additionally filter on.
                 Setting this removes query parameters which match both name
                 and value.
-            limit (Optional[int]): Optional maximum number of parameters to
-                remove.
+            limit: Optional maximum number of parameters to remove.
 
         Returns:
             URL: A new :class:`URL` instance with the parameter removed.
@@ -2001,9 +1994,10 @@ class DecodedURL(object):
     special characters encoded with codecs other than UTF-8.
 
     Args:
-        url (URL): A :class:`URL` object to wrap.
-        lazy (bool): Set to True to avoid pre-decode all parts of the URL to
-            check for validity. Defaults to False.
+        url: A :class:`URL` object to wrap.
+        lazy: Set to True to avoid pre-decode all parts of the URL to check for
+            validity.
+            Defaults to False.
 
     .. note::
 
@@ -2034,9 +2028,10 @@ class DecodedURL(object):
         Make a `DecodedURL` instance from any text string containing a URL.
 
         Args:
-          text (Text): Text containing the URL
-          lazy (bool): Whether to pre-decode all parts of the URL to check for
-              validity. Defaults to True.
+          text: Text containing the URL
+          lazy: Whether to pre-decode all parts of the URL to check for
+              validity.
+              Defaults to True.
         """
         _url = URL.from_text(text)
         return cls(_url, lazy=lazy)
@@ -2386,16 +2381,16 @@ def parse(url, decoded=True, lazy=False):
     https://github.com/python-hyper/hyperlink
 
     Args:
-        url (str): A text string representation of a URL.
+        url: A text string representation of a URL.
 
-        decoded (bool): Whether or not to return a :class:`DecodedURL`,
+        decoded: Whether or not to return a :class:`DecodedURL`,
             which automatically handles all
             encoding/decoding/quoting/unquoting for all the various
             accessors of parts of the URL, or a :class:`URL`,
             which has the same API, but requires handling of special
             characters for different parts of the URL.
 
-        lazy (bool): In the case of `decoded=True`, this controls
+        lazy: In the case of `decoded=True`, this controls
             whether the URL is decoded immediately or as accessed. The
             default, `lazy=False`, checks all encoded parts of the URL
             for decodability.
