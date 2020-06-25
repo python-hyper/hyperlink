@@ -27,11 +27,11 @@ setup(
     url=__url__,
     packages=find_packages(where="src"),
     package_dir={"": "src"},
-    package_data=dict(hyperlink=["py.typed",],),
+    package_data=dict(hyperlink=["py.typed"]),
     zip_safe=False,
     license=__license__,
     platforms="any",
-    install_requires=["idna>=2.5", 'typing ; python_version<"3.5"',],
+    install_requires=["idna>=2.5", 'typing ; python_version<"3.5"'],
     python_requires=">=2.6, !=3.0.*, !=3.1.*, !=3.2.*, !=3.3.*",
     classifiers=[
         "Topic :: Utilities",
