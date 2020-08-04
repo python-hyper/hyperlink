@@ -1,6 +1,8 @@
 # Hyperlink Changelog
 
-## dev (not yet released)
+## 20.0.0
+
+*(August 3, 2020)*
 
 * CPython 3.7 and 3.8 and PyPy3 added to test matrix
 * Hyperlink now has type hints and they are now exported per
