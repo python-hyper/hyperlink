@@ -6,7 +6,7 @@
     <img src="https://img.shields.io/badge/docs-latest-brightgreen.svg?style=flat" alt="Documentation">
 </a>
 <a href="https://pypi.org/project/hyperlink/">
-    <img src="https://img.shields.io/pypi/v/boltons.svg" alt="PyPI">
+    <img src="https://img.shields.io/pypi/v/hyperlink.svg" alt="PyPI">
 </a>
 <a href="http://calver.org">
     <img src="https://img.shields.io/badge/calver-YY.MINOR.MICRO-22bfda.svg" alt="Calendar Versioning">
