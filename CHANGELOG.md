@@ -1,5 +1,13 @@
 # Hyperlink Changelog
 
+## 20.0.1
+
+*(August 4, 2020)*
+
+Rerelease to fix packaging metadata around conditional requirements.
+See [issue #133](https://github.com/python-hyper/hyperlink/issues/133)
+for more details.
+
 ## 20.0.0
 
 *(August 3, 2020)*
