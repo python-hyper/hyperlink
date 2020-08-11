@@ -64,8 +64,8 @@ project = u'hyperlink'
 copyright = u'2018, Mahmoud Hashemi'
 author = u'Mahmoud Hashemi'
 
-version = '19.0'
-release = '19.0.0'
+version = '20.0'
+release = '20.0.1'
 
 if os.name != 'nt':
     today_fmt = '%B %d, %Y'
