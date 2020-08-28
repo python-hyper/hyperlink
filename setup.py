@@ -27,7 +27,7 @@ setup(
     url=__url__,
     packages=find_packages(where="src"),
     package_dir={"": "src"},
-    package_data=dict(hyperlink=["py.typed"]),
+    package_data=dict(hyperlink=["py.typed", "idna-tables-properties.csv.gz"]),
     zip_safe=False,
     license=__license__,
     platforms="any",
