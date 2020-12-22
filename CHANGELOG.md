@@ -1,5 +1,9 @@
 # Hyperlink Changelog
 
+## Next
+
+* CPython 3.9 added to text matrix
+
 ## 20.0.1
 
 *(August 4, 2020)*
