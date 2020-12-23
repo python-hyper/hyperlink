@@ -2,7 +2,7 @@
 
 ## Next
 
-* CPython 3.9 added to text matrix
+* CPython 3.9 added to test matrix
 
 ## 20.0.1
 
