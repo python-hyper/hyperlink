@@ -208,7 +208,7 @@ jobs:
           else  # CPython
               py_test="py${py/./}";  # Add "py" prefix, remove "."
           fi;
-          env_test="test-${py_test},codecov";
+          env_test="test-${py_test}";
           echo "Test environment: ${env_test}";
           ln -s ".tox/${env_test}" testenv;  # Fixed location for upload step below
           tox -e "${env_test}";
