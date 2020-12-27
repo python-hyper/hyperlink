@@ -78,7 +78,8 @@ else:
             )
             with open_gzip(dataFileName) as dataFile:
                 reader = csv_reader(
-                    (line.decode("utf-8") for line in dataFile), delimiter=",",
+                    (line.decode("utf-8") for line in dataFile),
+                    delimiter=",",
                 )
                 next(reader)  # Skip header row
                 for row in reader:
