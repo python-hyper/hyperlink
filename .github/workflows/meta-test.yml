@@ -1,0 +1,14 @@
+name: meta-test
+
+on:
+  push:
+    branches: [ master ]
+  pull_request:
+    branches: [ master ]
+
+jobs:
+  meta-test:
+    runs-on: ubuntu-latest
+    steps:
+    - run: echo ":tada:"
+
