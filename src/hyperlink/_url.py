@@ -183,7 +183,7 @@ _SCHEMELESS_PATH_SAFE = _PATH_SAFE - set(":")
 _SCHEMELESS_PATH_DELIMS = _ALL_DELIMS - _SCHEMELESS_PATH_SAFE
 _FRAGMENT_SAFE = _UNRESERVED_CHARS | _PATH_SAFE | set(u"/?")
 _FRAGMENT_DELIMS = _ALL_DELIMS - _FRAGMENT_SAFE
-_QUERY_VALUE_SAFE = _UNRESERVED_CHARS | _FRAGMENT_SAFE - set(u"&+")
+_QUERY_VALUE_SAFE = _UNRESERVED_CHARS | _FRAGMENT_SAFE - set(u"&")
 _QUERY_VALUE_DELIMS = _ALL_DELIMS - _QUERY_VALUE_SAFE
 _QUERY_KEY_SAFE = _UNRESERVED_CHARS | _QUERY_VALUE_SAFE - set(u"=")
 _QUERY_KEY_DELIMS = _ALL_DELIMS - _QUERY_KEY_SAFE
@@ -931,9 +931,9 @@ class URL(object):
         https://example.com/hello/world
 
     The constructor runs basic type checks. All strings are expected
-    to be decoded (:class:`unicode` in Python 2). All arguments are
-    optional, defaulting to appropriately empty values. A full list of
-    constructor arguments is below.
+    to be text (:class:`str` in Python 3, :class:`unicode` in Python 2). All
+    arguments are optional, defaulting to appropriately empty values. A full
+    list of constructor arguments is below.
 
     Args:
         scheme: The text name of the scheme.
@@ -943,9 +943,9 @@ class URL(object):
             it is known. See the ``SCHEME_PORT_MAP`` and
             :func:`register_default_port` for more info.
         path: A tuple of strings representing the slash-separated parts of the
-            path.
+            path, each percent-encoded.
         query: The query parameters, as a dictionary or as an sequence of
-            key-value pairs.
+            percent-encoded key-value pairs.
         fragment: The fragment part of the URL.
         rooted: A rooted URL is one which indicates an absolute path.
             This is True on any URL that includes a host, or any relative URL
