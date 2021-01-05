@@ -183,7 +183,7 @@ _SCHEMELESS_PATH_SAFE = _PATH_SAFE - set(":")
 _SCHEMELESS_PATH_DELIMS = _ALL_DELIMS - _SCHEMELESS_PATH_SAFE
 _FRAGMENT_SAFE = _UNRESERVED_CHARS | _PATH_SAFE | set(u"/?")
 _FRAGMENT_DELIMS = _ALL_DELIMS - _FRAGMENT_SAFE
-_QUERY_VALUE_SAFE = _UNRESERVED_CHARS | _FRAGMENT_SAFE - set(u"&+")
+_QUERY_VALUE_SAFE = _UNRESERVED_CHARS | _FRAGMENT_SAFE - set(u"&")
 _QUERY_VALUE_DELIMS = _ALL_DELIMS - _QUERY_VALUE_SAFE
 _QUERY_KEY_SAFE = _UNRESERVED_CHARS | _QUERY_VALUE_SAFE - set(u"=")
 _QUERY_KEY_DELIMS = _ALL_DELIMS - _QUERY_KEY_SAFE
@@ -467,9 +467,13 @@ NO_NETLOC_SCHEMES = set(
 )
 # As of Mar 11, 2017, there were 44 netloc schemes, and 13 non-netloc
 
+NO_QUERY_PLUS_SCHEMES = set()
 
-def register_scheme(text, uses_netloc=True, default_port=None):
-    # type: (Text, bool, Optional[int]) -> None
+
+def register_scheme(
+    text, uses_netloc=True, default_port=None, query_plus_is_space=True
+):
+    # type: (Text, bool, Optional[int], bool) -> None
     """Registers new scheme information, resulting in correct port and
     slash behavior from the URL object. There are dozens of standard
     schemes preregistered, so this function is mostly meant for
@@ -485,6 +489,8 @@ def register_scheme(text, uses_netloc=True, default_port=None):
             not. Defaults to True.
         default_port: The default port, if any, for
             netloc-using schemes.
+        query_plus_is_space: If true, a "+" in the query string should be
+            decoded as a space by DecodedURL.
 
     .. _file an issue: https://github.com/mahmoud/hyperlink/issues
     """
@@ -509,6 +515,9 @@ def register_scheme(text, uses_netloc=True, default_port=None):
         NO_NETLOC_SCHEMES.add(text)
     else:
         raise ValueError("uses_netloc expected bool, not: %r" % uses_netloc)
+
+    if not query_plus_is_space:
+        NO_QUERY_PLUS_SCHEMES.add(text)
 
     return
 
@@ -922,9 +931,9 @@ class URL(object):
         https://example.com/hello/world
 
     The constructor runs basic type checks. All strings are expected
-    to be decoded (:class:`unicode` in Python 2). All arguments are
-    optional, defaulting to appropriately empty values. A full list of
-    constructor arguments is below.
+    to be text (:class:`str` in Python 3, :class:`unicode` in Python 2). All
+    arguments are optional, defaulting to appropriately empty values. A full
+    list of constructor arguments is below.
 
     Args:
         scheme: The text name of the scheme.
@@ -934,9 +943,9 @@ class URL(object):
             it is known. See the ``SCHEME_PORT_MAP`` and
             :func:`register_default_port` for more info.
         path: A tuple of strings representing the slash-separated parts of the
-            path.
+            path, each percent-encoded.
         query: The query parameters, as a dictionary or as an sequence of
-            key-value pairs.
+            percent-encoded key-value pairs.
         fragment: The fragment part of the URL.
         rooted: A rooted URL is one which indicates an absolute path.
             This is True on any URL that includes a host, or any relative URL
@@ -1969,6 +1978,16 @@ EncodedURL = URL  # An alias better describing what the URL really is
 _EMPTY_URL = URL()
 
 
+def _replace_plus(text):
+    # type: (Text) -> Text
+    return text.replace("+", "%20")
+
+
+def _no_op(text):
+    # type: (Text) -> Text
+    return text
+
+
 class DecodedURL(object):
     """
     :class:`DecodedURL` is a type designed to act as a higher-level
@@ -1998,6 +2017,9 @@ class DecodedURL(object):
         lazy: Set to True to avoid pre-decode all parts of the URL to check for
             validity.
             Defaults to False.
+        query_plus_is_space: + characters in the query string should be treated
+            as spaces when decoding.  If unspecified, the default is taken from
+            the scheme.
 
     .. note::
 
@@ -2012,9 +2034,12 @@ class DecodedURL(object):
     .. versionadded:: 18.0.0
     """
 
-    def __init__(self, url=_EMPTY_URL, lazy=False):
-        # type: (URL, bool) -> None
+    def __init__(self, url=_EMPTY_URL, lazy=False, query_plus_is_space=None):
+        # type: (URL, bool, Optional[bool]) -> None
         self._url = url
+        if query_plus_is_space is None:
+            query_plus_is_space = url.scheme not in NO_QUERY_PLUS_SCHEMES
+        self._query_plus_is_space = query_plus_is_space
         if not lazy:
             # cache the following, while triggering any decoding
             # issues with decodable fields
@@ -2022,8 +2047,8 @@ class DecodedURL(object):
         return
 
     @classmethod
-    def from_text(cls, text, lazy=False):
-        # type: (Text, bool) -> DecodedURL
+    def from_text(cls, text, lazy=False, query_plus_is_space=None):
+        # type: (Text, bool, Optional[bool]) -> DecodedURL
         """\
         Make a `DecodedURL` instance from any text string containing a URL.
 
@@ -2034,7 +2059,7 @@ class DecodedURL(object):
               Defaults to True.
         """
         _url = URL.from_text(text)
-        return cls(_url, lazy=lazy)
+        return cls(_url, lazy=lazy, query_plus_is_space=query_plus_is_space)
 
     @property
     def encoded_url(self):
@@ -2059,6 +2084,14 @@ class DecodedURL(object):
         "Passthrough to :meth:`~hyperlink.URL.to_iri()`"
         return self._url.to_iri()
 
+    def _clone(self, url):
+        # type: (URL) -> DecodedURL
+        return self.__class__(
+            url,
+            # TODO: propagate laziness?
+            query_plus_is_space=self._query_plus_is_space,
+        )
+
     def click(self, href=u""):
         # type: (Union[Text, URL, DecodedURL]) -> DecodedURL
         """Return a new DecodedURL wrapping the result of
@@ -2066,7 +2099,9 @@ class DecodedURL(object):
         """
         if isinstance(href, DecodedURL):
             href = href._url
-        return self.__class__(self._url.click(href=href))
+        return self._clone(
+            self._url.click(href=href),
+        )
 
     def sibling(self, segment):
         # type: (Text) -> DecodedURL
@@ -2074,7 +2109,9 @@ class DecodedURL(object):
         return a new `DecodedURL` wrapping the result of
         :meth:`~hyperlink.URL.sibling()`
         """
-        return self.__class__(self._url.sibling(_encode_reserved(segment)))
+        return self._clone(
+            self._url.sibling(_encode_reserved(segment)),
+        )
 
     def child(self, *segments):
         # type: (Text) -> DecodedURL
@@ -2085,7 +2122,7 @@ class DecodedURL(object):
         if not segments:
             return self
         new_segs = [_encode_reserved(s) for s in segments]
-        return self.__class__(self._url.child(*new_segs))
+        return self._clone(self._url.child(*new_segs))
 
     def normalize(
         self,
@@ -2101,7 +2138,7 @@ class DecodedURL(object):
         """Return a new `DecodedURL` wrapping the result of
         :meth:`~hyperlink.URL.normalize()`
         """
-        return self.__class__(
+        return self._clone(
             self._url.normalize(
                 scheme, host, path, query, fragment, userinfo, percents
             )
@@ -2148,11 +2185,18 @@ class DecodedURL(object):
     def query(self):
         # type: () -> QueryPairs
         if not hasattr(self, "_query"):
+            if self._query_plus_is_space:
+                predecode = _replace_plus
+            else:
+                predecode = _no_op
+
             self._query = cast(
                 QueryPairs,
                 tuple(
                     tuple(
-                        _percent_decode(x, raise_subencoding_exc=True)
+                        _percent_decode(
+                            predecode(x), raise_subencoding_exc=True
+                        )
                         if x is not None
                         else None
                         for x in (k, v)
@@ -2248,7 +2292,7 @@ class DecodedURL(object):
             userinfo=userinfo_text,
             uses_netloc=uses_netloc,
         )
-        return self.__class__(url=new_url)
+        return self._clone(url=new_url)
 
     def get(self, name):
         # type: (Text) -> List[Optional[Text]]

@@ -133,6 +133,8 @@ ROUNDTRIP_TESTS = (
     "https://example.com/?a=%23",  # hash in query param value
     "https://example.com/?a=%26",  # ampersand in query param value
     "https://example.com/?a=%3D",  # equals in query param value
+    "https://example.com/?foo+bar=baz",  # plus in query param name
+    "https://example.com/?foo=bar+baz",  # plus in query param value
     # double-encoded percent sign in all percent-encodable positions:
     "http://(%2525):(%2525)@example.com/(%2525)/?(%2525)=(%2525)#(%2525)",
     # colon in first part of schemeless relative url

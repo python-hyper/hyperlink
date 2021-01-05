@@ -7,15 +7,11 @@ from .common import HyperlinkTestCase
 
 
 class _ExpectedException(Exception):
-    """An exception used to test HyperlinkTestCase.assertRaises.
-
-    """
+    """An exception used to test HyperlinkTestCase.assertRaises."""
 
 
 class _UnexpectedException(Exception):
-    """An exception used to test HyperlinkTestCase.assertRaises.
-
-    """
+    """An exception used to test HyperlinkTestCase.assertRaises."""
 
 
 class TestHyperlink(TestCase):

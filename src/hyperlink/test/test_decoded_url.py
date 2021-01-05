@@ -210,3 +210,19 @@ class TestURL(HyperlinkTestCase):
         assert clicked.host == durl.host
         assert clicked.path == durl_dest.path
         assert clicked.path == ("tëst",)
+
+    def test_decode_plus(self):
+        # type: () -> None
+        durl = DecodedURL.from_text("/x+y%2B?a=b+c%2B")
+        assert durl.path == ("x+y+",)
+        assert durl.get("a") == ["b c+"]
+        assert durl.query == (("a", "b c+"),)
+
+    def test_decode_nonplussed(self):
+        # type: () -> None
+        durl = DecodedURL.from_text(
+            "/x+y%2B?a=b+c%2B", query_plus_is_space=False
+        )
+        assert durl.path == ("x+y+",)
+        assert durl.get("a") == ["b+c+"]
+        assert durl.query == (("a", "b+c+"),)
