@@ -1,5 +1,18 @@
 # Hyperlink Changelog
 
+## 21.0.0
+
+*(January 7, 2021)*
+
+* Update plus sign (`+`) handling to work with/like HTML form encoding
+  (`POST`) by default, fixes [#129][i129], and associated roundtripping ([#146][i146]).
+* Package IDNA tables. ([#134][i134])
+* Long overdue dependency bumps
+
+[i129]: https://github.com/python-hyper/hyperlink/issues/129
+[i134]: https://github.com/python-hyper/hyperlink/issues/134
+[i146]: https://github.com/python-hyper/hyperlink/issues/146
+
 ## 20.0.1
 
 *(August 4, 2020)*
