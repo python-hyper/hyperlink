@@ -11,7 +11,7 @@ from setuptools import find_packages, setup
 
 
 __author__ = "Mahmoud Hashemi and Glyph Lefkowitz"
-__version__ = "20.0.2dev"
+__version__ = "21.0.0"
 __contact__ = "mahmoud@hatnote.com"
 __url__ = "https://github.com/python-hyper/hyperlink"
 __license__ = "MIT"
@@ -47,6 +47,7 @@ setup(
         "Programming Language :: Python :: 3.6",
         "Programming Language :: Python :: 3.7",
         "Programming Language :: Python :: 3.8",
+        "Programming Language :: Python :: 3.9",
         "Programming Language :: Python :: Implementation :: PyPy",
         "License :: OSI Approved :: MIT License",
     ],
