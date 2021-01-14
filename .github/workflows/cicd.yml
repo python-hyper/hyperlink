@@ -208,11 +208,10 @@ jobs:
           else  # CPython
               py_test="py${py/./}";  # Add "py" prefix, remove "."
           fi;
-          env_test="test-${py_test}";
+          env_test="test-${py_test}-coverage_xml";
           echo "Test environment: ${env_test}";
           tox -e "${env_test}";
           tar cvzf pytest-logs.tgz ".tox/${env_test}/log";
-          tox -e "coverage_xml-${py_test}";
 
       - name: Upload pytest log artifact
         if: failure()
