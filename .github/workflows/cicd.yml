@@ -212,6 +212,9 @@ jobs:
           echo "Test environment: ${env_test}";
           tox -e "${env_test}";
           tar cvzf pytest-logs.tgz ".tox/${env_test}/log";
+          tox -e "coverage_combine-${env_test}";
+        env:
+          COVERAGE_FILE: .tox/coverage
 
       - name: Upload pytest log artifact
         if: failure()
@@ -225,11 +228,6 @@ jobs:
       - uses: "actions/setup-python@v2"
         with:
           python-version: "3.9"
-
-      - name: "Combine coverage"
-        run: tox -e coverage_combine;
-        env:
-          COVERAGE_FILE: .tox/coverage
 
       - name: "Upload coverage to Codecov"
         uses: "codecov/codecov-action@v1"
