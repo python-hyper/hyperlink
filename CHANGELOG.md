@@ -16,7 +16,6 @@
 [i129]: https://github.com/python-hyper/hyperlink/issues/129
 [i134]: https://github.com/python-hyper/hyperlink/issues/134
 [i146]: https://github.com/python-hyper/hyperlink/issues/146
->>>>>>> master
 
 ## 20.0.1
 
