@@ -229,7 +229,8 @@ jobs:
       - name: "Combine coverage"
         run: |
           set -eux
-          pip install coverage[toml];
+          # pip install coverage[toml];
+          pip install coverage==4.5.4;  # coverage 5.0 drops Python 3.4 support
           coverage combine;
           coverage xml;
         env:
