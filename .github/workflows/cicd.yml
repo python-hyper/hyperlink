@@ -204,14 +204,20 @@ jobs:
           set -eux
           py="${{ matrix.python }}";
           if [[ $py =~ pypy ]]; then  # PyPy
-              py_test="pypy${py:5:1}";  # Add "pypy" prefix, select major version
+              py_test="${py}";
           else  # CPython
               py_test="py${py/./}";  # Add "py" prefix, remove "."
           fi;
           env_test="test-${py_test}";
           echo "Test environment: ${env_test}";
-          ln -s ".tox/${env_test}" testenv;  # Fixed location for upload step below
-          tox -e "${env_test}";
+          tar cvzf pytest-logs.tgz ".tox/${env_test}/log";
+
+      - name: Upload pytest log artifact
+        if: failure()
+        uses: actions/upload-artifact@v1
+        with:
+          name: pytest-logs
+          path: pytest-logs.tgz
 
       # Use the latest supported Python version for combining coverage to
       # prevent parsing errors in older versions when looking at modern code.
