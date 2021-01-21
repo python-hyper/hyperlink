@@ -1,5 +1,9 @@
 # Hyperlink Changelog
 
+## Next
+
+* CPython 3.9 added to test matrix
+
 ## 21.0.0
 
 *(January 7, 2021)*
