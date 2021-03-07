@@ -61,7 +61,7 @@ master_doc = 'index'
 
 # General information about the project.
 project = u'hyperlink'
-copyright = u'2018, Mahmoud Hashemi'
+copyright = u'2021, Mahmoud Hashemi'
 author = u'Mahmoud Hashemi'
 
 version = '21.0'
