@@ -44,6 +44,7 @@ from typing import (
     Union,
     cast,
     TYPE_CHECKING,
+    overload,
 )
 from unicodedata import normalize
 from ._socket import inet_pton
@@ -2415,35 +2416,25 @@ class DecodedURL(object):
 
     # # End Twisted Compat Code
 
-
+# Add some overloads so that parse gives a better return value.
+# Literal is not available in all pythons so we only bring it in for mypy.
 if TYPE_CHECKING:
-    # Add some overloads so that parse gives a better return value.
-    # Literal is not available in all pythons so we only bring it in for mypy.
-    # Also to remain compatible with 2.7 we use pass instead of ...
-    from typing import Literal, overload
+    from typing import Literal
 
-    @overload
-    def parse(url):
-        # type: (Text) -> DecodedURL
-        pass
+@overload
+def parse(url, decoded, lazy=False):
+    # type: (Text, Literal[False], bool) -> URL
+    """Passing decoded=False returns URL."""
 
+@overload
+def parse(url, decoded=True, lazy=False):
+    # type: (Text, Literal[True], bool) -> DecodedURL
+    """Passing decoded=True (or the default value) returns DecodedURL."""
 
-    @overload
-    def parse(url, decoded, lazy=False):
-        # type: (Text, Literal[True], bool) -> DecodedURL
-        pass
-
-
-    @overload
-    def parse(url, decoded, lazy=False):
-        # type: (Text, Literal[False], bool) -> URL
-        pass
-
-    @overload
-    def parse(url, decoded=True, lazy=False):
-        # type: (Text, bool, bool) -> Union[URL, DecodedURL]
-        pass
-
+@overload
+def parse(url, decoded=True, lazy=False):
+    # type: (Text, bool, bool) -> Union[URL, DecodedURL]
+    """If decoded is not a literal we don't know the return type."""
 
 def parse(url, decoded=True, lazy=False):
     # type: (Text, bool, bool) -> Union[URL, DecodedURL]
