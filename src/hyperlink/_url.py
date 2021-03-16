@@ -43,6 +43,7 @@ from typing import (
     TypeVar,
     Union,
     cast,
+    TYPE_CHECKING,
 )
 from unicodedata import normalize
 from ._socket import inet_pton
@@ -65,7 +66,7 @@ QueryPairs = Tuple[Tuple[Text, Optional[Text]], ...]  # internal representation
 QueryParameters = Union[
     Mapping[Text, Optional[Text]],
     QueryPairs,
-    Sequence[Tuple[Text, Optional[Text]]],
+    Iterable[Tuple[Text, Optional[Text]]],
 ]
 T = TypeVar("T")
 
@@ -2413,6 +2414,35 @@ class DecodedURL(object):
         return ret
 
     # # End Twisted Compat Code
+
+
+if TYPE_CHECKING:
+    # Add some overloads so that parse gives a better return value.
+    # Literal is not available in all pythons so we only bring it in for mypy.
+    # Also to remain compatible with 2.7 we use pass instead of ...
+    from typing import Literal, overload
+
+    @overload
+    def parse(url):
+        # type: (Text) -> DecodedURL
+        pass
+
+
+    @overload
+    def parse(url, decoded, lazy=False):
+        # type: (Text, Literal[True], bool) -> DecodedURL
+        pass
+
+
+    @overload
+    def parse(url, decoded, lazy=False):
+        # type: (Text, Literal[False], bool) -> URL
+        pass
+
+    @overload
+    def parse(url, decoded=True, lazy=False):
+        # type: (Text, bool, bool) -> Union[URL, DecodedURL]
+        pass
 
 
 def parse(url, decoded=True, lazy=False):
