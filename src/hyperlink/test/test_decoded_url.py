@@ -37,11 +37,11 @@ class TestURL(HyperlinkTestCase):
         assert durl.userinfo == ("user", "\0\0\0\0")
 
     def test_roundtrip_iri_parameter_values(self):
+        # type: () -> None
         """
         .to_iri() should never modify the application-level data of a query
         parameter.
         """
-        # type: () -> None
         for value in ["hello", "goodbye", "+", "/", ":", "?"]:
             self.assertEqual(
                 DecodedURL(DecodedURL().set("test", value).to_iri()).get(
@@ -51,11 +51,11 @@ class TestURL(HyperlinkTestCase):
             )
 
     def test_roundtrip_uri_parameter_values(self):
+        # type: () -> None
         """
         .to_uri() should never modify the application-level data of a query
         parameter.
         """
-        # type: () -> None
         for value in ["hello", "goodbye", "+", "/", ":", "?"]:
             self.assertEqual(
                 DecodedURL(DecodedURL().set("test", value).to_uri()).get(
