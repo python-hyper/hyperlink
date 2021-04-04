@@ -6,12 +6,6 @@
 
 environment:
   matrix:
-    - PYTHON: "C:\\Python27-x64"
-      TOX_ENV: "test-py27,codecov"
-
-    - PYTHON: "C:\\Python35-x64"
-      TOX_ENV: "test-py35,codecov"
-
     - PYTHON: "C:\\Python36-x64"
       TOX_ENV: "test-py36,codecov"
 
