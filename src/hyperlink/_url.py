@@ -43,6 +43,8 @@ from typing import (
     TypeVar,
     Union,
     cast,
+    TYPE_CHECKING,
+    overload,
 )
 from unicodedata import normalize
 from ._socket import inet_pton
@@ -65,9 +67,12 @@ QueryPairs = Tuple[Tuple[Text, Optional[Text]], ...]  # internal representation
 QueryParameters = Union[
     Mapping[Text, Optional[Text]],
     QueryPairs,
-    Sequence[Tuple[Text, Optional[Text]]],
+    Iterable[Tuple[Text, Optional[Text]]],
 ]
 T = TypeVar("T")
+# Literal is not available in all pythons so we only bring it in for mypy.
+if TYPE_CHECKING:
+    from typing import Literal
 
 
 # from boltons.typeutils
@@ -2413,6 +2418,25 @@ class DecodedURL(object):
         return ret
 
     # # End Twisted Compat Code
+
+
+# Add some overloads so that parse gives a better return value.
+@overload
+def parse(url, decoded, lazy=False):
+    # type: (Text, Literal[False], bool) -> URL
+    """Passing decoded=False returns URL."""
+
+
+@overload
+def parse(url, decoded=True, lazy=False):
+    # type: (Text, Literal[True], bool) -> DecodedURL
+    """Passing decoded=True (or the default value) returns DecodedURL."""
+
+
+@overload
+def parse(url, decoded=True, lazy=False):
+    # type: (Text, bool, bool) -> Union[URL, DecodedURL]
+    """If decoded is not a literal we don't know the return type."""
 
 
 def parse(url, decoded=True, lazy=False):
