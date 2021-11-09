@@ -67,7 +67,7 @@ jobs:
         uses: actions/checkout@v2
 
       - name: Install Python
-        uses: actions/setup-python@v1
+        uses: actions/setup-python@v2
         with:
           python-version: "3.9"
 
@@ -91,15 +91,15 @@ jobs:
         uses: actions/checkout@v2
 
       - name: Install Python
-        uses: actions/setup-python@v1
+        uses: actions/setup-python@v2
         with:
-          python-version: "3.9"
+          python-version: "3.10"
 
       - name: Install Tox
-        run: pip install tox;
+        run: pip install tox
 
       - name: Run Black
-        run: tox -e black;
+        run: tox -e black
 
 
   mypy:
@@ -114,15 +114,15 @@ jobs:
         uses: actions/checkout@v2
 
       - name: Install Python
-        uses: actions/setup-python@v1
+        uses: actions/setup-python@v2
         with:
-          python-version: "3.9"
+          python-version: "3.10"
 
       - name: Install Tox
-        run: pip install tox;
+        run: pip install tox
 
       - name: Run Mypy
-        run: tox -e mypy;
+        run: tox -e mypy
 
 
   docs:
@@ -138,15 +138,15 @@ jobs:
         uses: actions/checkout@v2
 
       - name: Install Python
-        uses: actions/setup-python@v1
+        uses: actions/setup-python@v2
         with:
-          python-version: "3.9"
+          python-version: "3.10"
 
       - name: Install Tox
-        run: pip install tox;
+        run: pip install tox
 
       - name: Build documentation
-        run: tox -e docs;
+        run: tox -e docs
 
 
   packaging:
@@ -161,15 +161,15 @@ jobs:
         uses: actions/checkout@v2
 
       - name: Install Python
-        uses: actions/setup-python@v1
+        uses: actions/setup-python@2
         with:
-          python-version: "3.9"
+          python-version: "3.10"
 
       - name: Install Tox
-        run: pip install tox;
+        run: pip install tox
 
       - name: Check packaging
-        run: tox -e packaging;
+        run: tox -e packaging
 
 
   unit:
@@ -181,7 +181,7 @@ jobs:
     timeout-minutes: 30
     strategy:
       matrix:
-        python: ["2.7", "3.5", "3.6", "3.7", "3.8", "3.9", "pypy2", "pypy3"]
+        python: ["2.7", "3.5", "3.6", "3.7", "3.8", "3.9", "3.10", "pypy2", "pypy3"]
 
     steps:
 
@@ -189,12 +189,12 @@ jobs:
         uses: actions/checkout@v2
 
       - name: Install Python
-        uses: actions/setup-python@v1
+        uses: actions/setup-python@v2
         with:
           python-version: ${{ matrix.python }}
 
       - name: Install Tox
-        run: pip install tox;
+        run: pip install tox
 
       - name: Run unit tests
         shell: bash
@@ -202,29 +202,30 @@ jobs:
         # specified above to the equivalents used in Tox environments.
         run: |
           set -eux
-          py="${{ matrix.python }}";
+          py="${{ matrix.python }}"
           if [[ $py =~ pypy ]]; then  # PyPy
               py_test="${py}";
           else  # CPython
               py_test="py${py/./}";  # Add "py" prefix, remove "."
-          fi;
-          env_test="test-${py_test}-coverage_xml";
-          echo "Test environment: ${env_test}";
-          tox -e "${env_test}";
-          tar cvzf pytest-logs.tgz ".tox/${env_test}/log";
+          fi
+          env_test="test-${py_test}-coverage_xml"
+          echo "Test environment: ${env_test}"
+          tox -e "${env_test}"
+          tar cvzf pytest-logs.tgz ".tox/${env_test}/log"
 
       - name: Upload pytest log artifact
         if: failure()
-        uses: actions/upload-artifact@v1
+        uses: actions/upload-artifact@v2
         with:
           name: pytest-logs
           path: pytest-logs.tgz
 
       # Use the latest supported Python version for combining coverage to
       # prevent parsing errors in older versions when looking at modern code.
+
       - uses: "actions/setup-python@v2"
         with:
-          python-version: "3.9"
+          python-version: "3.10"
 
       - name: "Upload coverage to Codecov"
         uses: "codecov/codecov-action@v1"
