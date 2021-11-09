@@ -145,7 +145,7 @@ jobs:
       - name: Install Tox
         run: pip install tox
 
-      - name: Build documentationb
+      - name: Build documentation
         run: tox -e docs
 
 
