@@ -321,5 +321,5 @@ else:
         encoded_url = draw(encoded_urls())
         try:
             return DecodedURL(encoded_url)
-        except:
+        except UnicodeDecodeError:
             assume(False)
