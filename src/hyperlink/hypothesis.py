@@ -31,7 +31,7 @@ else:
 
     from . import DecodedURL, EncodedURL
 
-    from hypothesis import assume
+    from hypothesis import reject
     from hypothesis.strategies import (
         composite,
         integers,
@@ -137,7 +137,7 @@ else:
         try:
             idna_encode(result)
         except IDNAError:
-            assume(False)
+            reject()
 
         return result
 
@@ -198,7 +198,7 @@ else:
         try:
             check_label(label)
         except UnicodeError:  # pragma: no cover (not always drawn)
-            assume(False)
+            reject()
 
         return label
 
@@ -322,4 +322,4 @@ else:
         try:
             return DecodedURL(encoded_url)
         except UnicodeDecodeError:
-            assume(False)
+            reject()
