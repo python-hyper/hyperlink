@@ -318,4 +318,8 @@ else:
         Call the L{EncodedURL.to_uri} method on each URL to get an HTTP
         protocol-friendly URI.
         """
-        return DecodedURL(draw(encoded_urls()))
+        encoded_url = draw(encoded_urls())
+        try:
+            return DecodedURL(encoded_url)
+        except:
+            assume(False)
