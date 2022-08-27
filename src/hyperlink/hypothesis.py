@@ -31,7 +31,7 @@ else:
 
     from . import DecodedURL, EncodedURL
 
-    from hypothesis import assume
+    from hypothesis import reject
     from hypothesis.strategies import (
         composite,
         integers,
@@ -137,7 +137,7 @@ else:
         try:
             idna_encode(result)
         except IDNAError:
-            assume(False)
+            reject()
 
         return result
 
@@ -198,7 +198,7 @@ else:
         try:
             check_label(label)
         except UnicodeError:  # pragma: no cover (not always drawn)
-            assume(False)
+            reject()
 
         return label
 
@@ -318,4 +318,8 @@ else:
         Call the L{EncodedURL.to_uri} method on each URL to get an HTTP
         protocol-friendly URI.
         """
-        return DecodedURL(draw(encoded_urls()))
+        encoded_url = draw(encoded_urls())
+        try:
+            return DecodedURL(encoded_url)
+        except UnicodeDecodeError:
+            reject()
