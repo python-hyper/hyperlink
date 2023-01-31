@@ -501,9 +501,9 @@ def register_scheme(
     """
     text = text.lower()
     if default_port is not None:
-        try:
+        if isinstance(default_port, int) or (isinstance(default_port, str) and default_port.isdigit() and default_port.isascii()):
             default_port = int(default_port)
-        except (ValueError, TypeError):
+        else:
             raise ValueError(
                 "default_port expected integer or None, not %r"
                 % (default_port,)
@@ -1407,9 +1407,9 @@ class URL(object):
         host = au_gs["ipv6_host"] or au_gs["plain_host"]
         port = au_gs["port"]
         if port is not None:
-            try:
+            if port.isdigit() and port.isascii():
                 port = int(port)  # type: ignore[assignment] # FIXME, see below
-            except ValueError:
+            else:
                 if not port:  # TODO: excessive?
                     raise URLParseError("port must not be empty: %r" % au_text)
                 raise URLParseError("expected integer for port, not %r" % port)
