@@ -478,7 +478,7 @@ NO_QUERY_PLUS_SCHEMES = set()
 def register_scheme(
     text, uses_netloc=True, default_port=None, query_plus_is_space=True
 ):
-    # type: (Text, bool, Optional[int], bool) -> None
+    # type: (Text, bool, Optional[Union[int, str]], bool) -> None
     """Registers new scheme information, resulting in correct port and
     slash behavior from the URL object. There are dozens of standard
     schemes preregistered, so this function is mostly meant for
@@ -501,11 +501,12 @@ def register_scheme(
     """
     text = text.lower()
     if default_port is not None:
-        try:
+        default_port = str(default_port)
+        if all(d in "0123456789" for d in default_port):
             default_port = int(default_port)
-        except (ValueError, TypeError):
+        else:
             raise ValueError(
-                "default_port expected integer or None, not %r"
+                "default_port expected nonnegative integer, numeric string, or None, not %r"
                 % (default_port,)
             )
 
@@ -1407,9 +1408,9 @@ class URL(object):
         host = au_gs["ipv6_host"] or au_gs["plain_host"]
         port = au_gs["port"]
         if port is not None:
-            try:
+            if all(d in "0123456789" for d in default_port)
                 port = int(port)  # type: ignore[assignment] # FIXME, see below
-            except ValueError:
+            else:
                 if not port:  # TODO: excessive?
                     raise URLParseError("port must not be empty: %r" % au_text)
                 raise URLParseError("expected integer for port, not %r" % port)
