@@ -3,6 +3,8 @@
 Tests for hyperlink.hypothesis.
 """
 
+from __future__ import annotations
+
 try:
     import hypothesis
 
@@ -11,15 +13,15 @@ except ImportError:
     pass
 else:
     from string import digits
-    from typing import Sequence, Text
+    from typing import TYPE_CHECKING, Sequence
 
-    try:
-        from unittest.mock import patch
-    except ImportError:
-        from mock import patch  # type: ignore[misc]
+    from unittest.mock import patch
 
-    from hypothesis import given, settings
-    from hypothesis.strategies import SearchStrategy, data
+    from hypothesis import given, settings, HealthCheck
+    from hypothesis.strategies import data
+
+    if TYPE_CHECKING:
+        from hypothesis.strategies import SearchStrategy
 
     from idna import IDNAError, check_label, encode as idna_encode
 
@@ -43,8 +45,7 @@ else:
         """
 
         @given(idna_text())
-        def test_idna_text_valid(self, text):
-            # type: (Text) -> None
+        def test_idna_text_valid(self, text: str) -> None:
             """
             idna_text() generates IDNA-encodable text.
             """
@@ -54,8 +55,7 @@ else:
                 raise AssertionError("Invalid IDNA text: {!r}".format(text))
 
         @given(data())
-        def test_idna_text_min_max(self, data):
-            # type: (SearchStrategy) -> None
+        def test_idna_text_min_max(self, data: SearchStrategy) -> None:
             """
             idna_text() raises AssertionError if min_size is < 1.
             """
@@ -63,8 +63,7 @@ else:
             self.assertRaises(AssertionError, data.draw, idna_text(max_size=0))
 
         @given(port_numbers())
-        def test_port_numbers_bounds(self, port):
-            # type: (int) -> None
+        def test_port_numbers_bounds(self, port: int) -> None:
             """
             port_numbers() generates integers between 1 and 65535, inclusive.
             """
@@ -72,8 +71,7 @@ else:
             self.assertLessEqual(port, 65535)
 
         @given(port_numbers(allow_zero=True))
-        def test_port_numbers_bounds_allow_zero(self, port):
-            # type: (int) -> None
+        def test_port_numbers_bounds_allow_zero(self, port: int) -> None:
             """
             port_numbers(allow_zero=True) generates integers between 0 and
             65535, inclusive.
@@ -82,8 +80,7 @@ else:
             self.assertLessEqual(port, 65535)
 
         @given(hostname_labels())
-        def test_hostname_labels_valid_idn(self, label):
-            # type: (Text) -> None
+        def test_hostname_labels_valid_idn(self, label: str) -> None:
             """
             hostname_labels() generates IDN host name labels.
             """
@@ -95,22 +92,24 @@ else:
 
         @given(data())
         @settings(max_examples=10)
-        def test_hostname_labels_long_idn_punycode(self, data):
-            # type: (SearchStrategy) -> None
+        def test_hostname_labels_long_idn_punycode(
+            self, data: SearchStrategy
+        ) -> None:
             """
             hostname_labels() handles case where idna_text() generates text
             that encoded to punycode ends up as longer than allowed.
             """
 
             @composite
-            def mock_idna_text(draw, min_size, max_size):
-                # type: (DrawCallable, int, int) -> Text
+            def mock_idna_text(
+                draw: DrawCallable, min_size: int, max_size: int
+            ) -> str:
                 # We want a string that does not exceed max_size, but when
                 # encoded to punycode, does exceed max_size.
                 # So use a unicode character that is larger when encoded,
                 # "á" being a great example, and use it max_size times, which
                 # will be max_size * 3 in size when encoded.
-                return u"\N{LATIN SMALL LETTER A WITH ACUTE}" * max_size
+                return "\N{LATIN SMALL LETTER A WITH ACUTE}" * max_size
 
             with patch("hyperlink.hypothesis.idna_text", mock_idna_text):
                 label = data.draw(hostname_labels())
@@ -123,8 +122,8 @@ else:
                     )
 
         @given(hostname_labels(allow_idn=False))
-        def test_hostname_labels_valid_ascii(self, label):
-            # type: (Text) -> None
+        @settings(suppress_health_check=[HealthCheck.filter_too_much])
+        def test_hostname_labels_valid_ascii(self, label: str) -> None:
             """
             hostname_labels() generates a ASCII host name labels.
             """
@@ -135,13 +134,12 @@ else:
                 raise AssertionError("Invalid ASCII label: {!r}".format(label))
 
         @given(hostnames())
-        def test_hostnames_idn(self, hostname):
-            # type: (Text) -> None
+        def test_hostnames_idn(self, hostname: str) -> None:
             """
             hostnames() generates a IDN host names.
             """
             try:
-                for label in hostname.split(u"."):
+                for label in hostname.split("."):
                     check_label(label)
                 idna_encode(hostname)
             except UnicodeError:  # pragma: no cover
@@ -150,8 +148,7 @@ else:
                 )
 
         @given(hostnames(allow_leading_digit=False))
-        def test_hostnames_idn_nolead(self, hostname):
-            # type: (Text) -> None
+        def test_hostnames_idn_nolead(self, hostname: str) -> None:
             """
             hostnames(allow_leading_digit=False) generates a IDN host names
             without leading digits.
@@ -159,13 +156,13 @@ else:
             self.assertTrue(hostname == hostname.lstrip(digits))
 
         @given(hostnames(allow_idn=False))
-        def test_hostnames_ascii(self, hostname):
-            # type: (Text) -> None
+        @settings(suppress_health_check=[HealthCheck.filter_too_much])
+        def test_hostnames_ascii(self, hostname: str) -> None:
             """
             hostnames() generates a ASCII host names.
             """
             try:
-                for label in hostname.split(u"."):
+                for label in hostname.split("."):
                     check_label(label)
                 hostname.encode("ascii")
             except UnicodeError:  # pragma: no cover
@@ -174,8 +171,8 @@ else:
                 )
 
         @given(hostnames(allow_leading_digit=False, allow_idn=False))
-        def test_hostnames_ascii_nolead(self, hostname):
-            # type: (Text) -> None
+        @settings(suppress_health_check=[HealthCheck.filter_too_much])
+        def test_hostnames_ascii_nolead(self, hostname: str) -> None:
             """
             hostnames(allow_leading_digit=False, allow_idn=False) generates
             ASCII host names without leading digits.
@@ -183,12 +180,11 @@ else:
             self.assertTrue(hostname == hostname.lstrip(digits))
 
         @given(paths())
-        def test_paths(self, path):
-            # type: (Sequence[Text]) -> None
+        def test_paths(self, path: Sequence[str]) -> None:
             """
             paths() generates sequences of URL path components.
             """
-            text = u"/".join(path)
+            text = "/".join(path)
             try:
                 text.encode("utf-8")
             except UnicodeError:  # pragma: no cover
@@ -198,16 +194,14 @@ else:
                 self.assertNotIn("#/?", segment)
 
         @given(encoded_urls())
-        def test_encoded_urls(self, url):
-            # type: (EncodedURL) -> None
+        def test_encoded_urls(self, url: EncodedURL) -> None:
             """
             encoded_urls() generates EncodedURLs.
             """
             self.assertIsInstance(url, EncodedURL)
 
         @given(decoded_urls())
-        def test_decoded_urls(self, url):
-            # type: (DecodedURL) -> None
+        def test_decoded_urls(self, url: DecodedURL) -> None:
             """
             decoded_urls() generates DecodedURLs.
             """

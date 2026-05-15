@@ -4,7 +4,6 @@
   just when query string is present)
 * Polish logo
 * Get coverage up
-* Switch off ctypes/socket for IP validation
 * rebase method for path (prepends to path)
 * sibling() should be maximal=False like child()
 * make subencoding an exposed parameter

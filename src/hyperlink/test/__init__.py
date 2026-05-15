@@ -3,11 +3,12 @@
 Tests for hyperlink
 """
 
+from __future__ import annotations
+
 __all = ()
 
 
-def _init_hypothesis():
-    # type: () -> None
+def _init_hypothesis() -> None:
     from os import environ
 
     if "CI" in environ:

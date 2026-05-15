@@ -1,6 +1,5 @@
 # -*- coding: utf-8 -*-
-
-from __future__ import unicode_literals
+from __future__ import annotations
 
 from .common import HyperlinkTestCase
 from hyperlink import parse, EncodedURL, DecodedURL
@@ -16,8 +15,7 @@ UNDECODABLE_FRAG_URL = TOTAL_URL + "%C3"
 
 
 class TestURL(HyperlinkTestCase):
-    def test_parse(self):
-        # type: () -> None
+    def test_parse(self) -> None:
         purl = parse(TOTAL_URL)
         assert isinstance(purl, DecodedURL)
         assert purl.user == "user"

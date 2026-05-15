@@ -2,29 +2,22 @@
 """
 Hypothesis strategies.
 """
-from __future__ import absolute_import
+
+from __future__ import annotations
 
 try:
     import hypothesis
 
     del hypothesis
 except ImportError:
-    from typing import Tuple
-
-    __all__ = ()  # type: Tuple[str, ...]
+    __all__: tuple[str, ...] = ()
 else:
     from csv import reader as csv_reader
     from os.path import dirname, join
     from string import ascii_letters, digits
     from sys import maxunicode
     from typing import (
-        Callable,
-        Iterable,
-        List,
-        Optional,
-        Sequence,
-        Text,
-        TypeVar,
+        TYPE_CHECKING,
         cast,
     )
     from gzip import open as open_gzip
@@ -42,6 +35,23 @@ else:
 
     from idna import IDNAError, check_label, encode as idna_encode
 
+    if TYPE_CHECKING:
+        from typing import (
+            Callable,
+            Iterable,
+            List,
+            Optional,
+            Sequence,
+            TypeVar,
+        )
+
+        T = TypeVar("T")
+        DrawCallable = Callable[[Callable[..., T]], T]
+    else:
+        # Runtime stubs for types that are only used in type checking
+        # but are imported by test code
+        DrawCallable = None  # type: ignore[assignment,misc]
+
     __all__ = (
         "decoded_urls",
         "encoded_urls",
@@ -50,18 +60,10 @@ else:
         "idna_text",
         "paths",
         "port_numbers",
+        "DrawCallable",
     )
 
-    T = TypeVar("T")
-    DrawCallable = Callable[[Callable[..., T]], T]
-
-    try:
-        unichr
-    except NameError:  # Py3
-        unichr = chr  # type: Callable[[int], Text]
-
-    def idna_characters():
-        # type: () -> Text
+    def idna_characters() -> str:
         """
         Returns a string containing IDNA characters.
         """
@@ -100,17 +102,18 @@ else:
                     for i in range(start, end + 1):
                         if i > maxunicode:  # Happens using Py2 on Windows
                             break
-                        result.append(unichr(i))
+                        result.append(chr(i))
 
-            _idnaCharacters = u"".join(result)
+            _idnaCharacters = "".join(result)
 
         return _idnaCharacters
 
-    _idnaCharacters = ""  # type: Text
+    _idnaCharacters: str = ""
 
     @composite
-    def idna_text(draw, min_size=1, max_size=None):
-        # type: (DrawCallable, int, Optional[int]) -> Text
+    def idna_text(
+        draw: DrawCallable, min_size: int = 1, max_size: Optional[int] = None
+    ) -> str:
         """
         A strategy which generates IDNA-encodable text.
 
@@ -128,7 +131,7 @@ else:
             assert max_size >= 1
 
         result = cast(
-            Text,
+            str,
             draw(text(min_size=min_size, max_size=max_size, alphabet=alphabet)),
         )
 
@@ -142,8 +145,7 @@ else:
         return result
 
     @composite
-    def port_numbers(draw, allow_zero=False):
-        # type: (DrawCallable, bool) -> int
+    def port_numbers(draw: DrawCallable, allow_zero: bool = False) -> int:
         """
         A strategy which generates port numbers.
 
@@ -157,8 +159,7 @@ else:
         return cast(int, draw(integers(min_value=min_value, max_value=65535)))
 
     @composite
-    def hostname_labels(draw, allow_idn=True):
-        # type: (DrawCallable, bool) -> Text
+    def hostname_labels(draw: DrawCallable, allow_idn: bool = True) -> str:
         """
         A strategy which generates host name labels.
 
@@ -166,7 +167,7 @@ else:
             internationalized domain names (IDNs).
         """
         if allow_idn:
-            label = cast(Text, draw(idna_text(min_size=1, max_size=63)))
+            label = cast(str, draw(idna_text(min_size=1, max_size=63)))
 
             try:
                 label.encode("ascii")
@@ -182,12 +183,12 @@ else:
 
         else:
             label = cast(
-                Text,
+                str,
                 draw(
                     text(
                         min_size=1,
                         max_size=63,
-                        alphabet=Text(ascii_letters + digits + u"-"),
+                        alphabet=str(ascii_letters + digits + "-"),
                     )
                 ),
             )
@@ -203,8 +204,11 @@ else:
         return label
 
     @composite
-    def hostnames(draw, allow_leading_digit=True, allow_idn=True):
-        # type: (DrawCallable, bool, bool) -> Text
+    def hostnames(
+        draw: DrawCallable,
+        allow_leading_digit: bool = True,
+        allow_idn: bool = True,
+    ) -> str:
         """
         A strategy which generates host names.
 
@@ -215,13 +219,15 @@ else:
             internationalized domain names (IDNs).
         """
         # Draw first label, filtering out labels with leading digits if needed
-        labels = [
+        labels: list[str] = [
             cast(
-                Text,
+                str,
                 draw(
                     hostname_labels(allow_idn=allow_idn).filter(
-                        lambda l: (
-                            True if allow_leading_digit else l[0] not in digits
+                        lambda label: (
+                            True
+                            if allow_leading_digit
+                            else label[0] not in digits
                         )
                     )
                 ),
@@ -229,7 +235,7 @@ else:
         ]
         # Draw remaining labels
         labels += cast(
-            List[Text],
+            list[str],
             draw(
                 lists(
                     hostname_labels(allow_idn=allow_idn),
@@ -241,13 +247,29 @@ else:
 
         # Trim off labels until the total host name length fits in 252
         # characters.  This avoids having to filter the data.
-        while sum(len(label) for label in labels) + len(labels) - 1 > 252:
+        # For IDNs, the length must also be checked after Punycode encoding,
+        # because the encoded form may be much longer due to the 'xn--' prefix
+        # and Unicode-to-ASCII expansion. This ensures compliance with RFC 1035
+        # and IDNA's 255-byte limit.
+
+        def get_len(lbls: list[str]) -> int:
+            d = ".".join(lbls)
+            if allow_idn:
+                try:
+                    return len(idna_encode(d))
+                except IDNAError:
+                    # Encoding failed due to length or invalidity.
+                    # Return large number to force trimming.
+                    return 9999
+            return len(d)
+
+        # Trim off labels until total hostname length fits IDNA/DNS limits
+        while get_len(labels) > 253 and len(labels) > 1:
             labels = labels[:-1]
 
-        return u".".join(labels)
+        return ".".join(labels)
 
-    def path_characters():
-        # type: () -> str
+    def path_characters() -> str:
         """
         Returns a string containing valid URL path characters.
         """
@@ -255,10 +277,9 @@ else:
 
         if _path_characters is None:
 
-            def chars():
-                # type: () -> Iterable[Text]
+            def chars() -> Iterable[str]:
                 for i in range(maxunicode):
-                    c = unichr(i)
+                    c = chr(i)
 
                     # Exclude reserved characters
                     if c in "#/?":
@@ -276,43 +297,40 @@ else:
 
         return _path_characters
 
-    _path_characters = None  # type: Optional[str]
+    _path_characters: Optional[str] = None
 
     @composite
-    def paths(draw):
-        # type: (DrawCallable) -> Sequence[Text]
+    def paths(draw: DrawCallable) -> Sequence[str]:
         return cast(
-            List[Text],
+            "List[str]",
             draw(
                 lists(text(min_size=1, alphabet=path_characters()), max_size=10)
             ),
         )
 
     @composite
-    def encoded_urls(draw):
-        # type: (DrawCallable) -> EncodedURL
+    def encoded_urls(draw: DrawCallable) -> EncodedURL:
         """
         A strategy which generates L{EncodedURL}s.
         Call the L{EncodedURL.to_uri} method on each URL to get an HTTP
         protocol-friendly URI.
         """
-        port = cast(Optional[int], draw(port_numbers(allow_zero=True)))
-        host = cast(Text, draw(hostnames()))
-        path = cast(Sequence[Text], draw(paths()))
+        port = cast("Optional[int]", draw(port_numbers(allow_zero=True)))
+        host = cast(str, draw(hostnames()))
+        path = cast("Sequence[str]", draw(paths()))
 
         if port == 0:
             port = None
 
         return EncodedURL(
-            scheme=cast(Text, draw(sampled_from((u"http", u"https")))),
+            scheme=cast(str, draw(sampled_from(("http", "https")))),
             host=host,
             port=port,
             path=path,
         )
 
     @composite
-    def decoded_urls(draw):
-        # type: (DrawCallable) -> DecodedURL
+    def decoded_urls(draw: DrawCallable) -> DecodedURL:
         """
         A strategy which generates L{DecodedURL}s.
         Call the L{EncodedURL.to_uri} method on each URL to get an HTTP

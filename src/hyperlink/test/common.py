@@ -1,5 +1,10 @@
-from typing import Any, Callable, Optional, Type
+from __future__ import annotations
+
+from typing import TYPE_CHECKING
 from unittest import TestCase
+
+if TYPE_CHECKING:
+    from typing import Any, Callable, Optional, Type
 
 
 class HyperlinkTestCase(TestCase):
@@ -9,12 +14,11 @@ class HyperlinkTestCase(TestCase):
 
     def assertRaises(  # type: ignore[override]
         self,
-        expected_exception,  # type: Type[BaseException]
-        callableObj=None,  # type: Optional[Callable[..., Any]]
-        *args,  # type: Any
-        **kwargs  # type: Any
-    ):
-        # type: (...) -> Any
+        expected_exception: Type[BaseException],
+        callableObj: Optional[Callable[..., Any]] = None,
+        *args: Any,
+        **kwargs: Any,
+    ) -> Any:
         """Fail unless an exception of class expected_exception is raised
         by callableObj when invoked with arguments args and keyword
         arguments kwargs. If a different type of exception is
@@ -47,17 +51,18 @@ class HyperlinkTestCase(TestCase):
 class _AssertRaisesContext(object):
     "A context manager used to implement HyperlinkTestCase.assertRaises."
 
-    def __init__(self, expected, test_case):
-        # type: (Type[BaseException], TestCase) -> None
+    def __init__(
+        self, expected: Type[BaseException], test_case: TestCase
+    ) -> None:
         self.expected = expected
         self.failureException = test_case.failureException
 
-    def __enter__(self):
-        # type: () -> "_AssertRaisesContext"
+    def __enter__(self) -> _AssertRaisesContext:
         return self
 
-    def __exit__(self, exc_type, exc_value, tb):
-        # type: (Optional[Type[BaseException]], Any, Any) -> bool
+    def __exit__(
+        self, exc_type: Optional[Type[BaseException]], exc_value: Any, tb: Any
+    ) -> bool:
         if exc_type is None:
             exc_name = self.expected.__name__
             raise self.failureException("%s not raised" % (exc_name,))

@@ -64,7 +64,7 @@ constructed, instances are not changed. Methods like
 all return new URL objects. This enables URLs to be used in sets, as
 well as dictionary keys.
 
-.. _immutable: https://docs.python.org/2/glossary.html#term-immutable
+.. _immutable: https://docs.python.org/3/glossary.html#term-immutable
 .. _multidict: https://en.wikipedia.org/wiki/Multimap
 .. _query string: https://en.wikipedia.org/wiki/Query_string
 .. _GET parameters: http://php.net/manual/en/reserved.variables.get.php
