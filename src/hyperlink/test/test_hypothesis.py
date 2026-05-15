@@ -18,7 +18,7 @@ else:
     except ImportError:
         from mock import patch  # type: ignore[misc]
 
-    from hypothesis import given, settings
+    from hypothesis import given, settings, HealthCheck
     from hypothesis.strategies import SearchStrategy, data
 
     from idna import IDNAError, check_label, encode as idna_encode
@@ -174,6 +174,7 @@ else:
                 )
 
         @given(hostnames(allow_leading_digit=False, allow_idn=False))
+        @settings(suppress_health_check=[HealthCheck.filter_too_much])
         def test_hostnames_ascii_nolead(self, hostname):
             # type: (Text) -> None
             """

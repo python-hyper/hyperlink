@@ -35,3 +35,8 @@ class TestURL(HyperlinkTestCase):
 
         with self.assertRaises(UnicodeDecodeError):
             purl3.fragment
+
+    def test_ipv6_literal_not_idna_encoded(self) -> None:
+
+        url = EncodedURL.from_text("http://[::1]:8080/path")
+        assert url.to_uri().to_text() == "http://[::1]:8080/path"
