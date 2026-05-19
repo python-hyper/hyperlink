@@ -2265,6 +2265,10 @@ class DecodedURL(object):
         automatically encoded instead of an error being raised.
         """
         if path is not _UNSET:
+            if isinstance(path, Text):
+                raise TypeError(
+                    "expected iterable of text for path, not: %r" % (path,)
+                )
             path = tuple(_encode_reserved(p) for p in path)
         if query is not _UNSET:
             query = cast(

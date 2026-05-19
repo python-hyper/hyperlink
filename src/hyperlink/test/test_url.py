@@ -1023,6 +1023,18 @@ class TestURL(HyperlinkTestCase):
             "expected iterable of text for path, not: {0}".format(repr("foo")),
         )
 
+        decoded_url = URL.from_text(
+            "https://example.com/api/v1/webui"
+        ).get_decoded_url()
+        with self.assertRaises(TypeError) as raised:
+            decoded_url.replace(path="support/woo")
+        self.assertEqual(
+            str(raised.exception),
+            "expected iterable of text for path, not: {0}".format(
+                repr("support/woo")
+            ),
+        )
+
     def test_netloc(self):
         # type: () -> None
         url = URL(scheme="https")
