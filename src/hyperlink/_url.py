@@ -163,6 +163,7 @@ _AUTHORITY_RE = re.compile(
     r"|(?P<bad_host>.*?))?"
     r"(?::(?P<port>.*))?$"
 )
+_PORT_RE = re.compile(r"\A[0-9]+\Z")
 
 
 _HEX_CHAR_MAP = dict(
@@ -1407,12 +1408,11 @@ class URL(object):
         host = au_gs["ipv6_host"] or au_gs["plain_host"]
         port = au_gs["port"]
         if port is not None:
-            try:
-                port = int(port)  # type: ignore[assignment] # FIXME, see below
-            except ValueError:
-                if not port:  # TODO: excessive?
-                    raise URLParseError("port must not be empty: %r" % au_text)
+            if not port:  # TODO: excessive?
+                raise URLParseError("port must not be empty: %r" % au_text)
+            if not _PORT_RE.match(port):
                 raise URLParseError("expected integer for port, not %r" % port)
+            port = int(port)  # type: ignore[assignment] # FIXME, see below
 
         scheme = gs["scheme"] or u""
         fragment = gs["fragment"] or u""

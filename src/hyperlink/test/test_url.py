@@ -1114,6 +1114,14 @@ class TestURL(HyperlinkTestCase):
     def test_invalid_port(self):
         # type: () -> None
         self.assertRaises(URLParseError, URL.from_text, "ftp://portmouth:smash")
+        for url_text in [
+            "http://example.com: 11",
+            "http://example.com:+11",
+            "http://example.com:-11",
+            "http://example.com:1_1",
+            u"http://example.com:\u0ed1",
+        ]:
+            self.assertRaises(URLParseError, URL.from_text, url_text)
         self.assertRaises(
             ValueError,
             URL.from_text,
