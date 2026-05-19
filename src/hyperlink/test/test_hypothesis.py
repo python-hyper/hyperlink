@@ -19,15 +19,13 @@ else:
         from mock import patch  # type: ignore[misc]
 
     from hypothesis import given, settings
-    from hypothesis.strategies import SearchStrategy, data
+    from hypothesis.strategies import SearchStrategy, data, just
 
     from idna import IDNAError, check_label, encode as idna_encode
 
     from .common import HyperlinkTestCase
     from .. import DecodedURL, EncodedURL
     from ..hypothesis import (
-        DrawCallable,
-        composite,
         decoded_urls,
         encoded_urls,
         hostname_labels,
@@ -102,15 +100,16 @@ else:
             that encoded to punycode ends up as longer than allowed.
             """
 
-            @composite
-            def mock_idna_text(draw, min_size, max_size):
-                # type: (DrawCallable, int, int) -> Text
+            def mock_idna_text(min_size, max_size):
+                # type: (int, int) -> SearchStrategy[Text]
                 # We want a string that does not exceed max_size, but when
                 # encoded to punycode, does exceed max_size.
                 # So use a unicode character that is larger when encoded,
                 # "á" being a great example, and use it max_size times, which
                 # will be max_size * 3 in size when encoded.
-                return u"\N{LATIN SMALL LETTER A WITH ACUTE}" * max_size
+                return just(
+                    u"\N{LATIN SMALL LETTER A WITH ACUTE}" * max_size
+                )
 
             with patch("hyperlink.hypothesis.idna_text", mock_idna_text):
                 label = data.draw(hostname_labels())
