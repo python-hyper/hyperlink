@@ -25,7 +25,9 @@ setup(
     author=__author__,
     author_email=__contact__,
     url=__url__,
-    packages=find_packages(where="src"),
+    packages=find_packages(
+        where="src", exclude=["hyperlink.test", "hyperlink.test.*"]
+    ),
     package_dir={"": "src"},
     package_data=dict(hyperlink=["py.typed", "idna-tables-properties.csv.gz"]),
     zip_safe=False,
