@@ -1512,9 +1512,9 @@ class URL(object):
 
         if path:
             if self.path:
-                kw["path"] = [
-                    _dec_unres(p) for p in _resolve_dot_segments(self.path)
-                ]
+                kw["path"] = _resolve_dot_segments(
+                    [_dec_unres(p) for p in self.path]
+                )
             else:
                 kw["path"] = (u"",)
         if query:
