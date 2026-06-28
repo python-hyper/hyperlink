@@ -1461,6 +1461,27 @@ class TestURL(HyperlinkTestCase):
             == "ftp://%25:%25@/%25%25%25/%25a%25b?%25=%25%25#%25"
         )
 
+    def test_normalize_percent_encoded_dot_segments(self):
+        # type: () -> None
+        # RFC 3986 Section 6.2.2.2: percent-encoded unreserved characters
+        # should be decoded BEFORE resolving dot segments.
+        # %2e = '.' (unreserved), so %2e%2e should become '..' and
+        # be resolved to the parent directory.
+        url = URL.from_text("http://example.com/%2e%2e/foo")
+        norm = url.normalize()
+        assert norm.path == ("foo",)
+        assert norm.to_text() == "http://example.com/foo"
+
+        url2 = URL.from_text("http://example.com/%2e/foo")
+        norm2 = url2.normalize()
+        assert norm2.path == ("foo",)
+        assert norm2.to_text() == "http://example.com/foo"
+
+        url3 = URL.from_text("http://example.com/foo/%2e%2e/bar")
+        norm3 = url3.normalize()
+        assert norm3.path == ("bar",)
+        assert norm3.to_text() == "http://example.com/bar"
+
     def test_str(self):
         # type: () -> None
 
