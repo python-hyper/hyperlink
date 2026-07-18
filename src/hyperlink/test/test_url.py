@@ -1132,6 +1132,15 @@ class TestURL(HyperlinkTestCase):
         self.assertEqual(u2.to_text(), "https://xn--bcher-kva.ch")
         self.assertEqual(u2.to_iri().to_text(), "https://bücher.ch")
 
+    def test_to_uri_ip_literal(self):
+        # type: () -> None
+        ipv6 = URL.from_text("http://[::1]/")
+        self.assertEqual(ipv6.to_uri().to_text(), "http://[::1]/")
+        self.assertEqual(ipv6.to_uri().host, "::1")
+        ipv4 = URL.from_text("http://127.0.0.1/")
+        self.assertEqual(ipv4.to_uri().to_text(), "http://127.0.0.1/")
+        self.assertEqual(ipv4.to_uri().host, "127.0.0.1")
+
     def test_netloc_slashes(self):
         # type: () -> None
 

@@ -1667,11 +1667,16 @@ class URL(object):
         new_path = _encode_path_parts(
             self.path, has_scheme=bool(self.scheme), rooted=False, maximal=True
         )
-        new_host = (
-            self.host
-            if not self.host
-            else idna_encode(self.host, uts46=True).decode("ascii")
-        )
+        # IP literals must not be IDNA-encoded (colons fail idna).
+        if not self.host:
+            new_host = self.host
+        else:
+            family, _ = parse_host(self.host)
+            new_host = (
+                self.host
+                if family is not None
+                else idna_encode(self.host, uts46=True).decode("ascii")
+            )
         return self.replace(
             userinfo=new_userinfo,
             host=new_host,
