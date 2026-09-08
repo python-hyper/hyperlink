@@ -1904,7 +1904,7 @@ class URL(object):
         # Preserve the original position of the query key in the list
         q = [(k, v) for (k, v) in self.query if k != name]
         idx = next(
-            (i for (i, (k, v)) in enumerate(self.query) if k == name), -1
+            (i for (i, (k, v)) in enumerate(self.query) if k == name), len(q)
         )
         q[idx:idx] = [(name, value)]
         return self.replace(query=q)
@@ -2315,7 +2315,7 @@ class DecodedURL(object):
         "Return a new DecodedURL with query parameter *name* set to *value*"
         query = self.query
         q = [(k, v) for (k, v) in query if k != name]
-        idx = next((i for (i, (k, v)) in enumerate(query) if k == name), -1)
+        idx = next((i for (i, (k, v)) in enumerate(query) if k == name), len(q))
         q[idx:idx] = [(name, value)]
         return self.replace(query=q)
 

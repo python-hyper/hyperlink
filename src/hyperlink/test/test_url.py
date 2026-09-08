@@ -10,7 +10,7 @@ import socket
 from typing import Any, Iterable, Optional, Text, Tuple, cast
 
 from .common import HyperlinkTestCase
-from .. import URL, URLParseError
+from .. import URL, DecodedURL, URLParseError
 from .._url import inet_pton, SCHEME_PORT_MAP
 
 
@@ -1317,13 +1317,34 @@ class TestURL(HyperlinkTestCase):
     def test_set_ordering(self):
         # type: () -> None
 
-        # TODO
         url = URL.from_text("http://example.com/?a=b&c")
         url = url.set("x", "x")
         url = url.add("x", "y")
-        assert url.to_text() == "http://example.com/?a=b&x=x&c&x=y"
-        # Would expect:
-        # assert url.to_text() == u'http://example.com/?a=b&c&x=x&x=y'
+        assert url.to_text() == "http://example.com/?a=b&c&x=x&x=y"
+
+    def test_set_new_query_parameter(self):
+        # type: () -> None
+        """Both URL types append new parameters without moving existing ones."""
+        for url_type in (URL, DecodedURL):
+            for query in ((), (("a", "1"),), (("a", "1"), ("b", None))):
+                url = url_type.from_text("https://example.com/").replace(
+                    query=query
+                )
+                result = url.set("new", "value")
+                self.assertEqual(result.query, query + (("new", "value"),))
+                self.assertEqual(url.query, query)
+
+    def test_set_existing_query_parameter(self):
+        # type: () -> None
+        """Replacing duplicate parameters retains the first occurrence's position."""
+        for url_type in (URL, DecodedURL):
+            url = url_type.from_text(
+                "https://example.com/?a=1&x=old&b=2&x=other"
+            )
+            result = url.set("x", "new")
+            self.assertEqual(
+                result.query, (("a", "1"), ("x", "new"), ("b", "2"))
+            )
 
     def test_schemeless_path(self):
         # type: () -> None
