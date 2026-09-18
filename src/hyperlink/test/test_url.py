@@ -1493,3 +1493,25 @@ class TestURL(HyperlinkTestCase):
         assert (
             URL.from_text(text).to_uri().get_decoded_url().host == "example.com"
         )
+
+
+class OutOfRangePortTests(HyperlinkTestCase):
+    def test_from_text_rejects_out_of_range_port(self):
+        from hyperlink import URL, URLParseError
+        for bad in ("http://ex.com:-1", "http://ex.com:65536", "http://ex.com:99999"):
+            try:
+                URL.from_text(bad)
+            except URLParseError:
+                pass
+            else:
+                raise AssertionError("expected URLParseError for %r" % (bad,))
+
+    def test_ctor_rejects_out_of_range_port(self):
+        from hyperlink import URL
+        for bad in (-1, 65536, 99999):
+            try:
+                URL(scheme=u"http", host=u"ex.com", port=bad)
+            except ValueError:
+                pass
+            else:
+                raise AssertionError("expected ValueError for port %r" % (bad,))

@@ -1035,6 +1035,8 @@ class URL(object):
         )
         self._fragment = _textcheck("fragment", fragment)
         self._port = _typecheck("port", port, int, NoneType)
+        if self._port is not None and not (0 <= self._port <= 65535):
+            raise ValueError("port must be in range 0-65535, not %r" % (self._port,))
         self._rooted = _typecheck("rooted", rooted, bool)
         self._userinfo = _textcheck("userinfo", userinfo, "/?#@")
 
@@ -1413,6 +1415,10 @@ class URL(object):
                 if not port:  # TODO: excessive?
                     raise URLParseError("port must not be empty: %r" % au_text)
                 raise URLParseError("expected integer for port, not %r" % port)
+            if not (0 <= port <= 65535):
+                raise URLParseError(
+                    "port must be in range 0-65535, not %r" % (port,)
+                )
 
         scheme = gs["scheme"] or u""
         fragment = gs["fragment"] or u""
