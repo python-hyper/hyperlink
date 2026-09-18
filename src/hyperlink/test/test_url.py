@@ -1495,7 +1495,7 @@ class TestURL(HyperlinkTestCase):
         )
 
 
-class OutOfRangePortTests(object):
+class OutOfRangePortTests(HyperlinkTestCase):
     def test_from_text_rejects_out_of_range_port(self):
         from hyperlink import URL, URLParseError
         for bad in ("http://ex.com:-1", "http://ex.com:65536", "http://ex.com:99999"):
