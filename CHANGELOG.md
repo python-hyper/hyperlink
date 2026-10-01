@@ -2,6 +2,7 @@
 
 ## Next
 
+* A URL scheme no longer accepts a comma. `+-.` in the scheme check was a character range, so `,` sat between `+` and `.`. ([#199](https://github.com/python-hyper/hyperlink/issues/199))
 * CPython 3.9 added to test matrix
 
 ## 21.0.0
