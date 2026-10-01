@@ -154,7 +154,8 @@ _URL_RE = re.compile(
     r"(\?(?P<query>[^#]*))?"
     r"(#(?P<fragment>.*))?$"
 )
-_SCHEME_RE = re.compile(r"^[a-zA-Z0-9+-.]*$")
+# Hyphen is last so it is a literal. "+-." would be the range from "+" to ".".
+_SCHEME_RE = re.compile(r"^[a-zA-Z0-9.+-]*$")
 _AUTHORITY_RE = re.compile(
     r"^(?:(?P<userinfo>[^@/?#]*)@)?"
     r"(?P<host>"

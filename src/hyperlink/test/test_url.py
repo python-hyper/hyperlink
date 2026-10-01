@@ -1261,6 +1261,11 @@ class TestURL(HyperlinkTestCase):
         with self.assertRaises(ValueError):
             # explicitly bad scheme not allowed
             URL("HTTP_____more_like_imHoTTeP")
+        with self.assertRaises(ValueError):
+            # "+-." is not a range, so a comma is not a scheme character
+            URL(scheme="ht,tp")
+        with self.assertRaises(ValueError):
+            URL.from_text("ht,tp://example.com")
 
     def test_encoded_userinfo(self):
         # type: () -> None
