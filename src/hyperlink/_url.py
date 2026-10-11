@@ -1259,11 +1259,10 @@ class URL(object):
         # type: () -> int
         return hash(
             (
-                self.__class__,
                 self.scheme,
                 self.userinfo,
                 self.host,
-                self.path,
+                () if self.path in _ROOT_PATHS else self.path,
                 self.query,
                 self.fragment,
                 self.port,
@@ -2379,20 +2378,7 @@ class DecodedURL(object):
 
     def __hash__(self):
         # type: () -> int
-        return hash(
-            (
-                self.__class__,
-                self.scheme,
-                self.userinfo,
-                self.host,
-                self.path,
-                self.query,
-                self.fragment,
-                self.port,
-                self.rooted,
-                self.uses_netloc,
-            )
-        )
+        return hash(self.normalize().to_uri())
 
     # # Begin Twisted Compat Code
     asURI = to_uri

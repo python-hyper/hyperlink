@@ -172,6 +172,33 @@ class TestURL(HyperlinkTestCase):
 
         assert len(durl_map) == 3
 
+    def test_hash_inherited_equality(self):
+        # type: () -> None
+        class InheritedURL(DecodedURL):
+            pass
+
+        url = DecodedURL.from_text("http://example.com/a")
+        inherited = InheritedURL.from_text("http://example.com/a")
+        assert url == inherited
+        assert hash(url) == hash(inherited)
+        assert {url: "value"}[inherited] == "value"
+
+    def test_hash_equivalent_normalized_urls(self):
+        # type: () -> None
+        pairs = [
+            ("http://example.com", "http://example.com/"),
+            ("http://example.com/a", "HTTP://EXAMPLE.COM/a"),
+            ("http://example.com/a", "http://example.com/b/../a"),
+            ("http://example.com/~", "http://example.com/%7E"),
+        ]
+        for left, right in pairs:
+            left_url = DecodedURL.from_text(left)
+            right_url = DecodedURL.from_text(right)
+            assert left_url == right_url
+            assert hash(left_url) == hash(right_url)
+            assert len({left_url, right_url}) == 1
+            assert {left_url: "value"}[right_url] == "value"
+
     def test_replace_roundtrip(self):
         # type: () -> None
         durl = DecodedURL.from_text(TOTAL_URL)

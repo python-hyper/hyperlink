@@ -1295,6 +1295,26 @@ class TestURL(HyperlinkTestCase):
 
         assert hash(URL()) == hash(URL())  # slightly more sanity
 
+    def test_hash_inherited_equality(self):
+        # type: () -> None
+        class InheritedURL(URL):
+            pass
+
+        url = URL.from_text("http://example.com/a")
+        inherited = InheritedURL.from_text("http://example.com/a")
+        assert url == inherited
+        assert hash(url) == hash(inherited)
+        assert {url: "value"}[inherited] == "value"
+
+    def test_hash_equivalent_root_paths(self):
+        # type: () -> None
+        without_slash = URL.from_text("http://example.com")
+        with_slash = URL.from_text("http://example.com/")
+        assert without_slash == with_slash
+        assert hash(without_slash) == hash(with_slash)
+        assert len({without_slash, with_slash}) == 1
+        assert {without_slash: "value"}[with_slash] == "value"
+
     def test_dir(self):
         # type: () -> None
         url = URL()
