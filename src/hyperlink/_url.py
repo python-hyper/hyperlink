@@ -1619,6 +1619,12 @@ class URL(object):
         else:
             clicked = self
 
+        if clicked.uses_netloc:
+            return clicked.replace(
+                scheme=clicked.scheme or self.scheme,
+                path=_resolve_dot_segments(clicked.path),
+            )
+
         query = clicked.query
         if clicked.scheme and not clicked.rooted:
             # Schemes with relative paths are not well-defined.  RFC 3986 calls

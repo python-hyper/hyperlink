@@ -412,6 +412,29 @@ class TestURL(HyperlinkTestCase):
             urlpath.sibling("sister").to_text(),
         )
 
+    def test_click_network_path_replaces_authority(self):
+        # type: () -> None
+        base = URL.from_text("http://user:password@example.com:8080/old?q=base")
+        for href, expected in [
+            ("//other.example/new", "http://other.example/new"),
+            ("//other.example", "http://other.example"),
+            ("//other.example?x=1", "http://other.example/?x=1"),
+            ("//other.example:0/new", "http://other.example:0/new"),
+            ("//newuser@other.example/new", "http://newuser@other.example/new"),
+            ("//other.example/a/../new", "http://other.example/new"),
+        ]:
+            self.assertEqual(
+                base.click(href).to_text(with_password=True), expected
+            )
+        self.assertEqual(
+            base.click("/new").to_text(with_password=True),
+            "http://user:password@example.com:8080/new",
+        )
+        self.assertEqual(
+            base.to_text(with_password=True),
+            "http://user:password@example.com:8080/old?q=base",
+        )
+
     def test_click(self):
         # type: () -> None
         """
