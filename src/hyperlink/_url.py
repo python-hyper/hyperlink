@@ -2266,6 +2266,8 @@ class DecodedURL(object):
         """
         if path is not _UNSET:
             path = tuple(_encode_reserved(p) for p in path)
+        if fragment is not _UNSET:
+            fragment = _encode_reserved(fragment)
         if query is not _UNSET:
             query = cast(
                 QueryPairs,

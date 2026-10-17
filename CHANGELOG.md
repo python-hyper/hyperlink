@@ -3,6 +3,7 @@
 ## Next
 
 * CPython 3.9 added to test matrix
+* Preserve literal percent escapes when replacing a `DecodedURL` fragment.
 
 ## 21.0.0
 

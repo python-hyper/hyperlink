@@ -190,6 +190,39 @@ class TestURL(HyperlinkTestCase):
 
         assert durl == durl2
 
+    def test_replace_fragment_percent_encoding(self):
+        # type: () -> None
+        """Fragment replacement treats percent escapes as literal text."""
+        durl = DecodedURL.from_text("https://example.com/path?q=1#original")
+        for fragment in ("%41", "%25", "%20", "%C3%A9", "100%", ""):
+            replaced = durl.replace(fragment=fragment)
+            assert replaced.fragment == fragment
+            assert DecodedURL.from_text(replaced.to_text()).fragment == fragment
+            assert replaced.replace(fragment=replaced.fragment) == replaced
+            assert replaced.path == durl.path
+            assert replaced.query == durl.query
+            assert durl.fragment == "original"
+
+    def test_replace_fragment_percent_bytes(self):
+        # type: () -> None
+        """Literal percent bytes need not represent valid UTF-8."""
+        for lazy in (False, True):
+            durl = DecodedURL.from_text("https://example.com/", lazy=lazy)
+            replaced = durl.replace(fragment="%FF")
+            assert replaced.fragment == "%FF"
+            assert replaced.to_text() == "https://example.com/#%25FF"
+
+    def test_replace_fragment_preservation(self):
+        # type: () -> None
+        """Reserved characters round-trip and omitted fragments stay encoded."""
+        durl = DecodedURL.from_text("https://example.com/#%2541")
+        assert durl.replace().to_text() == durl.to_text()
+        assert durl.replace(query=(("q", "1"),)).fragment == "%41"
+        fragment = "résumé #/?+"
+        replaced = durl.replace(fragment=fragment)
+        assert replaced.fragment == fragment
+        assert DecodedURL.from_text(replaced.to_text()).fragment == fragment
+
     def test_replace_userinfo(self):
         # type: () -> None
         durl = DecodedURL.from_text(TOTAL_URL)
