@@ -13,11 +13,13 @@ class TestSchemeRegistration(HyperlinkTestCase):
         # type: () -> None
         self._orig_scheme_port_map = dict(_url.SCHEME_PORT_MAP)
         self._orig_no_netloc_schemes = set(_url.NO_NETLOC_SCHEMES)
+        self._orig_no_query_plus_schemes = set(_url.NO_QUERY_PLUS_SCHEMES)
 
     def tearDown(self):
         # type: () -> None
         _url.SCHEME_PORT_MAP = self._orig_scheme_port_map
         _url.NO_NETLOC_SCHEMES = self._orig_no_netloc_schemes
+        _url.NO_QUERY_PLUS_SCHEMES = self._orig_no_query_plus_schemes
 
     def test_register_scheme_basic(self):
         # type: () -> None
@@ -48,6 +50,32 @@ class TestSchemeRegistration(HyperlinkTestCase):
         u4 = URL(scheme="noloctron")
         u4 = u4.replace(path=("example", "path"))
         assert u4.to_text() == "noloctron:example/path"
+
+    def test_reregister_scheme_replaces_previous_settings(self):
+        # type: () -> None
+        register_scheme(
+            "switchable",
+            uses_netloc=True,
+            default_port=8080,
+            query_plus_is_space=False,
+        )
+        register_scheme(
+            "switchable", uses_netloc=False, query_plus_is_space=True
+        )
+
+        assert _url.scheme_uses_netloc("switchable") is False
+        assert "switchable" not in _url.SCHEME_PORT_MAP
+        assert "switchable" not in _url.NO_QUERY_PLUS_SCHEMES
+        decoded = DecodedURL.from_text("switchable:path?q=a+b")
+        assert decoded.get("q") == ["a b"]
+
+        register_scheme("switchable", uses_netloc=True, default_port=8080)
+        assert _url.scheme_uses_netloc("switchable") is True
+        assert "switchable" not in _url.NO_NETLOC_SCHEMES
+        assert "switchable" not in _url.NO_QUERY_PLUS_SCHEMES
+        assert URL.from_text("switchable://example.com").port == 8080
+        decoded = DecodedURL.from_text("switchable://example.com/?q=a+b")
+        assert decoded.get("q") == ["a b"]
 
     def test_register_no_netloc_with_port(self):
         # type: () -> None

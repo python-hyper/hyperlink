@@ -479,7 +479,7 @@ def register_scheme(
     text, uses_netloc=True, default_port=None, query_plus_is_space=True
 ):
     # type: (Text, bool, Optional[int], bool) -> None
-    """Registers new scheme information, resulting in correct port and
+    """Registers or updates scheme information, resulting in correct port and
     slash behavior from the URL object. There are dozens of standard
     schemes preregistered, so this function is mostly meant for
     proprietary internal customizations or stopgaps on missing
@@ -510,6 +510,7 @@ def register_scheme(
             )
 
     if uses_netloc is True:
+        NO_NETLOC_SCHEMES.discard(text)
         SCHEME_PORT_MAP[text] = default_port
     elif uses_netloc is False:
         if default_port is not None:
@@ -517,11 +518,14 @@ def register_scheme(
                 "unexpected default port while specifying"
                 " non-netloc scheme: %r" % default_port
             )
+        SCHEME_PORT_MAP.pop(text, None)
         NO_NETLOC_SCHEMES.add(text)
     else:
         raise ValueError("uses_netloc expected bool, not: %r" % uses_netloc)
 
-    if not query_plus_is_space:
+    if query_plus_is_space:
+        NO_QUERY_PLUS_SCHEMES.discard(text)
+    else:
         NO_QUERY_PLUS_SCHEMES.add(text)
 
     return
