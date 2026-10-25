@@ -15,7 +15,7 @@ except ImportError:
 else:
     from csv import reader as csv_reader
     from os.path import dirname, join
-    from string import ascii_letters, digits
+    from string import ascii_lowercase, digits
     from sys import maxunicode
     from typing import (
         Callable,
@@ -181,13 +181,14 @@ else:
                     label = label[:-1]
 
         else:
+            # IDNA's check_label rejects uppercase ASCII characters.
             label = cast(
                 Text,
                 draw(
                     text(
                         min_size=1,
                         max_size=63,
-                        alphabet=Text(ascii_letters + digits + u"-"),
+                        alphabet=Text(ascii_lowercase + digits + u"-"),
                     )
                 ),
             )
