@@ -333,7 +333,9 @@ def _encode_path_parts(
             for part in text_parts
         ]
     else:
-        encoded_parts = [_encode_schemeless_path_part(text_parts[0])]
+        encoded_parts = [
+            _encode_schemeless_path_part(text_parts[0], maximal=maximal)
+        ]
         encoded_parts.extend(
             [
                 _encode_path_part(part, maximal=maximal) if part else part

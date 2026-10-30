@@ -1344,6 +1344,16 @@ class TestURL(HyperlinkTestCase):
         u6 = URL.from_text(u5.to_text()).to_uri()
         assert u5 == u6  # colons stay decoded bc they're not in the first seg
 
+    def test_schemeless_iri_path(self):
+        # type: () -> None
+        """Relative IRI paths preserve Unicode while escaping delimiters."""
+        url = URL(path=("café:menu", "next"))
+        iri_text = "café%3Amenu/next"
+        uri_text = "caf%C3%A9%3Amenu/next"
+        assert url.to_text() == iri_text
+        assert url.to_uri().to_text() == uri_text
+        assert URL.from_text(uri_text).to_iri().to_text() == iri_text
+
     def test_emoji_domain(self):
         # type: () -> None
         "See issue #7, affecting only narrow builds (2.6-3.3)"
