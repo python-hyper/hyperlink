@@ -1469,7 +1469,8 @@ class URL(object):
         * Uppercase remaining percent-encoded octets (`RFC 3986 2.1`_)
         * Convert scheme and host casing to lowercase (`RFC 3986 3.2.2`_)
         * Resolve any "." and ".." references in the path (`RFC 3986 6.2.2.3`_)
-        * Ensure an ending slash on URLs with an empty path (`RFC 3986 6.2.3`_)
+        * Ensure an ending slash on URLs with a host and an empty path
+          (`RFC 3986 6.2.3`_)
         * Encode any stray percent signs (`%`) in percent-encoded
           fields (path, query, fragment, userinfo) (`RFC 3986 2.4`_)
 
@@ -1515,7 +1516,7 @@ class URL(object):
                 kw["path"] = [
                     _dec_unres(p) for p in _resolve_dot_segments(self.path)
                 ]
-            else:
+            elif self.host:
                 kw["path"] = (u"",)
         if query:
             kw["query"] = [

@@ -1461,6 +1461,18 @@ class TestURL(HyperlinkTestCase):
             == "ftp://%25:%25@/%25%25%25/%25a%25b?%25=%25%25#%25"
         )
 
+    def test_normalize_empty_relative_path(self):
+        # type: () -> None
+        base = URL.from_text("http://example.com/a/b?old=1")
+        for text in ("", "?x=1", "#section", "?x=1#section"):
+            reference = URL.from_text(text)
+            normalized = reference.normalize()
+            assert normalized.path == ()
+            assert not normalized.rooted
+            assert normalized.to_text() == text
+            assert base.click(normalized) == base.click(reference)
+            assert normalized.normalize() == normalized
+
     def test_str(self):
         # type: () -> None
 
