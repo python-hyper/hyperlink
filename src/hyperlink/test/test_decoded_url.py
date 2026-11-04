@@ -15,6 +15,20 @@ TOTAL_URL = (
 
 
 class TestURL(HyperlinkTestCase):
+    def test_normalize_empty_relative_path(self):
+        # type: () -> None
+        base = DecodedURL.from_text("http://example.com/a/b?old=1")
+        for text in ("", "?x=1", "#section", "?x=1#section"):
+            reference = DecodedURL.from_text(text)
+            normalized = reference.normalize()
+            assert normalized.path == ()
+            assert not normalized.rooted
+            assert normalized.to_text() == text
+            assert base.click(normalized.to_text()) == base.click(text)
+            assert base.encoded_url.click(normalized.encoded_url) == (
+                base.encoded_url.click(reference.encoded_url)
+            )
+
     def test_durl_basic(self):
         # type: () -> None
         bdurl = DecodedURL.from_text(BASIC_URL)
