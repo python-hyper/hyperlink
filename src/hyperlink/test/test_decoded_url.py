@@ -15,6 +15,17 @@ TOTAL_URL = (
 
 
 class TestURL(HyperlinkTestCase):
+    def test_click_empty_reference_clears_fragment(self):
+        # type: () -> None
+        base = DecodedURL.from_text("http://example.com/a/b?x=1#old")
+        expected = "http://example.com/a/b?x=1"
+        assert base.click("").to_text() == expected
+        assert base.click().to_text() == expected
+        assert base.click("") == base.click(URL())
+        assert base.click("") == base.click(DecodedURL())
+        assert base.click("#new").fragment == "new"
+        assert base.fragment == "old"
+
     def test_durl_basic(self):
         # type: () -> None
         bdurl = DecodedURL.from_text(BASIC_URL)

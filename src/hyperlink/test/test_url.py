@@ -474,6 +474,21 @@ class TestURL(HyperlinkTestCase):
         u3 = u.click(u2)
         self.assertEqual(u3.to_text(), "http://localhost/foo/bar")
 
+    def test_click_empty_reference_clears_fragment(self):
+        # type: () -> None
+        for text, expected in (
+            ("http://example.com/a/b?x=1#old", "http://example.com/a/b?x=1"),
+            ("http://example.com/a/../b#old", "http://example.com/b"),
+            ("http://example.com/#old", "http://example.com/"),
+        ):
+            base = URL.from_text(text)
+            assert base.click("").to_text() == expected
+            assert base.click().to_text() == expected
+            assert base.click("") == base.click(URL())
+            assert base.click("#new").fragment == "new"
+            assert base.click("#").fragment == ""
+            assert base.fragment == "old"
+
     def test_clickRFC3986(self):
         # type: () -> None
         """

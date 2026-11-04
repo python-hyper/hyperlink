@@ -1617,7 +1617,7 @@ class URL(object):
             if clicked.absolute:
                 return clicked
         else:
-            clicked = self
+            clicked = self.replace(fragment=u"")
 
         query = clicked.query
         if clicked.scheme and not clicked.rooted:
