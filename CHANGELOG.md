@@ -2,6 +2,9 @@
 
 ## Next
 
+* Preserve explicit empty queries when parsing, rendering, and resolving URLs,
+  so clicking `?` clears existing query parameters.
+  ([#207](https://github.com/python-hyper/hyperlink/issues/207))
 * CPython 3.9 added to test matrix
 
 ## 21.0.0

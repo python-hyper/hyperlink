@@ -312,6 +312,67 @@ class TestURL(HyperlinkTestCase):
             assert iri_text == double_iri_text
         return
 
+    def test_empty_query_roundtrip(self):
+        # type: () -> None
+        """An explicit empty query survives parsing and URL transformations."""
+        for text in (
+            "?",
+            "?#fragment",
+            "/path?",
+            "/path?#fragment",
+            "http://example.com/path?",
+            "http://example.com/path?#fragment",
+        ):
+            url = URL.from_text(text)
+            self.assertEqual(url.query, (("", None),))
+            for transformed in (
+                url,
+                url.replace(),
+                url.to_uri(),
+                url.to_iri(),
+                url.normalize(path=False),
+            ):
+                self.assertEqual(transformed.to_text(), text)
+
+    def test_empty_query_parameters(self):
+        # type: () -> None
+        """An empty query differs from no query and uses normal query APIs."""
+        absent = URL.from_text("/path")
+        empty = absent.replace(query=(("", None),))
+        self.assertEqual(empty.to_text(), "/path?")
+        self.assertEqual(empty, URL.from_text("/path?"))
+        self.assertNotEqual(empty, absent)
+        self.assertEqual(empty.get(""), [None])
+        self.assertEqual(empty.add("x", "1").remove("x"), empty)
+        self.assertEqual(empty.set("x", "1").remove("x"), empty)
+        self.assertEqual(empty.set("", "value").to_text(), "/path?=value")
+        self.assertEqual(empty.set("", None), empty)
+        self.assertEqual(empty.remove("").to_text(), "/path")
+        self.assertEqual(empty.replace(query=()).to_text(), "/path")
+        self.assertEqual(URL.from_text("/path?=").query, (("", ""),))
+        self.assertEqual(URL.from_text("/path?&").query, (("", None),) * 2)
+
+    def test_click_empty_query(self):
+        # type: () -> None
+        """A defined empty query replaces, rather than inherits, the query."""
+        base_text = "http://example.com/a/b?x=1#old"
+        base = URL.from_text(base_text)
+        for reference, expected in (
+            ("?", "http://example.com/a/b?"),
+            ("?#new", "http://example.com/a/b?#new"),
+            ("/next?", "http://example.com/next?"),
+            ("../next?", "http://example.com/next?"),
+            ("http://other.example/next?", "http://other.example/next?"),
+            ("#new", "http://example.com/a/b?x=1#new"),
+            ("?y=2", "http://example.com/a/b?y=2"),
+            ("next", "http://example.com/a/next"),
+        ):
+            self.assertEqual(base.click(reference).to_text(), expected)
+            self.assertEqual(
+                base.click(URL.from_text(reference)).to_text(), expected
+            )
+        self.assertEqual(base.to_text(), base_text)
+
     def test_equality(self):
         # type: () -> None
         """
