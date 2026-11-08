@@ -2,7 +2,7 @@
 
 from __future__ import unicode_literals
 
-from typing import Dict, Union
+from typing import Dict, Text, Tuple, Union
 from .. import DecodedURL, URL
 from .._url import _percent_decode
 from .common import HyperlinkTestCase
@@ -15,6 +15,29 @@ TOTAL_URL = (
 
 
 class TestURL(HyperlinkTestCase):
+    def test_empty_query(self):
+        # type: () -> None
+        """Decoded URLs preserve empty queries, including clicked references."""
+        base = DecodedURL.from_text("http://example.com/path?x=1")
+        reference = DecodedURL.from_text("?")
+        self.assertEqual(reference.query, (("", None),))
+        references = (
+            "?",
+            URL.from_text("?"),
+            reference,
+        )  # type: Tuple[Union[Text, URL, DecodedURL], ...]
+        for href in references:
+            result = base.click(href)
+            self.assertEqual(result.to_text(), "http://example.com/path?")
+            self.assertEqual(result.replace().to_text(), result.to_text())
+            self.assertEqual(result.to_uri().to_text(), result.to_text())
+            self.assertEqual(result.to_iri().to_text(), result.to_text())
+            self.assertEqual(result.normalize().to_text(), result.to_text())
+            self.assertEqual(
+                result.replace(query=()).to_text(), "http://example.com/path"
+            )
+        self.assertEqual(base.to_text(), "http://example.com/path?x=1")
+
     def test_durl_basic(self):
         # type: () -> None
         bdurl = DecodedURL.from_text(BASIC_URL)

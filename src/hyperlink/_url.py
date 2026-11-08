@@ -1133,6 +1133,9 @@ class URL(object):
         always strings. Values are strings when present, or None when
         missing.
 
+        An absent query is ``()``. An explicit empty query (a trailing
+        ``?``) has one empty key without a value: ``((u"", None),)``.
+
         For more operations on the mapping, see
         :meth:`~hyperlink.URL.get()`, :meth:`~hyperlink.URL.add()`,
         :meth:`~hyperlink.URL.set()`, and
@@ -1428,14 +1431,15 @@ class URL(object):
         else:
             path = ()
             rooted = bool(au_text)
-        if gs["query"]:
+        query_text = cast(Optional[Text], gs["query"])
+        if query_text is not None:
             query = tuple(
                 (
                     qe.split(u"=", 1)  # type: ignore[misc]
                     if u"=" in qe
                     else (qe, None)
                 )
-                for qe in gs["query"].split(u"&")
+                for qe in query_text.split(u"&")
             )  # type: QueryPairs
         else:
             query = ()
@@ -1801,7 +1805,7 @@ class URL(object):
             if scheme and authority and path[:1] != "/":
                 _add("/")  # relpaths with abs authorities auto get '/'
             _add(path)
-        if query_string:
+        if self.query:
             _add("?")
             _add(query_string)
         if fragment:
