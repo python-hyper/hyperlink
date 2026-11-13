@@ -102,6 +102,41 @@ class TestURL(HyperlinkTestCase):
         assert not (durl == 1)
         assert durl != 1
 
+    def test_eager_decoding_validates_lazy_cache(self):
+        # type: () -> None
+        """A cached lazy wrapper must not bypass eager decoding errors."""
+        urls = [
+            "https://example.com/%FF",
+            "https://example.com/?%FF=value",
+            "https://example.com/?key=%FF",
+            "https://example.com/#%FF",
+            "https://%FF@example.com/",
+            "https://user:%FF@example.com/",
+        ]
+        for text in urls:
+            url = URL.from_text(text)
+            self.assertRaises(UnicodeDecodeError, url.get_decoded_url)
+            lazy_url = url.get_decoded_url(lazy=True)
+            # Repeated eager attempts must still fail after a failed decode.
+            self.assertRaises(UnicodeDecodeError, url.get_decoded_url)
+            self.assertRaises(UnicodeDecodeError, url.get_decoded_url)
+            self.assertTrue(url.get_decoded_url(lazy=True) is lazy_url)
+
+    def test_eager_decoding_populates_lazy_cache(self):
+        # type: () -> None
+        """Eager access validates the cached wrapper without replacing it."""
+        url = URL.from_text(TOTAL_URL)
+        lazy_url = url.get_decoded_url(lazy=True)
+        self.assertFalse(hasattr(lazy_url, "_path"))
+        self.assertTrue(url.get_decoded_url() is lazy_url)
+        self.assertTrue(hasattr(lazy_url, "_path"))
+        self.assertTrue(hasattr(lazy_url, "_query"))
+        self.assertTrue(hasattr(lazy_url, "_fragment"))
+        self.assertTrue(hasattr(lazy_url, "_userinfo"))
+        self.assertTrue(url.get_decoded_url() is lazy_url)
+        self.assertTrue(url.get_decoded_url(lazy=True) is lazy_url)
+        self.assertEqual(lazy_url.path, DecodedURL(url).path)
+
     def test_repr(self):
         # type: () -> None
         durl = DecodedURL.from_text(TOTAL_URL)
