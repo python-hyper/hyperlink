@@ -1064,10 +1064,20 @@ class URL(object):
     def get_decoded_url(self, lazy=False):
         # type: (bool) -> DecodedURL
         try:
-            return self._decoded_url
+            decoded_url = self._decoded_url
         except AttributeError:
             self._decoded_url = DecodedURL(self, lazy=lazy)  # type: DecodedURL
-        return self._decoded_url
+            return self._decoded_url
+        if not lazy:
+            # A cached wrapper may have been created without validation.
+            (
+                decoded_url.host,
+                decoded_url.userinfo,
+                decoded_url.path,
+                decoded_url.query,
+                decoded_url.fragment,
+            )
+        return decoded_url
 
     @property
     def scheme(self):
